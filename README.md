@@ -14,7 +14,7 @@ an export function to use my shaders also in other projects and to have the abil
 to extend the application and make backups of my shader projects.
 
 ## Releases
-v0.1.0 - First release with very basic functionality.
+Version 1.0.0 - First release with very basic functionality.
 
 ## Build
 You need the following libraries:
