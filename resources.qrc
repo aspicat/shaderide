@@ -1,0 +1,36 @@
+<!DOCTYPE RCC><RCC version="1.0">
+
+    <!-- App -->
+    <qresource prefix="/app">
+        <file alias="logo_light.png">assets/app/logo_light.png</file>
+    </qresource>
+
+    <!-- Icons -->
+    <qresource prefix="/icons">
+        <file alias="icon-aspicat.png">assets/icons/icon-aspicat.png</file>
+        <file alias="icon-github.png">assets/icons/icon-github.png</file>
+        <file alias="icon-settings.png">assets/icons/icon-settings.png</file>
+    </qresource>
+
+    <!-- Images -->
+    <qresource prefix="/images/64">
+        <file alias="bunny.png">assets/images/64/bunny.png</file>
+        <file alias="cube.png">assets/images/64/cube.png</file>
+        <file alias="sphere.png">assets/images/64/sphere.png</file>
+        <file alias="teapot.png">assets/images/64/teapot.png</file>
+    </qresource>
+
+    <!-- Models -->
+    <qresource prefix="/models">
+        <file alias="bunny.obj">assets/models/bunny.obj</file>
+        <file alias="cube.obj">assets/models/cube.obj</file>
+        <file alias="plane.obj">assets/models/plane.obj</file>
+        <file alias="sphere.obj">assets/models/sphere.obj</file>
+        <file alias="teapot.obj">assets/models/teapot.obj</file>
+    </qresource>
+
+    <!-- Config -->
+    <qresource prefix="/config">
+        <file alias="glsl460.json">config/glsl460.json</file>
+    </qresource>
+</RCC>

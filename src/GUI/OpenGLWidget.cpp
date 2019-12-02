@@ -1,4 +1,30 @@
-// Copyright (c) 2019 Aspicat - Florian Roth
+/**
+ * OpenGLWidget Class
+ *
+ * --------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
+ * --------------------------------------------------------------------------
+ *
+ * Copyright (c) 2019 Aspicat - Florian Roth
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -6,10 +32,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "OpenGLWidget.hpp"
 #include "src/Core/SyntaxErrorException.hpp"
+#include "src/Core/Memory.hpp"
 #include "src/GL/GLDefaults.hpp"
 #include "src/GL/GLUtility.hpp"
 #include "src/GL/Loaders/OBJMeshLoader.hpp"
-#include "src/Core/Memory.hpp"
+#include "src/GUI/StyleSheets.hpp"
 
 using namespace ShaderIDE::GUI;
 
@@ -18,55 +45,57 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
       program                   (0),
       vao                       (0),
       vertexBuffer              (0),
+      selectedMeshName          (""),
       overlayLayout             (nullptr),
       topLeftLayout             (nullptr),
       cbRealtimeUpdate          (nullptr),
+      cbPlane2D                 (nullptr),
       quickLoadModelsLayout     (nullptr),
       btLoadCube                (nullptr),
       btLoadSphere              (nullptr),
       btLoadTeapot              (nullptr),
       btLoadBunny               (nullptr),
-      btLoadDragon              (nullptr),
       slot0Texture              (nullptr),
       slot1Texture              (nullptr),
       slot2Texture              (nullptr),
       slot3Texture              (nullptr),
-      shortcutCompileShaders    (nullptr),
       realtime                  (false),
-      renderTime                (0.f),
+      plane2D                   (false),
+      renderTime                (0.0f),
       dragStartX                (0),
       dragStartY                (0),
       zoomStart                 (0),
-      zoomLastPosition          (0.f),
+      zoomLastPosition          (0.0f),
       shiftStartX               (0),
       shiftStartY               (0),
       mouseDragEnabled          (false),
       mouseZoomEnabled          (false),
       mouseShiftEnabled         (false),
-      modelStartRotation        (glm::vec3(0, 0, 0)),
-      modelRotation             (glm::vec3(0, 0, 0)),
-      cameraPosition            (glm::vec3(0, 0, 0)),
-      cameraStartPosition       (glm::vec3(0, 0, 0)),
-      modelMatrix               (glm::mat4(1)),
-      viewMatrix                (glm::mat4(1)),
-      projectionMatrix          (glm::mat4(1))
+      modelStartRotation        (glm::vec3(0.0f, 0.0f, 0.0f)),
+      modelRotation             (glm::vec3(0.0f, 0.0f, 0.0f)),
+      cameraPosition            (glm::vec3(0.0f, 0.0f, 0.0f)),
+      cameraStartPosition       (glm::vec3(0.0f, 0.0f, 0.0f)),
+      modelMatrix               (glm::mat4(1.0f)),
+      viewMatrix                (glm::mat4(1.0f)),
+      projectionMatrix          (glm::mat4(1.0f)),
+      identityMatrix            (glm::mat4(1.0f))
 {
     InitOverlay();
     InitTopLeftLayout();
     InitQuickModelButtons();
-    InitShortcuts();
+
+    setStyleSheet(STYLE_OPENGLWIDGET);
 
     // Load Default Mesh
-    LoadOBJMesh("../assets/models/cube.obj");
+    LoadOBJMesh(":/models/cube.obj");
     ResetModelRotation();
 
     // TODO Preload all default meshes for the quick actions...
 
-    MoveCamera(glm::vec3(0, 0, -3));
+    MoveCamera(OPENGLWIDGET_DEFAULT_CAMERA_POSITION);
 }
 
 OpenGLWidget::~OpenGLWidget() {
-    DestroyShortcuts();
     DestroyTextureSlots();
     DestroyQuickModelButtons();
     DestroyTopLeftLayout();
@@ -74,14 +103,75 @@ OpenGLWidget::~OpenGLWidget() {
     DestroyVAO();
 }
 
-void OpenGLWidget::LoadOBJMesh(const QString &file) {
+void OpenGLWidget::LoadOBJMesh(const QString &path) {
     try {
-        auto meshLoader = OBJMeshLoader(file.toStdString());
+        auto meshLoader = OBJMeshLoader(path);
         auto mesh = meshLoader.GetMesh();
         vertices = mesh.ComposedVertices();
+
     } catch (GeneralException &e) {
         emit si_GeneralError(e);
     }
+}
+
+QString OpenGLWidget::SelectedMeshName() {
+    return selectedMeshName;
+}
+
+void OpenGLWidget::SelectMesh(const QString &meshName) {
+    if (meshName == "Cube") { sl_LoadModelCube(); return; }
+    if (meshName == "Sphere") { sl_LoadModelSphere(); return; }
+    if (meshName == "Teapot") { sl_LoadModelTeapot(); return; }
+    if (meshName == "Bunny") { sl_LoadModelBunny(); }
+}
+
+void OpenGLWidget::SetRealtime(bool newRealtime) {
+
+    // Note that the internal variable is set by
+    // the signal coming from the checkbox!
+    cbRealtimeUpdate->setChecked(newRealtime);
+}
+
+bool OpenGLWidget::Realtime() {
+    return realtime;
+}
+
+void OpenGLWidget::SetPlane2D(bool newPlane2D) {
+
+    // Note that the internal variable is set by
+    // the signal coming from the checkbox!
+    cbPlane2D->setChecked(newPlane2D);
+}
+
+bool OpenGLWidget::Plane2D() {
+    return plane2D;
+}
+
+void OpenGLWidget::RotateModel(const glm::vec3 &rotation) {
+
+    // Reset model matrix first.
+    modelMatrix = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    modelRotation.x = rotation.x;
+    modelRotation.y = rotation.y;
+    modelRotation.z = rotation.z;
+
+    modelMatrix = glm::rotate(modelMatrix, modelRotation.x, glm::vec3(1, 0, 0));
+    modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0, 1, 0));
+    modelMatrix = glm::rotate(modelMatrix, modelRotation.z, glm::vec3(0, 0, 1));
+}
+
+void OpenGLWidget::MoveCamera(const glm::vec3 &position) {
+    cameraPosition = position;
+    viewMatrix = glm::translate(glm::mat4(1.0f), cameraPosition);
+}
+
+glm::vec3 OpenGLWidget::ModelRotation() {
+    return modelRotation;
+}
+
+glm::vec3 OpenGLWidget::CameraPosition() {
+    return cameraPosition;
 }
 
 void OpenGLWidget::SetVertexShaderSource(const QString &source) {
@@ -160,12 +250,17 @@ void OpenGLWidget::ClearTextureSlot(SLOT slot) {
     repaint();
 }
 
-void OpenGLWidget::ResetModelRotation() {
+void OpenGLWidget::ResetUI() {
 
-    // Reset model matrix first.
-    modelMatrix = glm::rotate(glm::mat4(1.f), 0.f, glm::vec3(1.f, 1.f, 1.f));
+    // Uncheck top left layout checkboxes.
+    cbRealtimeUpdate->setChecked(false);
+    cbPlane2D->setChecked(false);
 
-    RotateModel(glm::radians(45.f), glm::radians(45.f), 0);
+    // Load default model and reset matrices.
+    sl_LoadModelCube();
+    ResetModelRotation();
+    ResetCameraPosition();
+
     repaint();
 }
 
@@ -188,24 +283,24 @@ void OpenGLWidget::sl_CompileShaders() {
     }
 }
 
+void OpenGLWidget::sl_LoadModelPlane() {
+    LoadModel("Plane", ":/models/plane.obj", planeVertices);
+}
+
 void OpenGLWidget::sl_LoadModelCube() {
-    LoadModel("Cube", "../assets/models/cube.obj", cubeVertices);
+    LoadModel("Cube", ":/models/cube.obj", cubeVertices);
 }
 
 void OpenGLWidget::sl_LoadModelSphere() {
-    LoadModel("Sphere", "../assets/models/sphere.obj", sphereVertices);
+    LoadModel("Sphere", ":/models/sphere.obj", sphereVertices);
 }
 
 void OpenGLWidget::sl_LoadModelTeapot() {
-    LoadModel("Teapot", "../assets/models/teapot.obj", teapotVertices);
+    LoadModel("Teapot", ":/models/teapot.obj", teapotVertices);
 }
 
 void OpenGLWidget::sl_LoadModelBunny() {
-    LoadModel("Bunny", "../assets/models/bunny.obj", bunnyVertices);
-}
-
-void OpenGLWidget::sl_LoadModelDragon() {
-    LoadModel("Dragon", "../assets/models/dragon.obj", dragonVertices);
+    LoadModel("Bunny", ":/models/bunny.obj", bunnyVertices);
 }
 
 void OpenGLWidget::sl_RealtimeUpdateStateChanged(const int &state) {
@@ -216,6 +311,20 @@ void OpenGLWidget::sl_RealtimeUpdateStateChanged(const int &state) {
 
         case Qt::Unchecked:
             DisableRealtime();
+            break;
+
+        default: break;
+    }
+}
+
+void OpenGLWidget::sl_Plane2DStateChanged(const int &state) {
+    switch (state) {
+        case Qt::Checked:
+            EnablePlane2D();
+            break;
+
+        case Qt::Unchecked:
+            DisablePlane2D();
             break;
 
         default: break;
@@ -244,7 +353,7 @@ void OpenGLWidget::initializeGL() {
 
 void OpenGLWidget::resizeGL(int w, int h) {
     float ratio = static_cast<float>(w) / static_cast<float>(h);
-    projectionMatrix = glm::perspective(glm::radians(60.f), ratio, 0.1f, 100.f);
+    projectionMatrix = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 100.0f);
 }
 
 void OpenGLWidget::paintGL() {
@@ -256,16 +365,18 @@ void OpenGLWidget::paintGL() {
     // Shader Uniforms
     glUseProgram(program);
 
-    auto renderTimeLocation    = glGetUniformLocation(program, "renderTime");
-    auto modelMatLocation      = glGetUniformLocation(program, "modelMat");
-    auto viewMatLocation       = glGetUniformLocation(program, "viewMat");
-    auto projectionMatLocation = glGetUniformLocation(program, "projectionMat");
+    auto modelMatLocation       = glGetUniformLocation(program, "modelMat");
+    auto viewMatLocation        = glGetUniformLocation(program, "viewMat");
+    auto projectionMatLocation  = glGetUniformLocation(program, "projectionMat");
+    auto timeLocation           = glGetUniformLocation(program, "time");
+
+    // TODO Lights, math constants, camera position etc.
 
     // Apply Uniform Data
-    glUniform1f(renderTimeLocation, renderTime);
-    glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-    glUniformMatrix4fv(viewMatLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-    glUniformMatrix4fv(projectionMatLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, GetModelMatrix());
+    glUniformMatrix4fv(viewMatLocation, 1, GL_FALSE, GetViewMatrix());
+    glUniformMatrix4fv(projectionMatLocation, 1, GL_FALSE, GetProjectionMatrix());
+    glUniform1f(timeLocation, renderTime);
 
     // Samplers (Textures)
     BindTextures();
@@ -283,6 +394,11 @@ void OpenGLWidget::paintGL() {
 
 void OpenGLWidget::mousePressEvent(QMouseEvent *event) {
 
+    // Disable navigation for plane 2D view.
+    if (plane2D) {
+        return;
+    }
+
     // Left Button
     if (event->button() == Qt::MouseButton::LeftButton) {
         EnableMouseDrag();
@@ -299,6 +415,16 @@ void OpenGLWidget::mousePressEvent(QMouseEvent *event) {
     }
 }
 
+void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent *event) {
+    if (plane2D) {
+        return;
+    }
+
+    ResetModelRotation();
+    ResetCameraPosition();
+    repaint();
+}
+
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event) {
     DisableMouseDrag();
     DisableMouseZoom();
@@ -309,48 +435,17 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event) {
 
     // Mouse Drag / Model Rotation
     if (mouseDragEnabled) {
-        if (!dragStartX) dragStartX = mapToParent(event->pos()).x();
-        if (!dragStartY) dragStartY = mapToParent(event->pos()).y();
-
-        auto rotX = static_cast<GLfloat>(-(dragStartY - mapToParent(event->pos()).y()));
-        auto rotY = static_cast<GLfloat>(-(dragStartX - mapToParent(event->pos()).x()));
-
-        modelRotation = modelStartRotation + glm::vec3(
-                glm::radians(rotX) * MODEL_ROTATION_INTENSITY,
-                glm::radians(rotY) * MODEL_ROTATION_INTENSITY,
-                0 /* Z */
-        );
-
-        modelMatrix = glm::rotate(glm::mat4(1), modelRotation.x, glm::vec3(1, 0, 0));
-        modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0, 1, 0));
+        ApplyMouseDrag(event);
     }
 
     // Mouse Drag / Model Zoom (Camera Forward/Backwards)
     else if (mouseZoomEnabled) {
-        if (!zoomStart) zoomStart = mapToParent(event->pos()).y();
-        auto zoom = -(zoomStart - mapToParent(event->pos()).y());
-        MoveCamera(glm::vec3(
-                cameraPosition.x,
-                cameraPosition.y,
-                (zoom * MODEL_ZOOM_INTENSITY + zoomLastPosition))
-        );
+        ApplyMouseZoom(event);
     }
 
     // Mouse Shift / Model Shifting
     else if (mouseShiftEnabled) {
-        if (!shiftStartX) shiftStartX = mapToParent(event->pos()).x();
-        if (!shiftStartY) shiftStartY = mapToParent(event->pos()).y();
-
-        auto shiftX = -(shiftStartX - mapToParent(event->pos()).x());
-        auto shiftY = shiftStartY - mapToParent(event->pos()).y();
-
-        cameraPosition = cameraStartPosition + glm::vec3(
-                static_cast<GLfloat>(shiftX) * MODEL_SHIFT_INTENSITY,
-                static_cast<GLfloat>(shiftY) * MODEL_SHIFT_INTENSITY,
-                0 /* Z */
-        );
-
-        viewMatrix = glm::translate(glm::mat4(1), cameraPosition);
+        ApplyMouseShift(event);
     }
 
     repaint();
@@ -387,19 +482,19 @@ void OpenGLWidget::InitVAO() {
             vertices.data(), GL_STATIC_DRAW);
 
     // Vertex Position Attrib
-    auto vPosLocation = glGetAttribLocation(program, "vPos");
+    auto vPosLocation = glGetAttribLocation(program, "position");
     glEnableVertexAttribArray(vPosLocation);
     glVertexAttribPointer(vPosLocation, 3, GL_FLOAT, GL_FALSE,
                           GLUtility::StrideSize(stride), GLUtility::StridePtr(0));
 
     // Normal Attrib
-    auto vNormalLocation = glGetAttribLocation(program, "vNormal");
+    auto vNormalLocation = glGetAttribLocation(program, "normal");
     glEnableVertexAttribArray(vNormalLocation);
     glVertexAttribPointer(vNormalLocation, 3, GL_FLOAT, GL_FALSE,
                           GLUtility::StrideSize(stride), GLUtility::StridePtr(3));
 
     // UV Attrib
-    auto vTexUVLocation = glGetAttribLocation(program, "vTexUV");
+    auto vTexUVLocation = glGetAttribLocation(program, "uv");
     glEnableVertexAttribArray(vTexUVLocation);
     glVertexAttribPointer(vTexUVLocation, 2, GL_FLOAT, GL_FALSE,
                           GLUtility::StrideSize(stride), GLUtility::StridePtr(6));
@@ -419,28 +514,29 @@ void OpenGLWidget::InitOverlay() {
 void OpenGLWidget::InitTopLeftLayout() {
 
     // Top Left Layout
-    topLeftLayout = new QVBoxLayout();
+    topLeftLayout = new QHBoxLayout();
     topLeftLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     overlayLayout->addLayout(topLeftLayout);
 
     // Realtime Update Checkbox
     cbRealtimeUpdate = new QCheckBox("Realtime");
-
-    // TODO
-    cbRealtimeUpdate->setStyleSheet(
-            "QCheckBox {"
-            "    color: #fafafa;"
-            "    background: transparent;"
-            "}"
-    );
-
     topLeftLayout->addWidget(cbRealtimeUpdate);
 
     connect(cbRealtimeUpdate, SIGNAL(stateChanged(int)),
             this, SLOT(sl_RealtimeUpdateStateChanged(int)));
+
+    // Plane 2D Checkbox
+    cbPlane2D = new QCheckBox("Plane 2D");
+    topLeftLayout->addWidget(cbPlane2D);
+
+    connect(cbPlane2D, SIGNAL(stateChanged(int)),
+            this, SLOT(sl_Plane2DStateChanged(int)));
 }
 
 void OpenGLWidget::InitQuickModelButtons() {
+
+    // TODO Receive binary data for icons from resource.hpp file
+    //      in future versions.
 
     // Quick Load Models Layout
     quickLoadModelsLayout = new QHBoxLayout();
@@ -449,43 +545,24 @@ void OpenGLWidget::InitQuickModelButtons() {
     overlayLayout->addLayout(quickLoadModelsLayout, 0);
 
     // Load Cube
-    btLoadCube = new ImageButton("../assets/images/cube.png");
+    btLoadCube = new ImageButton(":/images/64/cube.png");
     quickLoadModelsLayout->addWidget(btLoadCube, 0, Qt::AlignLeft);
     connect(btLoadCube, SIGNAL(clicked()), this, SLOT(sl_LoadModelCube()));
 
     // Load Sphere
-    btLoadSphere = new ImageButton("../assets/images/sphere.png");
+    btLoadSphere = new ImageButton(":/images/64/sphere.png");
     quickLoadModelsLayout->addWidget(btLoadSphere, 0, Qt::AlignLeft);
     connect(btLoadSphere, SIGNAL(clicked()), this, SLOT(sl_LoadModelSphere()));
 
     // Load Teapot
-    btLoadTeapot = new ImageButton("../assets/images/teapot.png");
+    btLoadTeapot = new ImageButton(":/images/64/teapot.png");
     quickLoadModelsLayout->addWidget(btLoadTeapot, 0, Qt::AlignLeft);
     connect(btLoadTeapot, SIGNAL(clicked()), this, SLOT(sl_LoadModelTeapot()));
 
     // Load Bunny
-    btLoadBunny = new ImageButton("../assets/images/bunny.png");
+    btLoadBunny = new ImageButton(":/images/64/bunny.png");
     quickLoadModelsLayout->addWidget(btLoadBunny, 0, Qt::AlignLeft);
     connect(btLoadBunny, SIGNAL(clicked()), this, SLOT(sl_LoadModelBunny()));
-
-    // Load Dragon
-    btLoadDragon = new ImageButton("../assets/images/dragon.png");
-    quickLoadModelsLayout->addWidget(btLoadDragon, 0, Qt::AlignLeft);
-    connect(btLoadDragon, SIGNAL(clicked()), this, SLOT(sl_LoadModelDragon()));
-}
-
-void OpenGLWidget::InitShortcuts() {
-
-    // Compile Shaders
-    shortcutCompileShaders = new QShortcut(
-            QKeySequence(Qt::CTRL + Qt::Key_R),
-            this,
-            SLOT(sl_CompileShaders())
-    );
-}
-
-void OpenGLWidget::DestroyShortcuts() {
-    Memory::Release(shortcutCompileShaders);
 }
 
 void OpenGLWidget::DestroyTextureSlots() {
@@ -501,7 +578,6 @@ void OpenGLWidget::DestroyTextureSlots() {
 }
 
 void OpenGLWidget::DestroyQuickModelButtons() {
-    Memory::Release(btLoadDragon);
     Memory::Release(btLoadBunny);
     Memory::Release(btLoadTeapot);
     Memory::Release(btLoadSphere);
@@ -510,6 +586,7 @@ void OpenGLWidget::DestroyQuickModelButtons() {
 }
 
 void OpenGLWidget::DestroyTopLeftLayout() {
+    Memory::Release(cbPlane2D);
     Memory::Release(cbRealtimeUpdate);
     Memory::Release(topLeftLayout);
 }
@@ -524,6 +601,20 @@ void OpenGLWidget::DestroyVAO() {
     glDeleteProgram(program);
 }
 
+void OpenGLWidget::ShowQuickLoadModelsLayout() {
+    btLoadCube->setVisible(true);
+    btLoadSphere->setVisible(true);
+    btLoadTeapot->setVisible(true);
+    btLoadBunny->setVisible(true);
+}
+
+void OpenGLWidget::HideQuickLoadModelsLayout() {
+    btLoadCube->setVisible(false);
+    btLoadSphere->setVisible(false);
+    btLoadTeapot->setVisible(false);
+    btLoadBunny->setVisible(false);
+}
+
 void OpenGLWidget::EnableRealtime() {
     realtime = true;
     DetermineStartTime();
@@ -535,7 +626,23 @@ void OpenGLWidget::DisableRealtime() {
 }
 
 void OpenGLWidget::UpdateRealtime() {
+    // TODO Calculate FPS delay.
     QTimer::singleShot(33, this, SLOT(sl_Tick()));
+}
+
+void OpenGLWidget::EnablePlane2D() {
+    plane2D = true;
+    CacheVertices();
+    sl_LoadModelPlane();
+    HideQuickLoadModelsLayout();
+    repaint();
+}
+
+void OpenGLWidget::DisablePlane2D() {
+    plane2D = false;
+    ApplyVerticesFromCache();
+    ShowQuickLoadModelsLayout();
+    repaint();
 }
 
 void OpenGLWidget::EnableMouseDrag() {
@@ -570,18 +677,61 @@ void OpenGLWidget::DisableMouseShift() {
     mouseShiftEnabled = false;
 }
 
-void OpenGLWidget::MoveCamera(const glm::vec3 &position) {
-    cameraPosition = position;
+void OpenGLWidget::ApplyMouseDrag(QMouseEvent *event) {
+    if (!dragStartX) dragStartX = mapToParent(event->pos()).x();
+    if (!dragStartY) dragStartY = mapToParent(event->pos()).y();
+
+    auto rotX = static_cast<GLfloat>(-(dragStartY - mapToParent(event->pos()).y()));
+    auto rotY = static_cast<GLfloat>(-(dragStartX - mapToParent(event->pos()).x()));
+
+    modelRotation = modelStartRotation + glm::vec3(
+            glm::radians(rotX) * MODEL_ROTATION_INTENSITY,
+            glm::radians(rotY) * MODEL_ROTATION_INTENSITY,
+            0 /* Z */
+    );
+
+    modelMatrix = glm::rotate(glm::mat4(1), modelRotation.x, glm::vec3(1, 0, 0));
+    modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0, 1, 0));
+}
+
+void OpenGLWidget::ApplyMouseZoom(QMouseEvent *event) {
+    if (!zoomStart) {
+        zoomStart = mapToParent(event->pos()).y();
+    }
+
+    auto zoom = -(zoomStart - mapToParent(event->pos()).y());
+
+    MoveCamera(glm::vec3(
+            cameraPosition.x,
+            cameraPosition.y,
+            (zoom * MODEL_ZOOM_INTENSITY + zoomLastPosition))
+    );
+}
+
+void OpenGLWidget::ApplyMouseShift(QMouseEvent *event) {
+    if (!shiftStartX) shiftStartX = mapToParent(event->pos()).x();
+    if (!shiftStartY) shiftStartY = mapToParent(event->pos()).y();
+
+    auto shiftX = -(shiftStartX - mapToParent(event->pos()).x());
+    auto shiftY = shiftStartY - mapToParent(event->pos()).y();
+
+    cameraPosition = cameraStartPosition + glm::vec3(
+            static_cast<GLfloat>(shiftX) * MODEL_SHIFT_INTENSITY,
+            static_cast<GLfloat>(shiftY) * MODEL_SHIFT_INTENSITY,
+            0 /* Z */
+    );
+
     viewMatrix = glm::translate(glm::mat4(1), cameraPosition);
 }
 
-void OpenGLWidget::RotateModel(const GLfloat &x, const GLfloat &y, const GLfloat &z) {
-    modelRotation.x = x;
-    modelRotation.y = y;
-    modelRotation.z = z;
-    modelMatrix = glm::rotate(modelMatrix, modelRotation.x, glm::vec3(1, 0, 0));
-    modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0, 1, 0));
-    modelMatrix = glm::rotate(modelMatrix, modelRotation.z, glm::vec3(0, 0, 1));
+void OpenGLWidget::ResetModelRotation() {
+    RotateModel(OPENGLWIDGET_DEFAULT_MODEL_ROTATION);
+}
+
+void OpenGLWidget::ResetCameraPosition() {
+    zoomStart = 0;
+    zoomLastPosition = 0.0f;
+    MoveCamera(glm::vec3(0, 0, -3));
 }
 
 void OpenGLWidget::LoadModel(const QString &name,
@@ -594,13 +744,16 @@ void OpenGLWidget::LoadModel(const QString &name,
 
     ApplyVertices(vertexStore);
     emit si_StateUpdated(QString("Model \"") + name + "\" loaded.");
+
+    selectedMeshName = name;
 }
 
 void OpenGLWidget::LoadOBJMeshIntoBuffer(const QString &file, VertexVec &buffer) {
     try {
-        auto meshLoader = OBJMeshLoader(file.toStdString());
+        auto meshLoader = OBJMeshLoader(file);
         auto mesh = meshLoader.GetMesh();
         buffer = mesh.ComposedVertices();
+
     } catch (GeneralException &e) {
         emit si_GeneralError(e);
     }
@@ -612,13 +765,46 @@ void OpenGLWidget::ApplyVertices(const VertexVec &newVertices) {
     repaint();
 }
 
+void OpenGLWidget::CacheVertices() {
+    vertexCache = vertices;
+}
+
+void OpenGLWidget::ApplyVerticesFromCache() {
+    ApplyVertices(vertexCache);
+    vertexCache.clear();
+}
+
+GLfloat* OpenGLWidget::GetModelMatrix() {
+    if (plane2D) {
+        return glm::value_ptr(identityMatrix);
+    }
+
+    return glm::value_ptr(modelMatrix);
+}
+
+GLfloat* OpenGLWidget::GetViewMatrix() {
+    if (plane2D) {
+        return glm::value_ptr(identityMatrix);
+    }
+
+    return glm::value_ptr(viewMatrix);
+}
+
+GLfloat* OpenGLWidget::GetProjectionMatrix() {
+    if (plane2D) {
+        return glm::value_ptr(identityMatrix);
+    }
+
+    return glm::value_ptr(projectionMatrix);
+}
+
 void OpenGLWidget::DetermineStartTime() {
     startTime = QDateTime::currentDateTime();
 }
 
 void OpenGLWidget::UpdateRenderTime() {
     auto millisDiff = static_cast<float>(startTime.msecsTo(QDateTime::currentDateTime()));
-    renderTime = millisDiff / 1000.f;
+    renderTime = millisDiff / 1000.0f;
 }
 
 void OpenGLWidget::RecreateTexture(QOpenGLTexture *texture, const QImage &image) {

@@ -57,9 +57,9 @@ ELSE()
 ENDIF()
 
 IF(WIN32)
-    add_executable(${PROJECT_NAME} #[[WIN32]] ${INCLUDE_FILES} ${SOURCE_FILES} src/main.cpp assets/app/shaderide.rc)
+    add_executable(${PROJECT_NAME} #[[WIN32]] ${INCLUDE_FILES} ${SOURCE_FILES} resources.qrc src/main.cpp assets/app/shaderide.rc)
 ELSE()
-    add_executable(${PROJECT_NAME} ${INCLUDE_FILES} ${SOURCE_FILES} src/main.cpp)
+    add_executable(${PROJECT_NAME} ${INCLUDE_FILES} ${SOURCE_FILES} resources.qrc src/main.cpp)
 ENDIF()
 
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARIES})

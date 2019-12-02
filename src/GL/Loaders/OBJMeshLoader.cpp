@@ -1,6 +1,34 @@
-// Copyright (c) 2019 Aspicat - Florian Roth
+/**
+ * OBJMeshLoader Class
+ *
+ * --------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
+ * --------------------------------------------------------------------------
+ *
+ * Copyright (c) 2019 Aspicat - Florian Roth
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <algorithm>
+#include <QFile>
+#include <QTextStream>
 #include <boost/spirit/home/x3.hpp>
 #include "OBJMeshLoader.hpp"
 #include "src/Core/GeneralException.hpp"
@@ -8,7 +36,7 @@
 using namespace ShaderIDE::GL;
 using namespace boost::spirit;
 
-OBJMeshLoader::OBJMeshLoader(const std::string &path)
+OBJMeshLoader::OBJMeshLoader(const QString &path)
     : mesh        (),
       lineCounter (0)
 {
@@ -19,26 +47,34 @@ Mesh OBJMeshLoader::GetMesh() {
     return mesh;
 }
 
-void OBJMeshLoader::ReadFile(const std::string &path) {
+void OBJMeshLoader::ReadFile(const QString &path) {
     lineCounter = 0;
 
     // Load .obj File
-    std::ifstream objFile(path);
+    QFile objFile(path);
 
-    if (!objFile.is_open()) {
+    if (!objFile.open(QIODevice::ReadOnly)) {
         throw GeneralException(
                 std::string("[") + __FUNCTION__ + "] Could not open file " +
-                path + "."
+                path.toStdString() + "."
         );
     }
+
+    // Convert the Qt text stream to the C++
+    // standard stream, since it's faster.
+    QTextStream ofts(&objFile);
+    std::stringstream ofs;
+    ofs << ofts.readAll().toStdString();
 
     // Parse
     std::string line;
 
-    while (std::getline(objFile, line)) {
+    while (std::getline(ofs, line)) {
         ParseLine(line);
         lineCounter++;
     }
+
+    objFile.close();
 }
 
 void OBJMeshLoader::ParseLine(const std::string &line) {

@@ -1,4 +1,30 @@
-// Copyright (c) 2019 Aspicat - Florian Roth
+/**
+ * LogOutputWidget Class
+ *
+ * --------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
+ * --------------------------------------------------------------------------
+ *
+ * Copyright (c) 2019 Aspicat - Florian Roth
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <QTextCharFormat>
 #include "LogOutputWidget.hpp"
@@ -40,7 +66,7 @@ void LogOutputWidget::LogErrorMessage(const QString &message) {
     appendPlainText(QString("[ERROR] ") + message);
 }
 
-void LogOutputWidget::LogGLSLError(GLSLCompileError &error) {
+QString LogOutputWidget::LogGLSLError(GLSLCompileError &error) {
     QString err("[GLSL] [");
     err.append(error.File());
     err.append("] Syntax error at line ");
@@ -48,6 +74,7 @@ void LogOutputWidget::LogGLSLError(GLSLCompileError &error) {
     err.append(": Code ").append(error.Code()).append(" ");
     err.append("-> ").append(error.Message());
     LogErrorMessage(err);
+    return err;
 }
 
 void LogOutputWidget::contextMenuEvent(QContextMenuEvent *event) {
@@ -76,7 +103,7 @@ void LogOutputWidget::InitSyntaxHighlighter() {
     // Success Messages
     QTextCharFormat successFormat;
     successFormat.setFontWeight(QFont::Bold);
-    successFormat.setForeground(QColor("#54CF49"));
+    successFormat.setForeground(QColor("#54CF49")); // TODO Stylesheet.
 
     syntaxHighlighter->AddMatchBlock({
         successFormat,
@@ -86,7 +113,7 @@ void LogOutputWidget::InitSyntaxHighlighter() {
     // Error Messages
     QTextCharFormat errorFormat;
     errorFormat.setFontWeight(QFont::Bold);
-    errorFormat.setForeground(QColor("#CF3550"));
+    errorFormat.setForeground(QColor("#CF3550")); // TODO Stylesheet.
 
     syntaxHighlighter->AddMatchBlock({
         errorFormat,

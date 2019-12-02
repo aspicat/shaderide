@@ -1,9 +1,37 @@
-// Copyright (c) 2019 Aspicat - Florian Roth
+/**
+ * ShaderProject Class
+ *
+ * --------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
+ * --------------------------------------------------------------------------
+ *
+ * Copyright (c) 2019 Aspicat - Florian Roth
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <utility>
 #include <fstream>
 #include "ShaderProject.hpp"
-#include "src/Core/GeneralException.hpp"
+#include "ProjectException.hpp"
+#include "src/version.hpp"
+#include "src/GL/GLDefaults.hpp"
 
 using namespace ShaderIDE::Project;
 
@@ -12,26 +40,46 @@ ShaderProject* ShaderProject::Load(const std::string &path) {
 
     if (!file.is_open()) {
         throw GeneralException(
-                std::string("Could not load shader project file \"")
-                + path + "\""
+                std::string("Could not load shader project file \"") +
+                path +
+                "\""
         );
     }
 
     auto *shaderProject = new ShaderProject(path);
 
-    boost::archive::binary_iarchive ia(file);
-    ia >> *shaderProject;
+    try {
+        boost::archive::binary_iarchive ia(file);
+        ia >> *shaderProject;
+
+    } catch (boost::archive::archive_exception &e) {
+        // Loaded an older version.
+
+    } catch (std::exception &e) {
+        file.close();
+        return nullptr;
+    }
+
     file.close();
 
     return shaderProject;
 }
 
 ShaderProject::ShaderProject(std::string path)
-    : path      (std::move(path)),
-      vsSource  (""),
-      fsSource  (""),
-      meshName  ("")
+    : file_version      (SHADERIDE_VERSION),
+      path              (std::move(path)),
+      vsSource          (""),
+      fsSource          (""),
+      meshName          (""),
+      realtime          (false),
+      plane2D           (false),
+      modelRotation     (OPENGLWIDGET_DEFAULT_MODEL_ROTATION),
+      cameraPosition    (OPENGLWIDGET_DEFAULT_CAMERA_POSITION)
 {}
+
+std::string ShaderProject::Version() {
+    return file_version;
+}
 
 std::string ShaderProject::Path() {
     return path;
@@ -53,6 +101,22 @@ std::unordered_map<std::string, std::string> ShaderProject::TexturePaths() {
     return texturePaths;
 }
 
+bool ShaderProject::Realtime() {
+    return realtime;
+}
+
+bool ShaderProject::Plane2D() {
+    return plane2D;
+}
+
+glm::vec3 ShaderProject::ModelRotation() {
+    return modelRotation;
+}
+
+glm::vec3 ShaderProject::CameraPosition() {
+    return cameraPosition;
+}
+
 void ShaderProject::SetPath(const std::string &newPath) {
     path = newPath;
 }
@@ -69,11 +133,25 @@ void ShaderProject::SetMeshName(const std::string &newMeshName) {
     meshName = newMeshName;
 }
 
-void ShaderProject::SetTexturePaths(const std::unordered_map<std::string, std::string> &newTexturePaths) {
-    texturePaths = newTexturePaths;
+void ShaderProject::SetRealtime(bool newRealtime) {
+    realtime = newRealtime;
 }
 
-void ShaderProject::SetTexturePath(const std::string &name, const std::string &texturePath) {
+void ShaderProject::SetPlane2D(bool newPlane2D) {
+    plane2D = newPlane2D;
+}
+
+void ShaderProject::SetModelRotation(const glm::vec3 &newModelRotation) {
+    modelRotation = newModelRotation;
+}
+
+void ShaderProject::SetCameraPosition(const glm::vec3 &newCameraPosition) {
+    cameraPosition = newCameraPosition;
+}
+
+void ShaderProject::SetTexturePath(const std::string &name,
+                                   const std::string &texturePath)
+{
     texturePaths[name] = texturePath;
 }
 
@@ -87,9 +165,10 @@ void ShaderProject::Save() {
 
     // Check Path
     if (path.empty()) {
-        throw GeneralException(
+        throw ProjectException(
                 "Could not save shader project. "
-                "Project path not provided."
+                "Project path not provided.",
+                ProjectException::ExceptionCode::PATH_EMPTY
         );
     }
 
@@ -106,4 +185,5 @@ void ShaderProject::Save() {
     boost::archive::binary_oarchive oa(file);
     oa << *this;
     file.close();
+
 }

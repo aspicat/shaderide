@@ -1,9 +1,31 @@
 /**
- * Copyright (c) 2019 Aspicat - Florian Roth
- *
  * OpenGLWidget Class
  *
  * This is the main widget for the 3D view (left side).
+ *
+ * --------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
+ * --------------------------------------------------------------------------
+ *
+ * Copyright (c) 2019 Aspicat - Florian Roth
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #ifndef SHADERIDE_GUI_OPENGLWIDGET_HPP
@@ -37,12 +59,10 @@ namespace ShaderIDE::GUI {
 
     class OpenGLWidget : public QOpenGLWidget,
                          protected QOpenGLFunctions_4_5_Core {
-
+    Q_OBJECT
         static constexpr float MODEL_ROTATION_INTENSITY = 0.5f;
         static constexpr float MODEL_ZOOM_INTENSITY     = 0.02f;
         static constexpr float MODEL_SHIFT_INTENSITY    = 0.008f;
-
-        Q_OBJECT
     public:
         enum class SLOT {
             TEX_0,
@@ -54,7 +74,20 @@ namespace ShaderIDE::GUI {
         explicit OpenGLWidget(QWidget *parent = nullptr);
         ~OpenGLWidget() override;
 
-        void LoadOBJMesh(const QString &file);
+        void LoadOBJMesh(const QString &path);
+        QString SelectedMeshName();
+        void SelectMesh(const QString &meshName);
+
+        void SetRealtime(bool newRealtime);
+        bool Realtime();
+        void SetPlane2D(bool newPlane2D);
+        bool Plane2D();
+
+        void RotateModel(const glm::vec3 &rotation);
+        void MoveCamera(const glm::vec3 &position);
+
+        glm::vec3 ModelRotation();
+        glm::vec3 CameraPosition();
 
         void SetVertexShaderSource(const QString &source);
         void SetFragmentShaderSource(const QString &source);
@@ -63,7 +96,7 @@ namespace ShaderIDE::GUI {
         void ApplyTextureToSlot(const QImage &image, SLOT slot);
         void ClearTextureSlot(SLOT slot);
 
-        void ResetModelRotation();
+        void ResetUI();
 
     signals:
         void si_GLInitialized();
@@ -76,12 +109,13 @@ namespace ShaderIDE::GUI {
         void sl_CompileShaders();
 
     private slots:
+        void sl_LoadModelPlane();
         void sl_LoadModelCube();
         void sl_LoadModelSphere();
         void sl_LoadModelTeapot();
         void sl_LoadModelBunny();
-        void sl_LoadModelDragon();
         void sl_RealtimeUpdateStateChanged(const int &state);
+        void sl_Plane2DStateChanged(const int &state);
         void sl_Tick();
 
     protected:
@@ -90,6 +124,7 @@ namespace ShaderIDE::GUI {
         void paintGL() override;
 
         void mousePressEvent(QMouseEvent *event) override;
+        void mouseDoubleClickEvent(QMouseEvent *event) override;
         void mouseReleaseEvent(QMouseEvent *event) override;
         void mouseMoveEvent(QMouseEvent *event) override;
 
@@ -101,18 +136,23 @@ namespace ShaderIDE::GUI {
         GLuint vao;
         GLuint vertexBuffer;
         VertexVec vertices;
+        VertexVec planeVertices;
         VertexVec cubeVertices;
         VertexVec sphereVertices;
         VertexVec teapotVertices;
         VertexVec bunnyVertices;
-        VertexVec dragonVertices;
+        QString selectedMeshName;
+
+        // Vertex Cache
+        VertexVec vertexCache;
 
         // Overlay Layout
         QVBoxLayout *overlayLayout;
 
         // Top Left Layout
-        QVBoxLayout *topLeftLayout;
+        QHBoxLayout *topLeftLayout;
         QCheckBox *cbRealtimeUpdate;
+        QCheckBox *cbPlane2D;
 
         // Bottom Left (Quick Load Models)
         QHBoxLayout *quickLoadModelsLayout;
@@ -120,7 +160,6 @@ namespace ShaderIDE::GUI {
         ImageButton *btLoadSphere;
         ImageButton *btLoadTeapot;
         ImageButton *btLoadBunny;
-        ImageButton *btLoadDragon;
 
         // Texture Slots
         QOpenGLTexture *slot0Texture;
@@ -128,10 +167,8 @@ namespace ShaderIDE::GUI {
         QOpenGLTexture *slot2Texture;
         QOpenGLTexture *slot3Texture;
 
-        // Shortcuts
-        QShortcut *shortcutCompileShaders;
-
         bool realtime;
+        bool plane2D;
 
         // Render Time
         QDateTime startTime;
@@ -155,6 +192,7 @@ namespace ShaderIDE::GUI {
         glm::mat4 modelMatrix;
         glm::mat4 viewMatrix;
         glm::mat4 projectionMatrix;
+        glm::mat4 identityMatrix;
 
         // Init
         void InitShaders();
@@ -162,20 +200,26 @@ namespace ShaderIDE::GUI {
         void InitOverlay();
         void InitTopLeftLayout();
         void InitQuickModelButtons();
-        void InitShortcuts();
 
         // Destroy
-        void DestroyShortcuts();
         void DestroyTextureSlots();
         void DestroyQuickModelButtons();
         void DestroyTopLeftLayout();
         void DestroyOverlay();
         void DestroyVAO();
 
+        // Layouts
+        void ShowQuickLoadModelsLayout();
+        void HideQuickLoadModelsLayout();
+
         // Realtime
         void EnableRealtime();
         void DisableRealtime();
         void UpdateRealtime();
+
+        // Plane 2D
+        void EnablePlane2D();
+        void DisablePlane2D();
 
         // Mouse Model Controls
         void EnableMouseDrag();
@@ -185,9 +229,14 @@ namespace ShaderIDE::GUI {
         void EnableMouseShift();
         void DisableMouseShift();
 
-        void MoveCamera(const glm::vec3 &position);
-        void RotateModel(const GLfloat &x, const GLfloat &y, const GLfloat &z);
+        void ApplyMouseDrag(QMouseEvent *event);
+        void ApplyMouseZoom(QMouseEvent *event);
+        void ApplyMouseShift(QMouseEvent *event);
 
+        void ResetModelRotation();
+        void ResetCameraPosition();
+
+        // Model
         void LoadModel(const QString &name,
                        const QString &file,
                        VertexVec &vertexStore);
@@ -196,10 +245,19 @@ namespace ShaderIDE::GUI {
 
         void ApplyVertices(const VertexVec &newVertices);
 
+        void CacheVertices();
+        void ApplyVerticesFromCache();
+
+        // Matrices
+        GLfloat* GetModelMatrix();
+        GLfloat* GetViewMatrix();
+        GLfloat* GetProjectionMatrix();
+
         // Render Time
         void DetermineStartTime();
         void UpdateRenderTime();
 
+        // Textures
         void RecreateTexture(QOpenGLTexture *texture, const QImage &image);
 
         void BindTexture(QOpenGLTexture *texture,

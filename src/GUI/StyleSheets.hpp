@@ -1,5 +1,29 @@
 /**
+ * StyleSheets Header
+ *
+ * --------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
+ * --------------------------------------------------------------------------
+ *
  * Copyright (c) 2019 Aspicat - Florian Roth
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #ifndef SHADERIDE_GUI_STYLESHEETS_HPP
@@ -29,6 +53,13 @@
     "    background: rgb(60, 60, 60);" \
     "}"
 
+// OpenGL Widget
+#define STYLE_OPENGLWIDGET \
+    "QCheckBox {" \
+    "    color: #fafafa;" \
+    "    background: transparent;" \
+    "}"
+
 // Code Editor
 #define STYLE_CODEEDITOR \
     "QPlainTextEdit {" \
@@ -44,6 +75,17 @@
 #define STYLE_CODEEDITOR_FONT "Consolas"
 #else
 #define STYLE_CODEEDITOR_FONT "DejaVu Sans Mono"
+#endif
+
+// Code Editor / Line Number Area
+#define STYLE_LINENUMBERAREA_BG_COLOR QColor(40, 40, 40, 255)
+#define STYLE_LINENUMBERAREA_FONT_COLOR QColor(80, 80, 80)
+#define STYLE_LINENUMBERAREA_FONT_HIGHLIGHT_COLOR QColor("#4DDCFE")
+
+#if WIN32
+#define STYLE_LINENUMBERAREA_FONT "Consolas"
+#else
+#define STYLE_LINENUMBERAREA_FONT "DejaVu Sans Mono"
 #endif
 
 // Tab Widget
@@ -115,11 +157,24 @@
     "    color: #535353;" \
     "}"
 
+// Environment Settings Panel
+#define STYLE_ENVSETTINGSPANEL \
+    "#EnvSettingsPanel {" \
+    "    border-top: 4px solid #233151;" \
+    "    background: rgba(10, 10, 10, 0.95);" \
+    "}" \
+    "#EnvSettingsPanel QLabel#Title {" \
+    "    font-family: \"" STYLE_CODEEDITOR_FONT "\";" \
+    "    font-size: 12pt;" \
+    "    font-weight: bold;" \
+    "    color: #fafafa;" \
+    "    background: transparent;" \
+    "}"
+
 // Texture Browser
 #define STYLE_TEXTUREBROWSER \
     "#TextureBrowser {" \
-    "    border-top: 4px solid #233151;" \
-    "    background: rgba(10, 10, 10, 0.7);" \
+    "    background: transparent;" \
     "}"
 
 // Texture Browser Image
@@ -127,7 +182,7 @@
     "#TextureBrowserImage {" \
     "    border: none;" \
     "    border-radius: 4px;" \
-    "    background: transparent;" \
+    "    background: rgba(30, 30, 30, 0.5);" \
     "}" \
     "#TextureBrowserImage::hover {" \
     "    border: 2px solid #233151;" \
@@ -142,5 +197,14 @@
     "color: #656565;"
 
 #define STYLE_TEXTUREBROWSERIMAGE_NOIMAGE_TEXT "NO IMAGE"
+
+// About Dialog
+#define STYLE_ABOUTDIALOG \
+    "QDialog {" \
+    "    background: rgb(40, 40, 40);" \
+    "}" \
+    "QLabel {" \
+    "    color: #D9D9D9;" \
+    "}"
 
 #endif // SHADERIDE_GUI_STYLESHEETS_HPP

@@ -1,9 +1,34 @@
-// Copyright (c) 2019 Aspicat - Florian Roth
+/**
+ * FileTabWidget Class
+ *
+ * --------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
+ * --------------------------------------------------------------------------
+ *
+ * Copyright (c) 2019 Aspicat - Florian Roth
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <QDebug>
 #include <QTabBar>
 #include "FileTabWidget.hpp"
-#include "src/GL/GLDefaults.hpp"
 #include "src/Core/Memory.hpp"
 
 using namespace ShaderIDE::GUI;
@@ -12,19 +37,18 @@ FileTabWidget::FileTabWidget(QWidget *parent)
     : QTabWidget                (parent),
       vsCodeEditor              (nullptr),
       fsCodeEditor              (nullptr),
-      textureBrowser            (nullptr),
-      textureBrowserToggle      (nullptr)
+      envSettingsPanel          (nullptr),
+      envSettingsPanelToggle    (nullptr)
 {
     InitCodeEditors();
-    InitTextureBrowser();
-    LoadTextureBrowserSlots();
+    InitEnvSettingsPanel();
 
     // Quickfix for the tab width to not overdraw the text.
     tabBar()->setStyleSheet("QTabBar::tab { min-width: 140px; }");
 }
 
 FileTabWidget::~FileTabWidget() {
-    DestroyTextureBrowser();
+    DestroyEnvSettingsPanel();
     DestroyCodeEditors();
 }
 
@@ -48,14 +72,26 @@ QString FileTabWidget::FragmentShaderSource() {
     return fsCodeEditor->toPlainText();
 }
 
+CodeEditor* FileTabWidget::GetVSCodeEditor() {
+    return vsCodeEditor;
+}
+
+CodeEditor* FileTabWidget::GetFSCodeEditor() {
+    return fsCodeEditor;
+}
+
 TextureBrowser* FileTabWidget::GetTextureBrowser() {
-    return textureBrowser;
+    return envSettingsPanel->GetTextureBrowser();
+}
+
+void FileTabWidget::ResetUI() {
+    envSettingsPanel->ResetUI();
 }
 
 void FileTabWidget::resizeEvent(QResizeEvent *event) {
     QTabWidget::resizeEvent(event);
-    UpdateTextureBrowserGeometry();
-    UpdateTextureBrowserToggleButton();
+    UpdateEnvSettingsPanelGeometry();
+    UpdateEnvSettingsPanelToggleButton();
 }
 
 void FileTabWidget::sl_VSCodeChanged(const QString &code) {
@@ -66,55 +102,52 @@ void FileTabWidget::sl_FSCodeChanged(const QString &code) {
     emit si_FSCodeChanged(code);
 }
 
-void FileTabWidget::sl_HideTextureBrowser() {
-    textureBrowser->setVisible(false);
+void FileTabWidget::sl_HideEnvSettingsPanel() {
+    envSettingsPanel->Hide();
 }
 
-void FileTabWidget::sl_ToggleTextureBrowser() {
-    textureBrowser->setVisible(!textureBrowser->isVisible());
+void FileTabWidget::sl_ToggleEnvSettingsPanel() {
+    envSettingsPanel->Toggle();
 }
 
 void FileTabWidget::InitCodeEditors() {
 
     // Vertex Shader Code Editor
     vsCodeEditor = new CodeEditor();
-    vsCodeEditor->LoadSyntaxFile("../config/glsl460.json");
+    vsCodeEditor->LoadSyntaxFile(":/config/glsl460.json");
     addTab(vsCodeEditor, "Vertex Shader");
 
     connect(vsCodeEditor, SIGNAL(si_CodeChanged(const QString&)),
             this, SLOT(sl_VSCodeChanged(const QString&)));
 
     connect(vsCodeEditor, SIGNAL(si_MouseReleased()),
-            this, SLOT(sl_HideTextureBrowser()));
+            this, SLOT(sl_HideEnvSettingsPanel()));
 
     // Fragment Shader Code Editor
     fsCodeEditor = new CodeEditor();
-    fsCodeEditor->LoadSyntaxFile("../config/glsl460.json");
+    fsCodeEditor->LoadSyntaxFile(":/config/glsl460.json");
     addTab(fsCodeEditor, "Fragment Shader");
 
     connect(fsCodeEditor, SIGNAL(si_CodeChanged(const QString&)),
             this, SLOT(sl_FSCodeChanged(const QString&)));
 
     connect(fsCodeEditor, SIGNAL(si_MouseReleased()),
-            this, SLOT(sl_HideTextureBrowser()));
+            this, SLOT(sl_HideEnvSettingsPanel()));
 }
 
-void FileTabWidget::InitTextureBrowser() {
+void FileTabWidget::InitEnvSettingsPanel() {
+    envSettingsPanel = new EnvSettingsPanel(this);
+    envSettingsPanel->Hide();
 
-    // Texture Browser
-    textureBrowser = new TextureBrowser(this);
-    textureBrowser->setVisible(false);
+    envSettingsPanelToggle = new ImageButton(":/icons/icon-settings.png", this);
 
-    // Texture Browser Toggle Button
-    textureBrowserToggle = new ImageButton("../assets/icons/icon-image.png", this);
-
-    connect(textureBrowserToggle, SIGNAL(clicked()),
-            this, SLOT(sl_ToggleTextureBrowser()));
+    connect(envSettingsPanelToggle, SIGNAL(clicked()),
+            this, SLOT(sl_ToggleEnvSettingsPanel()));
 }
 
-void FileTabWidget::DestroyTextureBrowser() {
-    Memory::Release(textureBrowserToggle);
-    Memory::Release(textureBrowser);
+void FileTabWidget::DestroyEnvSettingsPanel() {
+    Memory::Release(envSettingsPanelToggle);
+    Memory::Release(envSettingsPanel);
 }
 
 void FileTabWidget::DestroyCodeEditors() {
@@ -122,20 +155,13 @@ void FileTabWidget::DestroyCodeEditors() {
     Memory::Release(vsCodeEditor);
 }
 
-void FileTabWidget::LoadTextureBrowserSlots() {
-    textureBrowser->AddImage(GLSL_TEXTURE_SLOT_0_NAME, "");
-    textureBrowser->AddImage(GLSL_TEXTURE_SLOT_1_NAME, "");
-    textureBrowser->AddImage(GLSL_TEXTURE_SLOT_2_NAME, "");
-    textureBrowser->AddImage(GLSL_TEXTURE_SLOT_3_NAME, "");
+void FileTabWidget::UpdateEnvSettingsPanelGeometry() {
+    envSettingsPanel->resize(width(), envSettingsPanel->height());
+    envSettingsPanel->move(0, height() - envSettingsPanel->height());
 }
 
-void FileTabWidget::UpdateTextureBrowserGeometry() {
-    textureBrowser->resize(width(), textureBrowser->height());
-    textureBrowser->move(0, height() - textureBrowser->height());
-}
-
-void FileTabWidget::UpdateTextureBrowserToggleButton() {
-    auto right = width() - textureBrowserToggle->width() - 10;
-    auto bottom = height() - textureBrowserToggle->height() - 10;
-    textureBrowserToggle->move(right, bottom);
+void FileTabWidget::UpdateEnvSettingsPanelToggleButton() {
+    auto right = width() - envSettingsPanelToggle->width() - 10;
+    auto bottom = height() - envSettingsPanelToggle->height() - 10;
+    envSettingsPanelToggle->move(right, bottom);
 }
