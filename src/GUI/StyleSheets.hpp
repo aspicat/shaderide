@@ -45,48 +45,12 @@
 #define STYLE_MENUBAR \
     "QMenuBar {" \
     "    color: #A8A8A8;" \
-    "    border-bottom: 2px solid rgb(28, 28, 28);" \
     "    background: rgb(32, 32, 32);" \
     "}" \
     "QMenuBar::item:selected {" \
     "    color: #4EC6D5;" \
     "    background: rgb(60, 60, 60);" \
     "}"
-
-// OpenGL Widget
-#define STYLE_OPENGLWIDGET \
-    "QCheckBox {" \
-    "    color: #fafafa;" \
-    "    background: transparent;" \
-    "}"
-
-// Code Editor
-#define STYLE_CODEEDITOR \
-    "QPlainTextEdit {" \
-    "    padding: 10px;" \
-    "    border: none;" \
-    "    color: #eaeaea;" \
-    "    background: rgb(30, 30, 30);" \
-    "}"
-
-#define STYLE_CODEEDITOR_FONT_SIZE 10
-
-#ifdef WIN32
-#define STYLE_CODEEDITOR_FONT "Consolas"
-#else
-#define STYLE_CODEEDITOR_FONT "DejaVu Sans Mono"
-#endif
-
-// Code Editor / Line Number Area
-#define STYLE_LINENUMBERAREA_BG_COLOR QColor(40, 40, 40, 255)
-#define STYLE_LINENUMBERAREA_FONT_COLOR QColor(80, 80, 80)
-#define STYLE_LINENUMBERAREA_FONT_HIGHLIGHT_COLOR QColor("#4DDCFE")
-
-#if WIN32
-#define STYLE_LINENUMBERAREA_FONT "Consolas"
-#else
-#define STYLE_LINENUMBERAREA_FONT "DejaVu Sans Mono"
-#endif
 
 // Tab Widget
 #define STYLE_TABWIDGET \
@@ -103,24 +67,7 @@
     "    font-weight: bold;" \
     "    color: #4EC6D5;" \
     "    background: rgb(50, 50, 50);" \
-    "} background: red;"
-
-// Log Output Widget
-#define STYLE_LOGOUTPUTWIDGET \
-    "QPlainTextEdit {" \
-    "    padding: 10px;" \
-    "    border: none;" \
-    "    color: rgb(120, 120, 120);" \
-    "    background: rgb(24, 24, 24);" \
-    "}" \
-
-#define STYLE_LOGOUTPUTWIDGET_FONT_SIZE 10
-
-#ifdef WIN32
-#define STYLE_LOGOUTPUTWIDGET_FONT "Consolas"
-#else
-#define STYLE_LOGOUTPUTWIDGET_FONT "Consolas"
-#endif
+    "}"
 
 // Status Bar
 #define STYLE_STATUSBAR \
@@ -157,54 +104,36 @@
     "    color: #535353;" \
     "}"
 
-// Environment Settings Panel
-#define STYLE_ENVSETTINGSPANEL \
-    "#EnvSettingsPanel {" \
-    "    border-top: 4px solid #233151;" \
-    "    background: rgba(10, 10, 10, 0.95);" \
-    "}" \
-    "#EnvSettingsPanel QLabel#Title {" \
-    "    font-family: \"" STYLE_CODEEDITOR_FONT "\";" \
-    "    font-size: 12pt;" \
-    "    font-weight: bold;" \
-    "    color: #fafafa;" \
-    "    background: transparent;" \
+// Checkbox
+#define STYLE_CHECKBOX \
+    "QCheckBox {" \
     "}"
 
-// Texture Browser
-#define STYLE_TEXTUREBROWSER \
-    "#TextureBrowser {" \
-    "    background: transparent;" \
-    "}"
-
-// Texture Browser Image
-#define STYLE_TEXTUREBROWSERIMAGE \
-    "#TextureBrowserImage {" \
+// Group Box
+#define STYLE_GROUPBOX \
+    "QGroupBox {" \
     "    border: none;" \
-    "    border-radius: 4px;" \
-    "    background: rgba(30, 30, 30, 0.5);" \
-    "}" \
-    "#TextureBrowserImage::hover {" \
-    "    border: 2px solid #233151;" \
-    "    background: #233151;" \
-    "}" \
-    "QLabel {" \
     "    color: #fafafa;" \
-    "    background: transparent;" \
     "}"
 
-#define STYLE_TEXTUREBROWSERIMAGE_LABEL \
-    "color: #656565;"
-
-#define STYLE_TEXTUREBROWSERIMAGE_NOIMAGE_TEXT "NO IMAGE"
-
-// About Dialog
-#define STYLE_ABOUTDIALOG \
-    "QDialog {" \
-    "    background: rgb(40, 40, 40);" \
+// Scroll Bar
+#define STYLE_SCROLLBAR \
+    "QScrollBar," \
+    "QScrollBar::add-page," \
+    "QScrollBar::sub-page," \
+    "QScrollBar::add-line," \
+    "QScrollBar::sub-line {" \
+    "    background: transparent;" \
     "}" \
-    "QLabel {" \
-    "    color: #D9D9D9;" \
+    "QScrollBar:handle {" \
+    "    border: none;" \
+    "    background: rgba(50, 50, 50, 0.8);" \
+    "}" \
+    "QScrollBar:vertical {" \
+    "    width: 16px;" \
+    "}" \
+    "QScrollBar:horizontal {" \
+    "    height: 16px;" \
     "}"
 
 #endif // SHADERIDE_GUI_STYLESHEETS_HPP

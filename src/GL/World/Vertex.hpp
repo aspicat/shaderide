@@ -1,5 +1,5 @@
 /**
- * Mesh Class
+ * Vertex Struct
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,50 +26,41 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GL_WORLD_MESH_HPP
-#define SHADERIDE_GL_WORLD_MESH_HPP
+#ifndef SHADERIDE_GL_WORLD_VERTEX_HPP
+#define SHADERIDE_GL_WORLD_VERTEX_HPP
 
-#include <string>
-#include <cstdint>
-#include "Vertex.hpp"
+#include <vector>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 namespace ShaderIDE::GL {
 
-    class Mesh {
-    public:
-        void AddVertex(const glm::vec3 &vertex);
-        void AddVertexNormal(const glm::vec3 &vertexNormal);
-        void AddVertexUV(const glm::vec2 &vertexUV);
-        void AddIndex(const uint32_t &index);
-        void AddNormalIndex(const uint32_t &normalIndex);
-        void AddUVIndex(const uint32_t &uvIndex);
+    struct Vertex {
+        glm::vec3 vertex;
+        glm::vec3 normal;
+        glm::vec2 uv;
 
-        std::vector<glm::vec3> Vertices();
-        std::vector<glm::vec3> VertexNormals();
-        std::vector<glm::vec3> VertexIndexedNormals();
-        std::vector<glm::vec2> VertexUVs();
-        std::vector<uint32_t> Indices();
-        std::vector<uint32_t> NormalIndices();
-        std::vector<uint32_t> UVIndices();
+        Vertex() = default;
 
-        /**
-         * Composed non-indexed vertices, including
-         * normals and UV's.
-         *
-         * @return VertexVec
-         */
-        VertexVec ComposedVertices();
+        explicit Vertex(const float &posX, const float &posY, const float &posZ,
+                        const float &normalX, const float &normalY, const float &normalZ,
+                        const float &uvX, const float &uvY)
+            : vertex(posX, posY, posZ),
+              normal(normalX, normalY, normalZ),
+              uv(uvX, uvY)
+        {}
 
-        std::string ComposedVerticesString();
+        ~Vertex() = default;
 
-    protected:
-        std::vector<glm::vec3> vertices;
-        std::vector<glm::vec3> vertexNormals;
-        std::vector<glm::vec2> vertexUVs;
-        std::vector<uint32_t> indices;
-        std::vector<uint32_t> normalIndices;
-        std::vector<uint32_t> uvIndices;
+        Vertex& operator= (const float vtx[8]) {
+            vertex = { vtx[0], vtx[1], vtx[2] };
+            normal = { vtx[3], vtx[4], vtx[5] };
+            uv = { vtx[6], vtx[7] };
+            return *this;
+        }
     };
+
+    using VertexVec = std::vector<Vertex>;
 }
 
-#endif // SHADERIDE_GL_WORLD_MESH_HPP
+#endif // SHADERIDE_GL_WORLD_VERTEX_HPP

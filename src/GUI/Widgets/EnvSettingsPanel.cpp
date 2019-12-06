@@ -30,7 +30,7 @@
 #include "src/Core/QtUtility.hpp"
 #include "src/GL/GLDefaults.hpp"
 #include "src/Core/Memory.hpp"
-#include "src/GUI/StyleSheets.hpp"
+#include "src/GUI/Style/EnvSettingsPanelStyle.hpp"
 
 using namespace ShaderIDE::GUI;
 

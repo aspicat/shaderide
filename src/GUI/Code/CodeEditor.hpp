@@ -37,19 +37,21 @@
 namespace ShaderIDE::GUI {
 
     class CodeEditor : public QPlainTextEdit {
-        Q_OBJECT
+    Q_OBJECT
         friend class LineNumberArea;
-
         static constexpr float FONT_SIZE_MIN = 6.0f;
         static constexpr float FONT_SIZE_MAX = 100.0f;
+
     public:
         explicit CodeEditor(QWidget *parent = nullptr);
         ~CodeEditor() override;
 
         void LoadSyntaxFile(const QString &path);
 
-        void HighlightLine(const int &line, const QColor &color);
-        void ResetHighlightedLines();
+        void HighlightErrorLine(const int &line, const QColor &color);
+        void ResetErrorLines();
+
+        void ToggleWordWrap();
 
     signals:
         void si_CodeChanged(const QString &code);
@@ -63,6 +65,7 @@ namespace ShaderIDE::GUI {
         void sl_CodeChanged();
         void sl_Scrolled(int value);
         void sl_LineNumberAreaUpdated();
+        void sl_CursorPositionChanged();
 
     protected:
         void keyPressEvent(QKeyEvent *event) override;
@@ -80,7 +83,8 @@ namespace ShaderIDE::GUI {
 
         SyntaxHighlighter *syntaxHighlighter;
         LineNumberArea *lineNumberArea;
-        QList<QTextEdit::ExtraSelection> highlightedLines;
+        QList<QTextEdit::ExtraSelection> errorLines;
+        QList<QTextEdit::ExtraSelection> cursorLines;
 
         QShortcut *increaseFontSizeSC;
         QShortcut *decreaseFontSizeSC;
@@ -91,10 +95,12 @@ namespace ShaderIDE::GUI {
 
         void ReplaceTabStopsWithSpaces();
         void UpdateLineNumberArea();
+        void HighlightCursorLine();
 
         void EnableFontScaling();
         void DisableFontScaling();
         void ApplyFontScale(const float &value);
+        void ApplyExtraSelections();
     };
 }
 

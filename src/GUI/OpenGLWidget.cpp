@@ -36,7 +36,7 @@
 #include "src/GL/GLDefaults.hpp"
 #include "src/GL/GLUtility.hpp"
 #include "src/GL/Loaders/OBJMeshLoader.hpp"
-#include "src/GUI/StyleSheets.hpp"
+#include "src/GUI/Style/OpenGLWidgetStyle.hpp"
 
 using namespace ShaderIDE::GUI;
 
@@ -53,14 +53,18 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
       quickLoadModelsLayout     (nullptr),
       btLoadCube                (nullptr),
       btLoadSphere              (nullptr),
+      btLoadTorus               (nullptr),
       btLoadTeapot              (nullptr),
       btLoadBunny               (nullptr),
+      loadingWidget             (nullptr),
       slot0Texture              (nullptr),
       slot1Texture              (nullptr),
       slot2Texture              (nullptr),
       slot3Texture              (nullptr),
       realtime                  (false),
       plane2D                   (false),
+      deferEnablePlane2D        (false),
+      realtimeCompilation       (false),
       renderTime                (0.0f),
       dragStartX                (0),
       dragStartY                (0),
@@ -80,27 +84,32 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
       projectionMatrix          (glm::mat4(1.0f)),
       identityMatrix            (glm::mat4(1.0f))
 {
+    setStyleSheet(STYLE_OPENGLWIDGET);
+
     InitOverlay();
     InitTopLeftLayout();
     InitQuickModelButtons();
-
-    setStyleSheet(STYLE_OPENGLWIDGET);
+    InitLoadingWidget();
 
     // Load Default Mesh
     LoadOBJMesh(":/models/cube.obj");
-    ResetModelRotation();
 
     // TODO Preload all default meshes for the quick actions...
 
-    MoveCamera(OPENGLWIDGET_DEFAULT_CAMERA_POSITION);
+    ResetModelRotation();
+    ResetCameraPosition();
 }
 
 OpenGLWidget::~OpenGLWidget() {
+    DestroyLoadingWidget();
     DestroyTextureSlots();
     DestroyQuickModelButtons();
     DestroyTopLeftLayout();
     DestroyOverlay();
     DestroyVAO();
+
+    modelLoaderThread.quit();
+    modelLoaderThread.wait();
 }
 
 void OpenGLWidget::LoadOBJMesh(const QString &path) {
@@ -121,26 +130,25 @@ QString OpenGLWidget::SelectedMeshName() {
 void OpenGLWidget::SelectMesh(const QString &meshName) {
     if (meshName == "Cube") { sl_LoadModelCube(); return; }
     if (meshName == "Sphere") { sl_LoadModelSphere(); return; }
+    if (meshName == "Torus") { sl_LoadModelTorus(); return; }
     if (meshName == "Teapot") { sl_LoadModelTeapot(); return; }
     if (meshName == "Bunny") { sl_LoadModelBunny(); }
 }
 
-void OpenGLWidget::SetRealtime(bool newRealtime) {
-
-    // Note that the internal variable is set by
-    // the signal coming from the checkbox!
-    cbRealtimeUpdate->setChecked(newRealtime);
+void OpenGLWidget::CheckRealtime(bool realtimeChecked) {
+    cbRealtimeUpdate->setChecked(realtimeChecked);
 }
 
 bool OpenGLWidget::Realtime() {
     return realtime;
 }
 
-void OpenGLWidget::SetPlane2D(bool newPlane2D) {
+void OpenGLWidget::EnablePlane2DAfterModelLoaded() {
+    deferEnablePlane2D = true;
+}
 
-    // Note that the internal variable is set by
-    // the signal coming from the checkbox!
-    cbPlane2D->setChecked(newPlane2D);
+void OpenGLWidget::CheckPlane2D(bool plane2DChecked) {
+    cbPlane2D->setChecked(plane2DChecked);
 }
 
 bool OpenGLWidget::Plane2D() {
@@ -156,9 +164,9 @@ void OpenGLWidget::RotateModel(const glm::vec3 &rotation) {
     modelRotation.y = rotation.y;
     modelRotation.z = rotation.z;
 
-    modelMatrix = glm::rotate(modelMatrix, modelRotation.x, glm::vec3(1, 0, 0));
-    modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0, 1, 0));
-    modelMatrix = glm::rotate(modelMatrix, modelRotation.z, glm::vec3(0, 0, 1));
+    modelMatrix = glm::rotate(modelMatrix, modelRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    modelMatrix = glm::rotate(modelMatrix, modelRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
 void OpenGLWidget::MoveCamera(const glm::vec3 &position) {
@@ -176,10 +184,30 @@ glm::vec3 OpenGLWidget::CameraPosition() {
 
 void OpenGLWidget::SetVertexShaderSource(const QString &source) {
     vertexShader->SetSource(source);
+
+    if (realtimeCompilation) {
+        sl_CompileShaders();
+    }
 }
 
 void OpenGLWidget::SetFragmentShaderSource(const QString &source) {
     fragmentShader->SetSource(source);
+
+    if (realtimeCompilation) {
+        sl_CompileShaders();
+    }
+}
+
+void OpenGLWidget::SetRealtimeCompilationEnabled(bool value) {
+    realtimeCompilation = value;
+}
+
+void OpenGLWidget::ToggleRealtimeCompilation() {
+    realtimeCompilation = !realtimeCompilation;
+}
+
+bool OpenGLWidget::RealtimeCompilation() {
+    return realtimeCompilation;
 }
 
 OpenGLWidget::SLOT OpenGLWidget::FindSlotByName(const QString &slotName) {
@@ -267,40 +295,70 @@ void OpenGLWidget::ResetUI() {
 void OpenGLWidget::sl_CompileShaders() {
     initializeOpenGLFunctions();
 
+    // Vertex Shader
     try {
         vertexShader->Compile(program);
-        fragmentShader->Compile(program);
-        glLinkProgram(program);
-
-        InitVAO();
-        repaint();
-
-        emit si_CompileSuccess("Shader compilation finished without errors.");
+        emit si_CompileSuccess("Vertex shader compilation finished without errors.");
 
     } catch (SyntaxErrorException &e) {
+        LinkProgramAndRepaint();
         auto error = GLSLCompileError(QString::fromStdString(e.File()), e.what());
         emit si_CompileError(error);
+        return;
     }
+
+    // Fragment Shader
+    try {
+        fragmentShader->Compile(program);
+        emit si_CompileSuccess("Fragment shader compilation finished without errors.");
+
+    } catch (SyntaxErrorException &e) {
+        LinkProgramAndRepaint();
+        auto error = GLSLCompileError(QString::fromStdString(e.File()), e.what());
+        emit si_CompileError(error);
+        return;
+    }
+
+    LinkProgramAndRepaint();
 }
 
 void OpenGLWidget::sl_LoadModelPlane() {
-    LoadModel("Plane", ":/models/plane.obj", planeVertices);
+
+    // Load immediately, instead of using LoadModelAsync(...).
+    if (planeVertices.empty()) {
+        LoadOBJMeshIntoBuffer(":/models/plane.obj", planeVertices);
+    }
+
+    ApplyVertices(planeVertices);
+    sl_ModelLoaded("Plane");
 }
 
 void OpenGLWidget::sl_LoadModelCube() {
-    LoadModel("Cube", ":/models/cube.obj", cubeVertices);
+    LoadModelAsync("Cube", ":/models/cube.obj", cubeVertices);
 }
 
 void OpenGLWidget::sl_LoadModelSphere() {
-    LoadModel("Sphere", ":/models/sphere.obj", sphereVertices);
+    LoadModelAsync("Sphere", ":/models/sphere.obj", sphereVertices);
+}
+
+void OpenGLWidget::sl_LoadModelTorus() {
+    LoadModelAsync("Torus", ":/models/torus.obj", torusVertices);
 }
 
 void OpenGLWidget::sl_LoadModelTeapot() {
-    LoadModel("Teapot", ":/models/teapot.obj", teapotVertices);
+    LoadModelAsync("Teapot", ":/models/teapot.obj", teapotVertices);
 }
 
 void OpenGLWidget::sl_LoadModelBunny() {
-    LoadModel("Bunny", ":/models/bunny.obj", bunnyVertices);
+    LoadModelAsync("Bunny", ":/models/bunny.obj", bunnyVertices);
+}
+
+void OpenGLWidget::sl_ModelLoaded(const QString &name) {
+    loadingWidget->Hide();
+    emit si_StateUpdated(QString("Model \"") + name + "\" loaded.");
+    selectedMeshName = name;
+    UpdateVAOAndRepaint();
+    DeferCheckPlane2D();
 }
 
 void OpenGLWidget::sl_RealtimeUpdateStateChanged(const int &state) {
@@ -354,6 +412,9 @@ void OpenGLWidget::initializeGL() {
 void OpenGLWidget::resizeGL(int w, int h) {
     float ratio = static_cast<float>(w) / static_cast<float>(h);
     projectionMatrix = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 100.0f);
+
+    loadingWidget->move(w - loadingWidget->width() - 10,
+                        h - loadingWidget->height() - 10);
 }
 
 void OpenGLWidget::paintGL() {
@@ -507,6 +568,7 @@ void OpenGLWidget::InitOverlay() {
 
     // Overlay Layout
     overlayLayout = new QVBoxLayout();
+    overlayLayout->setContentsMargins(10, 10, 10, 10);
     overlayLayout->setAlignment(Qt::AlignLeft);
     setLayout(overlayLayout);
 }
@@ -535,9 +597,6 @@ void OpenGLWidget::InitTopLeftLayout() {
 
 void OpenGLWidget::InitQuickModelButtons() {
 
-    // TODO Receive binary data for icons from resource.hpp file
-    //      in future versions.
-
     // Quick Load Models Layout
     quickLoadModelsLayout = new QHBoxLayout();
     quickLoadModelsLayout->setSpacing(10);
@@ -554,6 +613,11 @@ void OpenGLWidget::InitQuickModelButtons() {
     quickLoadModelsLayout->addWidget(btLoadSphere, 0, Qt::AlignLeft);
     connect(btLoadSphere, SIGNAL(clicked()), this, SLOT(sl_LoadModelSphere()));
 
+    // Load Torus
+    btLoadTorus = new ImageButton(":/images/64/torus.png");
+    quickLoadModelsLayout->addWidget(btLoadTorus, 0, Qt::AlignLeft);
+    connect(btLoadTorus, SIGNAL(clicked()), this, SLOT(sl_LoadModelTorus()));
+
     // Load Teapot
     btLoadTeapot = new ImageButton(":/images/64/teapot.png");
     quickLoadModelsLayout->addWidget(btLoadTeapot, 0, Qt::AlignLeft);
@@ -563,6 +627,14 @@ void OpenGLWidget::InitQuickModelButtons() {
     btLoadBunny = new ImageButton(":/images/64/bunny.png");
     quickLoadModelsLayout->addWidget(btLoadBunny, 0, Qt::AlignLeft);
     connect(btLoadBunny, SIGNAL(clicked()), this, SLOT(sl_LoadModelBunny()));
+}
+
+void OpenGLWidget::InitLoadingWidget() {
+    loadingWidget = new LoadingWidget(this);
+}
+
+void OpenGLWidget::DestroyLoadingWidget() {
+    Memory::Release(loadingWidget);
 }
 
 void OpenGLWidget::DestroyTextureSlots() {
@@ -580,6 +652,7 @@ void OpenGLWidget::DestroyTextureSlots() {
 void OpenGLWidget::DestroyQuickModelButtons() {
     Memory::Release(btLoadBunny);
     Memory::Release(btLoadTeapot);
+    Memory::Release(btLoadTorus);
     Memory::Release(btLoadSphere);
     Memory::Release(btLoadCube);
     Memory::Release(quickLoadModelsLayout);
@@ -604,6 +677,7 @@ void OpenGLWidget::DestroyVAO() {
 void OpenGLWidget::ShowQuickLoadModelsLayout() {
     btLoadCube->setVisible(true);
     btLoadSphere->setVisible(true);
+    btLoadTorus->setVisible(true);
     btLoadTeapot->setVisible(true);
     btLoadBunny->setVisible(true);
 }
@@ -611,6 +685,7 @@ void OpenGLWidget::ShowQuickLoadModelsLayout() {
 void OpenGLWidget::HideQuickLoadModelsLayout() {
     btLoadCube->setVisible(false);
     btLoadSphere->setVisible(false);
+    btLoadTorus->setVisible(false);
     btLoadTeapot->setVisible(false);
     btLoadBunny->setVisible(false);
 }
@@ -635,14 +710,31 @@ void OpenGLWidget::EnablePlane2D() {
     CacheVertices();
     sl_LoadModelPlane();
     HideQuickLoadModelsLayout();
-    repaint();
 }
 
 void OpenGLWidget::DisablePlane2D() {
     plane2D = false;
     ApplyVerticesFromCache();
     ShowQuickLoadModelsLayout();
-    repaint();
+}
+
+void OpenGLWidget::DeferCheckPlane2D() {
+
+    // This is actually not a good solution, but
+    // rather a quick fix. When loading a project, which has
+    // "Plane 2D" mode enabled, the model loads asynchronously and
+    // overrides the 2D mesh later. To avoid this, we check the
+    // "Plane 2D" checkbox after the actual model is loaded.
+
+    // TODO Decouple "Plane 2D" mode completely from
+    //      the model mesh system in future versions.
+    //      Just place a 2D plane on top of the 3D
+    //      view instead, which can be shown and hidden.
+
+    if (deferEnablePlane2D) {
+        CheckPlane2D(true);
+        deferEnablePlane2D = false;
+    }
 }
 
 void OpenGLWidget::EnableMouseDrag() {
@@ -690,8 +782,8 @@ void OpenGLWidget::ApplyMouseDrag(QMouseEvent *event) {
             0 /* Z */
     );
 
-    modelMatrix = glm::rotate(glm::mat4(1), modelRotation.x, glm::vec3(1, 0, 0));
-    modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0, 1, 0));
+    modelMatrix = glm::rotate(glm::mat4(1.0f), modelRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 void OpenGLWidget::ApplyMouseZoom(QMouseEvent *event) {
@@ -721,7 +813,7 @@ void OpenGLWidget::ApplyMouseShift(QMouseEvent *event) {
             0 /* Z */
     );
 
-    viewMatrix = glm::translate(glm::mat4(1), cameraPosition);
+    viewMatrix = glm::translate(glm::mat4(1.0f), cameraPosition);
 }
 
 void OpenGLWidget::ResetModelRotation() {
@@ -731,21 +823,34 @@ void OpenGLWidget::ResetModelRotation() {
 void OpenGLWidget::ResetCameraPosition() {
     zoomStart = 0;
     zoomLastPosition = 0.0f;
-    MoveCamera(glm::vec3(0, 0, -3));
+    MoveCamera(OPENGLWIDGET_DEFAULT_CAMERA_POSITION);
 }
 
-void OpenGLWidget::LoadModel(const QString &name,
-                             const QString &file,
-                             VertexVec &vertexStore)
+void OpenGLWidget::LoadModelAsync(const QString &name,
+                                  const QString &file,
+                                  VertexVec &vertexStore)
 {
-    if (vertexStore.empty()) {
-        LoadOBJMeshIntoBuffer(file, vertexStore);
+    // Apply only vertices, if the model was already loaded before.
+    if (!vertexStore.empty()) {
+        ApplyVertices(vertexStore);
+        sl_ModelLoaded(name);
+        return;
     }
 
-    ApplyVertices(vertexStore);
-    emit si_StateUpdated(QString("Model \"") + name + "\" loaded.");
+    loadingWidget->Show("Loading \"" + name + "\"");
 
-    selectedMeshName = name;
+    // Async Load Model
+    auto *loader = new OpenGLWidget_ModelLoader(this, name, file, vertexStore);
+    loader->moveToThread(&modelLoaderThread);
+
+    connect(&modelLoaderThread, &QThread::finished, loader, &QObject::deleteLater);
+    connect(this, SIGNAL(si_TriggerModelLoading()), loader, SLOT(sl_Load()));
+
+    connect(loader, SIGNAL(si_ModelLoaded(const QString&)),
+            this, SLOT(sl_ModelLoaded(const QString&)));
+
+    modelLoaderThread.start();
+    emit si_TriggerModelLoading();
 }
 
 void OpenGLWidget::LoadOBJMeshIntoBuffer(const QString &file, VertexVec &buffer) {
@@ -760,9 +865,9 @@ void OpenGLWidget::LoadOBJMeshIntoBuffer(const QString &file, VertexVec &buffer)
 }
 
 void OpenGLWidget::ApplyVertices(const VertexVec &newVertices) {
+    modelLoaderMutex.lock();
     vertices = newVertices;
-    InitVAO();
-    repaint();
+    modelLoaderMutex.unlock();
 }
 
 void OpenGLWidget::CacheVertices() {
@@ -772,6 +877,7 @@ void OpenGLWidget::CacheVertices() {
 void OpenGLWidget::ApplyVerticesFromCache() {
     ApplyVertices(vertexCache);
     vertexCache.clear();
+    UpdateVAOAndRepaint();
 }
 
 GLfloat* OpenGLWidget::GetModelMatrix() {
@@ -843,4 +949,14 @@ void OpenGLWidget::ReleaseTextures() {
     if (slot1Texture) slot1Texture->release();
     if (slot2Texture) slot2Texture->release();
     if (slot3Texture) slot3Texture->release();
+}
+
+void OpenGLWidget::LinkProgramAndRepaint() {
+    glLinkProgram(program);
+    UpdateVAOAndRepaint();
+}
+
+void OpenGLWidget::UpdateVAOAndRepaint() {
+    InitVAO();
+    repaint();
 }

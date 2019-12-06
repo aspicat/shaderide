@@ -37,7 +37,8 @@
 #include "OpenGLWidget.hpp"
 #include "LogOutputWidget.hpp"
 #include "Widgets/FileTabWidget.hpp"
-#include "AboutDialog.hpp"
+#include "src/GUI/Dialogs/SettingsDialog.hpp"
+#include "src/GUI/Dialogs/AboutDialog.hpp"
 #include "src/GL/Shader.hpp"
 #include "src/Project/ShaderProject.hpp"
 
@@ -47,8 +48,10 @@ using namespace ShaderIDE::Project;
 namespace ShaderIDE::GUI {
 
     class MainWindow : public QMainWindow {
-        Q_OBJECT
+    Q_OBJECT
+        friend class SettingsDialog;
         static constexpr const char* CONFIG_FILE_NAME = "config.json";
+        static constexpr const char* SETTINGS_FILE_NAME = "settings.json";
 
     public:
         explicit MainWindow(QWidget *parent = nullptr);
@@ -67,24 +70,27 @@ namespace ShaderIDE::GUI {
         void sl_UpdateStatusBarMessage(const QString &message);
 
         // Menu / File
-        void sl_Menu_FileNewProject();
-        void sl_Menu_FileOpenProject();
-        void sl_Menu_FileSaveProject();
-        void sl_Menu_FileSaveProjectAs();
-        void sl_Menu_FileExportShaders();
-        void sl_Menu_FileExit();
+        void sl_Menu_File_NewProject();
+        void sl_Menu_File_OpenProject();
+        void sl_Menu_File_SaveProject();
+        void sl_Menu_File_SaveProjectAs();
+        void sl_Menu_File_ExportShaders();
+        void sl_Menu_File_Settings();
+        void sl_Menu_File_Exit();
 
         // Menu / View
-        void sl_Menu_ViewSwapLayout();
-        void sl_Menu_ViewResetLayout();
-        void sl_Menu_ViewSaveLayout();
-        void sl_Menu_ViewToggleLog();
+        void sl_Menu_View_SwapLayout();
+        void sl_Menu_View_ResetLayout();
+        void sl_Menu_View_SaveLayout();
+        void sl_Menu_View_ToggleLog();
 
         // Menu / Code
-        void sl_Menu_CodeCompile();
+        void sl_Menu_Code_Compile();
+        void sl_Menu_Code_ToggleRealtimeCompilation();
+        void sl_Menu_Code_ToggleWordWrap();
 
         // Menu / Help
-        void sl_Menu_HelpAbout();
+        void sl_Menu_Help_About();
 
     protected:
         void closeEvent(QCloseEvent *event) override;
@@ -93,8 +99,13 @@ namespace ShaderIDE::GUI {
         static QString GetConfigPath();
         static bool AppConfigDirExists();
 
-        QJsonObject config;
+        // Settings
+        int numSamples;
 
+        QJsonObject config; // Layout
+        QJsonObject settings;
+
+        // Widgets
         QWidget *centralWidget;
         QVBoxLayout *verticalLayout;
         QSplitter *verticalSplitter;
@@ -103,6 +114,7 @@ namespace ShaderIDE::GUI {
         OpenGLWidget *openGLWidget;
         FileTabWidget *fileTabWidget;
         LogOutputWidget *logOutputWidget;
+        SettingsDialog *settingsDialog;
         AboutDialog *aboutDialog;
         QStatusBar *statusBar;
 
@@ -113,6 +125,7 @@ namespace ShaderIDE::GUI {
         QAction *saveProjectAction;
         QAction *saveProjectAsAction;
         QAction *exportShadersAction;
+        QAction *settingsAction;
         QAction *exitAction;
 
         // View Menu
@@ -125,6 +138,8 @@ namespace ShaderIDE::GUI {
         // Code Menu
         QMenu *codeMenu;
         QAction *compileCodeAction;
+        QAction *toggleRealtimeCompilationAction;
+        QAction *toggleWordWrapAction;
 
         // Help Menu
         QMenu *helpMenu;
@@ -143,6 +158,7 @@ namespace ShaderIDE::GUI {
         void InitOpenGLWidget();
         void InitFileTabWidget();
         void InitLogOutputWidget();
+        void InitSettingsDialog();
         void InitAboutDialog();
         void InitStatusBar();
         void InitShaderProject();
@@ -162,14 +178,17 @@ namespace ShaderIDE::GUI {
 
         // Project
         void ResetProject();
-        void ApplyProjectFromUI();
-        void ApplyUIFromProject();
+        bool ApplyProjectFromUI();
+        bool ApplyUIFromProject();
         void ExportShaders(const QUrl &directory);
 
-        // Config
+        // Layout Config & Settings
         void CreateAppConfigDirectory();
-        void StoreConfig();
-        void LoadConfig();
+        void SaveLayoutConfig();
+        void LoadLayoutConfig();
+
+        void SaveSettings();
+        void LoadSettings();
     };
 }
 

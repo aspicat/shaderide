@@ -1,5 +1,5 @@
 /**
- * AboutDialog Class
+ * TextureBrowser Style Header
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,40 +26,40 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GUI_ABOUTDIALOG_HPP
-#define SHADERIDE_GUI_ABOUTDIALOG_HPP
+#ifndef SHADERIDE_GUI_STYLE_TEXTUREBROWSERSTYLE_HPP
+#define SHADERIDE_GUI_STYLE_TEXTUREBROWSERSTYLE_HPP
 
-#include <QDialog>
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QPushButton>
-#include <QSpacerItem>
+#include "src/GUI/StyleSheets.hpp"
 
-namespace ShaderIDE::GUI {
+#ifdef WIN32
+#define STYLE_TEXTUREBROWSER_FONT "Consolas"
+#else
+#define STYLE_TEXTUREBROWSER_FONT "DejaVu Sans Mono"
+#endif
 
-    class AboutDialog : public QDialog {
-    public:
-        explicit AboutDialog(QWidget *parent = nullptr);
-        ~AboutDialog() override;
+#define STYLE_TEXTUREBROWSER \
+    "#TextureBrowser {" \
+    "    background: transparent;" \
+    "}"
 
-    private:
-        QVBoxLayout *mainLayout;
-        QLabel *logoLabel;
-        QLabel *versionLabel;
-        QLabel *copyrightLabel;
-        QLabel *licenseLinkLabel;
-        QSpacerItem *bottomLayoutSpacer;
+#define STYLE_TEXTUREBROWSERIMAGE \
+    "#TextureBrowserImage {" \
+    "    border: none;" \
+    "    border-radius: 4px;" \
+    "    background: rgba(30, 30, 30, 0.5);" \
+    "}" \
+    "#TextureBrowserImage::hover {" \
+    "    border: 2px solid #233151;" \
+    "    background: #233151;" \
+    "}" \
+    "QLabel {" \
+    "    color: #fafafa;" \
+    "    background: transparent;" \
+    "}"
 
-        QHBoxLayout *bottomLayout;
-        QLabel *linkLabel;
-        QPushButton *closeButton;
+#define STYLE_TEXTUREBROWSERIMAGE_LABEL \
+    "color: #656565;"
 
-        void InitLayout();
-        void InitBottomLayout();
+#define STYLE_TEXTUREBROWSERIMAGE_NOIMAGE_TEXT "NO IMAGE"
 
-        void DestroyLayout();
-        void DestroyBottomLayout();
-    };
-}
-
-#endif // SHADERIDE_GUI_ABOUTDIALOG_HPP
+#endif // SHADERIDE_GUI_STYLE_TEXTUREBROWSERSTYLE_HPP

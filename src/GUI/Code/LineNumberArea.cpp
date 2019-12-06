@@ -32,7 +32,7 @@
 #include <QResizeEvent>
 #include "LineNumberArea.hpp"
 #include "src/GUI/Code/CodeEditor.hpp"
-#include "src/GUI/StyleSheets.hpp"
+#include "src/GUI/Style/CodeEditorStyle.hpp"
 
 using namespace ShaderIDE::GUI;
 

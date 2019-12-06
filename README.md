@@ -4,7 +4,7 @@
 # Shader IDE
 Simple GLSL code editor with realtime 3D preview.
 
-[screeny]: assets/app/screenshot_v1_1_0.jpg "ShaderIDE Screenshot"
+[screeny]: assets/app/screenshot_v1_2_0.jpg "ShaderIDE Screenshot"
 ![alt text][screeny]
 
 The project was initialized during OpenGL learning sessions to have a better
@@ -15,9 +15,6 @@ to extend the application and make backups of my shader projects.
 
 ## Warning
 The application is in a very early state. Upcoming changes may break your projects!
-
-It is planned to switch from boost::serialization to plain JSON as project file format for the next release. You can though export
-your GLSL code via "File/Export Shaders..." and import later in newer versions.
 
 ## Releases
 See CHANGELOG.md for detailed release notes.
@@ -32,12 +29,12 @@ See CMakeLists.txt for further instructions.
 
 ## Usage
 The whole editor should be quite intuitive. On the left side you can find the
-3D preview, on the right side is the code section. On the bottom you can find
-the log output.
+3D preview, on the other side is the code section. The output log is positioned at the
+bottom of the main window.
 
 The 3D viewport can be controlled with the mouse. Left mouse button rotates the object.
-Keep the wheel (middle mouse button) pressed and move up and down the mouse to translate
-the model back and forth. With the right mouse button clicked you can move the camera.
+Keep middle mouse pressed and move up and down the mouse to translate
+the model back and forth. With the right mouse button pressed you can move the camera.
 
 Note the gear icon at the bottom right corner of the code editor. You may
 select textures (tex0 - tex3) for the four predefined sampler2D uniforms, which
@@ -46,15 +43,16 @@ versions could be more than the four predefined slots, so you can add them
 dynamically as needed.
 
 ### Keyboard Shortcuts
-| Command      | Description                                       |
-|--------------|---------------------------------------------------|
-| Ctrl + R     | Compile shader code and apply to 3D scene.        |
-| Ctrl + S     | Save currently opened project.                    |
-| Ctrl + L     | Toggle log output view.                           |
-| Ctrl + -/+   | Zoom text in code editors.                        |
+| Command           | Description                                       |
+|-------------------|---------------------------------------------------|
+| Ctrl + R          | Compile shader code and apply to 3D scene.        |
+| Ctrl + Alt + R    | Toggle realtime compilation.                      |
+| Ctrl + S          | Save currently opened project.                    |
+| Ctrl + L          | Toggle log output view.                           |
+| Ctrl + -/+        | Zoom text in code editors.                        |
 
 ## Shader Variables
-The following predefined shader variables are supported as of version 1.1.0:
+The following predefined shader variables are supported as of version 1.2.0:
 
 ### Vertex Shader
 * **in vec3 position**

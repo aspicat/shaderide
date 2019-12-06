@@ -1,5 +1,5 @@
 /**
- * EnvSettingsPanel Class
+ * CodeEditor Style Header
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,44 +26,38 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GUI_WIDGETS_ENVSETTINGSPANEL_HPP
-#define SHADERIDE_GUI_WIDGETS_ENVSETTINGSPANEL_HPP
+#ifndef SHADERIDE_GUI_STYLE_CODEEDITORSTYLE_HPP
+#define SHADERIDE_GUI_STYLE_CODEEDITORSTYLE_HPP
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QFormLayout>
-#include "TextureBrowser.hpp"
+#include "src/GUI/StyleSheets.hpp"
 
-namespace ShaderIDE::GUI {
+// Code Editor
+#define STYLE_CODEEDITOR \
+    "QPlainTextEdit {" \
+    "    border: none;" \
+    "    color: #eaeaea;" \
+    "    background: rgb(30, 30, 30);" \
+    "}" \
+    STYLE_SCROLLBAR
 
-    class EnvSettingsPanel : public QWidget {
-    Q_OBJECT
-    public:
-        explicit EnvSettingsPanel(QWidget *parent = nullptr);
-        ~EnvSettingsPanel() override;
+#define STYLE_CODEEDITOR_FONT_SIZE 10
+#define STYLE_CODEEDITOR_HIGHLIGHT_COLOR QColor(38, 38, 38)
 
-        TextureBrowser* GetTextureBrowser();
+#ifdef WIN32
+#define STYLE_CODEEDITOR_FONT "Consolas"
+#else
+#define STYLE_CODEEDITOR_FONT "DejaVu Sans Mono"
+#endif
 
-        void Toggle();
-        void Hide();
+// Line Number Area
+#define STYLE_LINENUMBERAREA_BG_COLOR QColor(40, 40, 40, 255)
+#define STYLE_LINENUMBERAREA_FONT_COLOR QColor(80, 80, 80)
+#define STYLE_LINENUMBERAREA_FONT_HIGHLIGHT_COLOR QColor("#4DDCFE")
 
-        void ResetUI();
+#if WIN32
+#define STYLE_LINENUMBERAREA_FONT "Consolas"
+#else
+#define STYLE_LINENUMBERAREA_FONT "DejaVu Sans Mono"
+#endif
 
-    protected:
-        void paintEvent(QPaintEvent *event) override;
-
-    private:
-        QVBoxLayout *mainLayout;
-        TextureBrowser *textureBrowser;
-
-        void InitLayout();
-        void InitTextureBrowser();
-
-        void DestroyTextureBrowser();
-        void DestroyLayout();
-
-        void LoadTextureBrowserSlots();
-    };
-}
-
-#endif // SHADERIDE_GUI_WIDGETS_ENVSETTINGSPANEL_HPP
+#endif // SHADERIDE_GUI_STYLE_CODEEDITORSTYLE_HPP

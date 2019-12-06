@@ -30,7 +30,7 @@
 #include "AboutDialog.hpp"
 #include "src/Core/ApplicationDefaults.hpp"
 #include "src/Core/Memory.hpp"
-#include "src/GUI/StyleSheets.hpp"
+#include "src/GUI/Style/AboutDialogStyle.hpp"
 #include "src/version.hpp"
 
 using namespace ShaderIDE::GUI;
@@ -57,6 +57,8 @@ AboutDialog::~AboutDialog() {
 }
 
 void AboutDialog::InitLayout() {
+
+    // Window
     setWindowTitle("About");
     setWindowFlags(Qt::FramelessWindowHint);
     setFixedWidth(512 + 20); // Logo width + content margin
@@ -79,8 +81,8 @@ void AboutDialog::InitLayout() {
     mainLayout->addWidget(logoLabel, 0, Qt::AlignTop);
 
     // Version
-    versionLabel = new QLabel();
-    versionLabel->setText(QString("Version ") + SHADERIDE_VERSION);
+    auto versionText = QString("Version ") + SHADERIDE_VERSION;
+    versionLabel = new QLabel(versionText);
     versionLabel->setContentsMargins(10, 10, 10, 20);
 
     auto versionLabelFont = versionLabel->font();
@@ -151,6 +153,12 @@ void AboutDialog::InitBottomLayout() {
             this, SLOT(close()));
 }
 
+void AboutDialog::DestroyBottomLayout() {
+    Memory::Release(closeButton);
+    Memory::Release(linkLabel);
+    Memory::Release(bottomLayout);
+}
+
 void AboutDialog::DestroyLayout() {
     Memory::Release(bottomLayoutSpacer);
     Memory::Release(licenseLinkLabel);
@@ -158,10 +166,4 @@ void AboutDialog::DestroyLayout() {
     Memory::Release(versionLabel);
     Memory::Release(logoLabel);
     Memory::Release(mainLayout);
-}
-
-void AboutDialog::DestroyBottomLayout() {
-    Memory::Release(closeButton);
-    Memory::Release(linkLabel);
-    Memory::Release(bottomLayout);
 }

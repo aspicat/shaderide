@@ -27,6 +27,7 @@
  */
 
 #include <QDebug>
+#include <QSurfaceFormat>
 #include <QMenuBar>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -44,51 +45,61 @@
 using namespace ShaderIDE::GUI;
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow           (parent),
-      centralWidget         (nullptr),
-      verticalLayout        (nullptr),
-      verticalSplitter      (nullptr),
-      mainSplitter          (nullptr),
-      menuBar               (nullptr),
-      openGLWidget          (nullptr),
-      fileTabWidget         (nullptr),
-      logOutputWidget       (nullptr),
-      aboutDialog           (nullptr),
-      statusBar             (nullptr),
-      fileMenu              (nullptr),
-      newProjectAction      (nullptr),
-      openProjectAction     (nullptr),
-      saveProjectAction     (nullptr),
-      saveProjectAsAction   (nullptr),
-      exportShadersAction   (nullptr),
-      exitAction            (nullptr),
-      viewMenu              (nullptr),
-      swapLayoutAction      (nullptr),
-      resetLayoutAction     (nullptr),
-      saveLayoutAction      (nullptr),
-      toggleLogAction       (nullptr),
-      codeMenu              (nullptr),
-      compileCodeAction     (nullptr),
-      helpMenu              (nullptr),
-      aboutAction           (nullptr),
-      shaderProject         (nullptr)
+    : QMainWindow                       (parent),
+      numSamples                        (SHADERIDE_SURFACEFORMAT_NUM_SAMPLES),
+      centralWidget                     (nullptr),
+      verticalLayout                    (nullptr),
+      verticalSplitter                  (nullptr),
+      mainSplitter                      (nullptr),
+      menuBar                           (nullptr),
+      openGLWidget                      (nullptr),
+      fileTabWidget                     (nullptr),
+      logOutputWidget                   (nullptr),
+      settingsDialog                    (nullptr),
+      aboutDialog                       (nullptr),
+      statusBar                         (nullptr),
+      fileMenu                          (nullptr),
+      newProjectAction                  (nullptr),
+      openProjectAction                 (nullptr),
+      saveProjectAction                 (nullptr),
+      saveProjectAsAction               (nullptr),
+      exportShadersAction               (nullptr),
+      settingsAction                    (nullptr),
+      exitAction                        (nullptr),
+      viewMenu                          (nullptr),
+      swapLayoutAction                  (nullptr),
+      resetLayoutAction                 (nullptr),
+      saveLayoutAction                  (nullptr),
+      toggleLogAction                   (nullptr),
+      codeMenu                          (nullptr),
+      compileCodeAction                 (nullptr),
+      toggleRealtimeCompilationAction   (nullptr),
+      toggleWordWrapAction              (nullptr),
+      helpMenu                          (nullptr),
+      aboutAction                       (nullptr),
+      shaderProject                     (nullptr)
 {
-    resize(STYLE_MAINWINDOW_WIDTH, STYLE_MAINWINDOW_HEIGHT);
-    setStyleSheet(STYLE_MAINWINDOW);
+    LoadSettings();
+
+    // Apply default surface format for Anti-Aliasing.
+    QSurfaceFormat surfaceFormat;
+    surfaceFormat.setSamples(numSamples);
+    QSurfaceFormat::setDefaultFormat(surfaceFormat);
 
     InitLayout();
     InitMenuBar();
     InitOpenGLWidget();
     InitFileTabWidget();
     InitLogOutputWidget();
+    InitSettingsDialog();
     InitAboutDialog();
     InitStatusBar();
     InitShaderProject();
 
     UpdateWindowTitle();
 
-    // Load Configuration
-    LoadConfig();
+    // Load Layout Config
+    LoadLayoutConfig();
 
     sl_UpdateStatusBarMessage("Ready.");
 }
@@ -138,11 +149,18 @@ void MainWindow::sl_GLInitialized() {
     if (fileTabWidget->CodeEditorsReady()) {
         fileTabWidget->SetVertexShaderSource(GLSL_DEFAULT_VS_SOURCE);
         fileTabWidget->SetFragmentShaderSource(GLSL_DEFAULT_FS_SOURCE);
-        openGLWidget->sl_CompileShaders();
+
+        // Only compile at first initialization if realtime compilation
+        // is not enabled, otherwise this step is redundant.
+        if (!openGLWidget->RealtimeCompilation()) {
+            openGLWidget->sl_CompileShaders();
+        }
     }
 }
 
 void MainWindow::sl_CompileSuccess(const QString &message) {
+    fileTabWidget->GetVSCodeEditor()->ResetErrorLines();
+    fileTabWidget->GetFSCodeEditor()->ResetErrorLines();
     logOutputWidget->LogSuccessMessage(message);
     sl_UpdateStatusBarMessage(message);
 }
@@ -158,13 +176,13 @@ void MainWindow::sl_CompileError(GLSLCompileError &error) {
     //      for shader types.
     if (error.File() == "VS") {
         auto *vsCodeEditor = fileTabWidget->GetVSCodeEditor();
-        vsCodeEditor->HighlightLine(error.Line(), highlightColor);
+        vsCodeEditor->HighlightErrorLine(error.Line(), highlightColor);
         fileTabWidget->setCurrentWidget(vsCodeEditor);
     }
 
     if (error.File() == "FS") {
         auto *fsCodeEditor = fileTabWidget->GetFSCodeEditor();
-        fsCodeEditor->HighlightLine(error.Line(), highlightColor);
+        fsCodeEditor->HighlightErrorLine(error.Line(), highlightColor);
         fileTabWidget->setCurrentWidget(fsCodeEditor);
     }
 }
@@ -178,7 +196,7 @@ void MainWindow::sl_UpdateStatusBarMessage(const QString &message) {
     statusBar->showMessage(message, SHADERIDE_STATUSBAR_TIMEOUT);
 }
 
-void MainWindow::sl_Menu_FileNewProject() {
+void MainWindow::sl_Menu_File_NewProject() {
     auto mbButton = QMessageBox::question(
             nullptr,
             "New Project",
@@ -191,7 +209,7 @@ void MainWindow::sl_Menu_FileNewProject() {
     }
 }
 
-void MainWindow::sl_Menu_FileOpenProject() {
+void MainWindow::sl_Menu_File_OpenProject() {
     QString path = QFileDialog::getOpenFileName(
             this,
             "Open Project...",
@@ -200,26 +218,29 @@ void MainWindow::sl_Menu_FileOpenProject() {
     );
 
     try {
-        shaderProject = ShaderProject::Load(path.toStdString());
-        ApplyUIFromProject();
+        shaderProject = ShaderProject::LoadFromJSON(path.toStdString());
+        shaderProject->SetPath(path.toStdString());
+
+        if (ApplyUIFromProject()) {
+            sl_UpdateStatusBarMessage(QString("Shader project loaded: ") + path);
+        }
 
     } catch (GeneralException &e) {
+        sl_GeneralError(e);
         return;
     }
-
-    sl_UpdateStatusBarMessage(QString("Shader project loaded: ") + path);
 }
 
-void MainWindow::sl_Menu_FileSaveProject() {
+void MainWindow::sl_Menu_File_SaveProject() {
     try {
         ApplyProjectFromUI();
-        shaderProject->Save();
-        sl_Menu_CodeCompile();
-        sl_UpdateStatusBarMessage(QString("Shader project saved."));
+        shaderProject->SaveAsJSON();
+        sl_Menu_Code_Compile();
+        sl_UpdateStatusBarMessage("Shader project saved.");
 
     } catch (ProjectException &e) {
         if (e.Code() == ProjectException::ExceptionCode::PATH_EMPTY) {
-            sl_Menu_FileSaveProjectAs();
+            sl_Menu_File_SaveProjectAs();
             return;
         }
 
@@ -227,7 +248,7 @@ void MainWindow::sl_Menu_FileSaveProject() {
     }
 }
 
-void MainWindow::sl_Menu_FileSaveProjectAs() {
+void MainWindow::sl_Menu_File_SaveProjectAs() {
     QString path = QFileDialog::getSaveFileName(
             this,
             "Save Project as...",
@@ -242,10 +263,10 @@ void MainWindow::sl_Menu_FileSaveProjectAs() {
     try {
         ApplyProjectFromUI();
         shaderProject->SetPath(path.toStdString());
-        shaderProject->Save();
+        shaderProject->SaveAsJSON();
         ApplyUIFromProject();
 
-        sl_Menu_CodeCompile();
+        sl_Menu_Code_Compile();
         sl_UpdateStatusBarMessage(QString("Shader project saved to ") + path);
 
     } catch (ProjectException &e) {
@@ -253,7 +274,7 @@ void MainWindow::sl_Menu_FileSaveProjectAs() {
     }
 }
 
-void MainWindow::sl_Menu_FileExportShaders() {
+void MainWindow::sl_Menu_File_ExportShaders() {
     auto directoryURL = QFileDialog::getExistingDirectoryUrl();
 
     if (!directoryURL.isEmpty()) {
@@ -261,46 +282,75 @@ void MainWindow::sl_Menu_FileExportShaders() {
     }
 }
 
-void MainWindow::sl_Menu_FileExit() {
+void MainWindow::sl_Menu_File_Settings() {
+    settingsDialog->show();
+}
+
+void MainWindow::sl_Menu_File_Exit() {
     auto mbButton = QMessageBox::question(
             nullptr,
             "Exit",
             "All unsaved changes will be lost.\n\nContinue?"
     );
 
-    if (mbButton == QMessageBox::Button::Yes) {
-        QApplication::instance()->quit();
+    if (mbButton != QMessageBox::Yes) {
+        return;
     }
+
+    // Disable realtime compilation before closing, to
+    // avoid another compilation step after the code editors
+    // were cleared by Qt. This caused an error in the
+    // log output widget, since the editors trigger the
+    // compilation process with some log output, but the log
+    // widget is destroyed first (see Destructor).
+    openGLWidget->SetRealtimeCompilationEnabled(false);
+
+    QApplication::instance()->quit();
 }
 
-void MainWindow::sl_Menu_ViewSwapLayout() {
+void MainWindow::sl_Menu_View_SwapLayout() {
     SwapLayout();
 }
 
-void MainWindow::sl_Menu_ViewResetLayout() {
+void MainWindow::sl_Menu_View_ResetLayout() {
     ResetLayout();
 }
 
-void MainWindow::sl_Menu_ViewSaveLayout() {
-    StoreConfig();
+void MainWindow::sl_Menu_View_SaveLayout() {
+    SaveLayoutConfig();
 }
 
-void MainWindow::sl_Menu_ViewToggleLog() {
+void MainWindow::sl_Menu_View_ToggleLog() {
     logOutputWidget->setVisible(!logOutputWidget->isVisible());
+    toggleLogAction->setIconVisibleInMenu(logOutputWidget->isVisible());
+    SaveLayoutConfig();
 }
 
-void MainWindow::sl_Menu_CodeCompile() {
-    fileTabWidget->GetVSCodeEditor()->ResetHighlightedLines();
-    fileTabWidget->GetFSCodeEditor()->ResetHighlightedLines();
+void MainWindow::sl_Menu_Code_Compile() {
+    fileTabWidget->GetVSCodeEditor()->ResetErrorLines();
+    fileTabWidget->GetFSCodeEditor()->ResetErrorLines();
     openGLWidget->sl_CompileShaders();
 }
 
-void MainWindow::sl_Menu_HelpAbout() {
+void MainWindow::sl_Menu_Code_ToggleRealtimeCompilation() {
+    openGLWidget->ToggleRealtimeCompilation();
+    toggleRealtimeCompilationAction->setIconVisibleInMenu(openGLWidget->RealtimeCompilation());
+    SaveLayoutConfig();
+}
+
+void MainWindow::sl_Menu_Code_ToggleWordWrap() {
+    fileTabWidget->ToggleWordWrap();
+    toggleWordWrapAction->setIconVisibleInMenu(fileTabWidget->WordWrap());
+    SaveLayoutConfig();
+}
+
+void MainWindow::sl_Menu_Help_About() {
     aboutDialog->show();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-    sl_Menu_FileExit();
+    event->ignore();
+    sl_Menu_File_Exit();
 }
 
 QString MainWindow::GetConfigPath() {
@@ -318,6 +368,8 @@ bool MainWindow::AppConfigDirExists() {
 }
 
 void MainWindow::InitLayout() {
+    resize(STYLE_MAINWINDOW_WIDTH, STYLE_MAINWINDOW_HEIGHT);
+    setStyleSheet(STYLE_MAINWINDOW);
 
     // Central Widget
     centralWidget = new QWidget(this);
@@ -361,6 +413,7 @@ void MainWindow::InitMenuFile() {
     saveProjectAction    = new QAction("Save Project");
     saveProjectAsAction  = new QAction("Save Project as...");
     exportShadersAction  = new QAction("Export Shaders...");
+    settingsAction       = new QAction("Settings...");
     exitAction           = new QAction("Exit");
 
     saveProjectAction->setShortcut(QKeySequence::Save);
@@ -373,25 +426,30 @@ void MainWindow::InitMenuFile() {
     fileMenu->addSeparator();
     fileMenu->addAction(exportShadersAction);
     fileMenu->addSeparator();
+    fileMenu->addAction(settingsAction);
+    fileMenu->addSeparator();
     fileMenu->addAction(exitAction);
 
     connect(newProjectAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_FileNewProject()));
+            this, SLOT(sl_Menu_File_NewProject()));
 
     connect(openProjectAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_FileOpenProject()));
+            this, SLOT(sl_Menu_File_OpenProject()));
 
     connect(saveProjectAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_FileSaveProject()));
+            this, SLOT(sl_Menu_File_SaveProject()));
 
     connect(saveProjectAsAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_FileSaveProjectAs()));
+            this, SLOT(sl_Menu_File_SaveProjectAs()));
 
     connect(exportShadersAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_FileExportShaders()));
+            this, SLOT(sl_Menu_File_ExportShaders()));
+
+    connect(settingsAction, SIGNAL(triggered(bool)),
+            this, SLOT(sl_Menu_File_Settings()));
 
     connect(exitAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_FileExit()));
+            this, SLOT(sl_Menu_File_Exit()));
 }
 
 void MainWindow::InitMenuView() {
@@ -401,8 +459,10 @@ void MainWindow::InitMenuView() {
     swapLayoutAction    = new QAction("Swap Layout");
     resetLayoutAction   = new QAction("Reset Layout");
     saveLayoutAction    = new QAction("Save Layout");
-    toggleLogAction     = new QAction("Toggle Log");
 
+    toggleLogAction = new QAction("Toggle Log");
+    toggleLogAction->setIcon(QIcon(":/icons/icon-menu-check.png"));
+    toggleLogAction->setIconVisibleInMenu(false);
     toggleLogAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_L));
 
     viewMenu->addAction(swapLayoutAction);
@@ -412,28 +472,53 @@ void MainWindow::InitMenuView() {
     viewMenu->addAction(toggleLogAction);
 
     connect(swapLayoutAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_ViewSwapLayout()));
+            this, SLOT(sl_Menu_View_SwapLayout()));
 
     connect(resetLayoutAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_ViewResetLayout()));
+            this, SLOT(sl_Menu_View_ResetLayout()));
 
     connect(saveLayoutAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_ViewSaveLayout()));
+            this, SLOT(sl_Menu_View_SaveLayout()));
 
     connect(toggleLogAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_ViewToggleLog()));
+            this, SLOT(sl_Menu_View_ToggleLog()));
 }
 
 void MainWindow::InitMenuCode() {
     codeMenu = new QMenu("&Code");
     menuBar->addMenu(codeMenu);
 
+    // Compile
     compileCodeAction = new QAction("Compile");
     compileCodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
-    codeMenu->addAction(compileCodeAction);
 
+    // Realtime Compilation
+    toggleRealtimeCompilationAction = new QAction("Toggle Realtime Compilation");
+    toggleRealtimeCompilationAction->setIcon(QIcon(":/icons/icon-menu-check.png"));
+    toggleRealtimeCompilationAction->setIconVisibleInMenu(false);
+    toggleRealtimeCompilationAction->setShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_R));
+
+    // Word Wrap
+    toggleWordWrapAction = new QAction("Toggle Word Wrap");
+    toggleWordWrapAction->setIcon(QIcon(":/icons/icon-menu-check.png"));
+    toggleWordWrapAction->setIconVisibleInMenu(false);
+
+    // Add Actions
+    codeMenu->addAction(compileCodeAction);
+    codeMenu->addSeparator();
+    codeMenu->addAction(toggleRealtimeCompilationAction);
+    codeMenu->addSeparator();
+    codeMenu->addAction(toggleWordWrapAction);
+
+    // Signals & Slots
     connect(compileCodeAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_CodeCompile()));
+            this, SLOT(sl_Menu_Code_Compile()));
+
+    connect(toggleRealtimeCompilationAction, SIGNAL(triggered(bool)),
+            this, SLOT(sl_Menu_Code_ToggleRealtimeCompilation()));
+
+    connect(toggleWordWrapAction, SIGNAL(triggered(bool)),
+            this, SLOT(sl_Menu_Code_ToggleWordWrap()));
 }
 
 void MainWindow::InitMenuHelp() {
@@ -444,7 +529,7 @@ void MainWindow::InitMenuHelp() {
     helpMenu->addAction(aboutAction);
 
     connect(aboutAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_HelpAbout()));
+            this, SLOT(sl_Menu_Help_About()));
 }
 
 void MainWindow::InitOpenGLWidget() {
@@ -474,10 +559,6 @@ void MainWindow::InitFileTabWidget() {
 
     // File Tab Widget
     fileTabWidget = new FileTabWidget();
-    fileTabWidget->setMinimumWidth(400);
-    fileTabWidget->resize(800, fileTabWidget->height());
-    fileTabWidget->setContentsMargins(0, 0, 0, 0);
-    fileTabWidget->setStyleSheet(STYLE_TABWIDGET);
     mainSplitter->addWidget(fileTabWidget);
 
     // Disable Collapsing
@@ -512,6 +593,11 @@ void MainWindow::InitLogOutputWidget() {
     verticalSplitter->addWidget(logOutputWidget);
     verticalSplitter->setCollapsible(verticalSplitter->indexOf(logOutputWidget), false);
     verticalSplitter->setSizes(QList<int>({ height(), 120 }));
+    toggleLogAction->setIconVisibleInMenu(logOutputWidget->isVisible());
+}
+
+void MainWindow::InitSettingsDialog() {
+    settingsDialog = new SettingsDialog(this);
 }
 
 void MainWindow::InitAboutDialog() {
@@ -543,6 +629,8 @@ void MainWindow::DestroyMenuBar() {
     Memory::Release(helpMenu);
 
     // Code Menu
+    Memory::Release(toggleWordWrapAction);
+    Memory::Release(toggleRealtimeCompilationAction);
     Memory::Release(compileCodeAction);
     Memory::Release(codeMenu);
 
@@ -555,6 +643,7 @@ void MainWindow::DestroyMenuBar() {
 
     // File Menu
     Memory::Release(exitAction);
+    Memory::Release(settingsAction);
     Memory::Release(exportShadersAction);
     Memory::Release(saveProjectAsAction);
     Memory::Release(saveProjectAction);
@@ -565,7 +654,6 @@ void MainWindow::DestroyMenuBar() {
 
 void MainWindow::DestroyLayout() {
     Memory::Release(statusBar);
-    Memory::Release(aboutDialog);
     Memory::Release(logOutputWidget);
     Memory::Release(fileTabWidget);
     Memory::Release(openGLWidget);
@@ -574,6 +662,9 @@ void MainWindow::DestroyLayout() {
     Memory::Release(verticalSplitter);
     Memory::Release(verticalLayout);
     Memory::Release(centralWidget);
+
+    aboutDialog->deleteLater();
+    settingsDialog->deleteLater();
 }
 
 void MainWindow::SwapLayout() {
@@ -609,6 +700,7 @@ void MainWindow::ResetLayout() {
     }
 
     logOutputWidget->setVisible(true);
+    toggleLogAction->setIconVisibleInMenu(logOutputWidget->isVisible());
 }
 
 void MainWindow::UpdateWindowTitle() {
@@ -680,16 +772,19 @@ void MainWindow::ResetProject() {
     ApplyUIFromProject();
 }
 
-void MainWindow::ApplyProjectFromUI() {
+bool MainWindow::ApplyProjectFromUI() {
     shaderProject->SetVertexShaderSource(
             fileTabWidget->VertexShaderSource().toStdString());
 
     shaderProject->SetFragmentShaderSource(
             fileTabWidget->FragmentShaderSource().toStdString());
 
-    shaderProject->SetMeshName(
-            openGLWidget->SelectedMeshName().toStdString()
-    );
+    // Ignore "Plane" mesh, which is only used by "Plane 2D" mode.
+    auto meshName = openGLWidget->SelectedMeshName().toStdString();
+
+    if (meshName != "Plane") {
+        shaderProject->SetMeshName(meshName);
+    }
 
     for (const auto &texture : fileTabWidget->GetTextureBrowser()->Images()) {
         shaderProject->SetTexturePath(
@@ -702,19 +797,24 @@ void MainWindow::ApplyProjectFromUI() {
     shaderProject->SetPlane2D(openGLWidget->Plane2D());
     shaderProject->SetModelRotation(openGLWidget->ModelRotation());
     shaderProject->SetCameraPosition(openGLWidget->CameraPosition());
+
+    return true;
 }
 
-void MainWindow::ApplyUIFromProject() {
+bool MainWindow::ApplyUIFromProject() {
     if (shaderProject == nullptr) {
-        logOutputWidget->LogErrorMessage(
-                "Could not load project. "
-        );
-
-        return;
+        auto msg = "Could not load project.";
+        logOutputWidget->LogErrorMessage(msg);
+        sl_UpdateStatusBarMessage(msg);
+        return false;
     }
 
     fileTabWidget->SetVertexShaderSource(shaderProject->VertexShaderSource().c_str());
     fileTabWidget->SetFragmentShaderSource(shaderProject->FragmentShaderSource().c_str());
+
+    if (shaderProject->Plane2D()) {
+        openGLWidget->EnablePlane2DAfterModelLoaded();
+    }
 
     openGLWidget->sl_CompileShaders();
     openGLWidget->SelectMesh(QString::fromStdString(shaderProject->MeshName()));
@@ -735,12 +835,13 @@ void MainWindow::ApplyUIFromProject() {
         fileTabWidget->GetTextureBrowser()->GetImage(slotName)->SetPath(path);
     }
 
-    openGLWidget->SetRealtime(shaderProject->Realtime());
-    openGLWidget->SetPlane2D(shaderProject->Plane2D());
+    openGLWidget->CheckRealtime(shaderProject->Realtime());
     openGLWidget->RotateModel(shaderProject->ModelRotation());
     openGLWidget->MoveCamera(shaderProject->CameraPosition());
 
     UpdateWindowTitle();
+
+    return true;
 }
 
 void MainWindow::ExportShaders(const QUrl &directory) {
@@ -792,16 +893,16 @@ void MainWindow::CreateAppConfigDirectory() {
     }
 }
 
-void MainWindow::StoreConfig() {
+void MainWindow::SaveLayoutConfig() {
     CreateAppConfigDirectory();
 
     if (!AppConfigDirExists()) {
-        auto msg = "Could not store layout, config directory not found.";
+        auto msg = "Could not save layout, app config directory not found.";
         LogMessage(msg);
         return;
     }
 
-    // Create application config file.
+    // Create layout config file.
     QFile file(GetConfigPath() + "/" + CONFIG_FILE_NAME);
 
     if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text)) {
@@ -813,13 +914,6 @@ void MainWindow::StoreConfig() {
     // Collect Variables
     config = QJsonObject();
 
-    // Window
-    QJsonObject config_window;
-    config_window["maximized"]  = isMaximized();
-    config_window["width"]      = width();
-    config_window["height"]     = height();
-    config["window"] = config_window;
-
     // Layout
     QJsonObject config_layout;
     config_layout["swapped"]     = mainSplitter->indexOf(openGLWidget) == 1; // See SwapLayout();
@@ -828,13 +922,24 @@ void MainWindow::StoreConfig() {
     config_layout["show_log"]    = logOutputWidget->isVisible();
     config["layout"] = config_layout;
 
+    // Window
+    QJsonObject config_window;
+    config_window["maximized"]  = isMaximized();
+    config_window["width"]      = width();
+    config_window["height"]     = height();
+    config["window"] = config_window;
+
+    // Code
+    QJsonObject config_code;
+    config_code["word_wrap"] = fileTabWidget->WordWrapMode();
+    config_code["realtime_compilation"] = openGLWidget->RealtimeCompilation();
+    config["code"] = config_code;
+
     QJsonDocument jsonDocument(config);
     file.write(jsonDocument.toJson());
-
-    LogMessage("Configuration saved.");
 }
 
-void MainWindow::LoadConfig() {
+void MainWindow::LoadLayoutConfig() {
     if (!AppConfigDirExists()) {
         return;
     }
@@ -842,7 +947,7 @@ void MainWindow::LoadConfig() {
     QFile file(GetConfigPath() + "/" + CONFIG_FILE_NAME);
 
     if (!file.open(QIODevice::ReadOnly)) {
-        auto msg = "Could not load application config file.";
+        auto msg = "Could not load layout config file.";
         LogMessage(msg);
         return;
     }
@@ -855,26 +960,6 @@ void MainWindow::LoadConfig() {
         return;
     }
 
-    // Window
-    if (config.find("window") != config.end()) {
-        auto config_window = config.find("window")->toObject();
-
-        // Maximized?
-        if (config_window.contains("maximized") && config_window["maximized"].toBool()) {
-            showMaximized();
-        }
-
-        // Width
-        if (config_window.contains("width")) {
-            resize(config_window["width"].toInt(), height());
-        }
-
-        // Height
-        if (config_window.contains("height")) {
-            resize(width(), config_window["height"].toInt());
-        }
-    }
-
     // Layout
     if (config.find("layout") != config.end()) {
         auto config_layout = config.find("layout")->toObject();
@@ -884,7 +969,6 @@ void MainWindow::LoadConfig() {
             SwapLayout();
         }
 
-        // TODO Splitter width does not apply in maximized window mode.
         // Width Left
         if (config_layout.contains("width_left")) {
             mainSplitter->widget(0)->resize(
@@ -903,9 +987,111 @@ void MainWindow::LoadConfig() {
 
         // Show Log
         if (config_layout.contains("show_log")) {
-            logOutputWidget->setVisible(config_layout["show_log"].toBool());
+            auto show_log = config_layout["show_log"].toBool();
+            logOutputWidget->setVisible(show_log);
+            toggleLogAction->setIconVisibleInMenu(show_log);
         }
     }
 
-    LogMessage("Configuration loaded.");
+    // Window
+    if (config.find("window") != config.end()) {
+        auto config_window = config.find("window")->toObject();
+
+        // Maximized?
+        if (config_window.contains("maximized") &&
+            config_window["maximized"].toBool()) {
+            showMaximized();
+        }
+
+        // Width
+        if (config_window.contains("width")) {
+            resize(config_window["width"].toInt(), height());
+        }
+
+        // Height
+        if (config_window.contains("height")) {
+            resize(width(), config_window["height"].toInt());
+        }
+    }
+
+    // Code
+    if (config.find("code") != config.end()) {
+        auto config_code = config.find("code")->toObject();
+
+        // Realtime Compilation
+        if (config_code.contains("realtime_compilation")) {
+            auto rtcEnabled = config_code["realtime_compilation"].toBool();
+            openGLWidget->SetRealtimeCompilationEnabled(rtcEnabled);
+            toggleRealtimeCompilationAction->setIconVisibleInMenu(rtcEnabled);
+        }
+
+        // Word Wrap
+        if (config_code.contains("word_wrap")) {
+            auto mode = static_cast<QTextOption::WrapMode>(config_code["word_wrap"].toInt());
+            fileTabWidget->SetWordWrapMode(mode);
+            toggleWordWrapAction->setIconVisibleInMenu(mode != 0);
+        }
+    }
+}
+
+void MainWindow::SaveSettings() {
+    CreateAppConfigDirectory();
+
+    if (!AppConfigDirExists()) {
+        auto msg = "Could not save settings, app config directory not found.";
+        LogMessage(msg);
+        return;
+    }
+
+    // Create settings file.
+    QFile file(GetConfigPath() + "/" + SETTINGS_FILE_NAME);
+
+    if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text)) {
+        auto msg = "Could not save settings.";
+        LogMessage(msg);
+        return;
+    }
+
+    // Collect Settings
+    settings = QJsonObject();
+
+    // Viewport
+    QJsonObject settings_viewport;
+    settings_viewport["multisampling"] = numSamples;
+    settings["viewport"] = settings_viewport;
+
+    QJsonDocument jsonDocument(settings);
+    file.write(jsonDocument.toJson());
+}
+
+void MainWindow::LoadSettings() {
+    if (!AppConfigDirExists()) {
+        return;
+    }
+
+    // Try to load an existing settings file.
+    // If not found, ignore and use previously defined default settings.
+    QFile file(GetConfigPath() + "/" + SETTINGS_FILE_NAME);
+
+    if (!file.open(QIODevice::ReadOnly)) {
+        return;
+    }
+
+    // Read settings file content.
+    auto content = file.readAll();
+    auto jsonDocument = QJsonDocument::fromJson(content);
+    settings = jsonDocument.object();
+
+    if (settings.isEmpty()) {
+        return;
+    }
+
+    // Viewport
+    if (settings.find("viewport") != settings.end()) {
+        auto settings_viewport = settings.find("viewport")->toObject();
+
+        if (settings_viewport.contains("multisampling")) {
+            numSamples = settings_viewport["multisampling"].toInt();
+        }
+    }
 }

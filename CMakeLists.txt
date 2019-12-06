@@ -1,6 +1,6 @@
 # Aspicat ShaderIDE - CMakeLists.txt
 #
-# On Windows, don't forget to tell CMAKE these directories (examples):
+# On Dialogs, don't forget to tell CMAKE these directories (examples):
 # -DCMAKE_PREFIX_PATH="C:/Qt/5.13.0/mingw73_64"
 # -DGLM_INCLUDE_DIRS="[...]/glm-0.9.9.5"
 # -DGLM_LIBRARY_DIRS="[...]/glm-0.9.9.5/lib"

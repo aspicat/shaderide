@@ -27,6 +27,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include "Mesh.hpp"
 #include "src/Core/GeneralException.hpp"
 
@@ -125,4 +126,28 @@ VertexVec Mesh::ComposedVertices() {
     }
 
     return stride;
+}
+
+std::string Mesh::ComposedVerticesString() {
+    std::stringstream stream;
+
+    for (const auto &vtx : ComposedVertices()) {
+        stream << "Vertex(";
+
+        stream << vtx.vertex.x << ", " <<
+                  vtx.vertex.y << ", " <<
+                  vtx.vertex.z << ", ";
+
+        stream << vtx.normal.x << ", " <<
+                  vtx.normal.y << ", " <<
+                  vtx.normal.z << ", ";
+
+        stream << vtx.uv.x << ", " <<
+                  vtx.uv.y << "),\n";
+    }
+
+    auto str = stream.str();
+
+    // Cut off last ",\n".
+    return str.substr(0, str.length() - 2);
 }

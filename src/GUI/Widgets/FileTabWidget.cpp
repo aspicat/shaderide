@@ -30,6 +30,7 @@
 #include <QTabBar>
 #include "FileTabWidget.hpp"
 #include "src/Core/Memory.hpp"
+#include "src/GUI/StyleSheets.hpp"
 
 using namespace ShaderIDE::GUI;
 
@@ -40,6 +41,7 @@ FileTabWidget::FileTabWidget(QWidget *parent)
       envSettingsPanel          (nullptr),
       envSettingsPanelToggle    (nullptr)
 {
+    InitLayout();
     InitCodeEditors();
     InitEnvSettingsPanel();
 
@@ -70,6 +72,27 @@ void FileTabWidget::SetFragmentShaderSource(const QString &source) {
 
 QString FileTabWidget::FragmentShaderSource() {
     return fsCodeEditor->toPlainText();
+}
+
+void FileTabWidget::ToggleWordWrap() {
+    vsCodeEditor->ToggleWordWrap();
+    fsCodeEditor->ToggleWordWrap();
+}
+
+void FileTabWidget::SetWordWrapMode(QTextOption::WrapMode &mode) {
+    vsCodeEditor->setWordWrapMode(mode);
+    fsCodeEditor->setWordWrapMode(mode);
+}
+
+QTextOption::WrapMode FileTabWidget::WordWrapMode() {
+
+    // Word wrap mode is equal for all code editors,
+    // only one code editor word wrap mode required here.
+    return vsCodeEditor->wordWrapMode();
+}
+
+bool FileTabWidget::WordWrap() {
+    return WordWrapMode() == QTextOption::WordWrap;
 }
 
 CodeEditor* FileTabWidget::GetVSCodeEditor() {
@@ -108,6 +131,13 @@ void FileTabWidget::sl_HideEnvSettingsPanel() {
 
 void FileTabWidget::sl_ToggleEnvSettingsPanel() {
     envSettingsPanel->Toggle();
+}
+
+void FileTabWidget::InitLayout() {
+    setMinimumWidth(400);
+    resize(800, height());
+    setContentsMargins(0, 0, 0, 0);
+    setStyleSheet(STYLE_TABWIDGET);
 }
 
 void FileTabWidget::InitCodeEditors() {

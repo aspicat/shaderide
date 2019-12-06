@@ -40,7 +40,9 @@ using namespace ShaderIDE::GL;
 namespace ShaderIDE::GUI {
 
     class LogOutputWidget : public QPlainTextEdit {
-        Q_OBJECT
+    Q_OBJECT
+        constexpr static uint16_t MAX_LOG_MESSAGES = 100;
+
     public:
         explicit LogOutputWidget(QWidget *parent = nullptr);
         ~LogOutputWidget() override;
@@ -57,6 +59,8 @@ namespace ShaderIDE::GUI {
         void sl_ClearLog();
 
     private:
+        uint16_t logCounter;
+
         SyntaxHighlighter *syntaxHighlighter;
         QMenu *contextMenu;
         QAction *clearLogAction;
@@ -67,6 +71,8 @@ namespace ShaderIDE::GUI {
 
         void DestroyContextMenu();
         void DestroySyntaxHighlighter();
+
+        void AppendPlainTextWithAutomaticCleanup(const QString &message);
     };
 }
 

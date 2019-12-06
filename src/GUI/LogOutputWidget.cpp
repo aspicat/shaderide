@@ -26,18 +26,20 @@
  * SOFTWARE.
  */
 
+#include <QDebug>
 #include <QTextCharFormat>
 #include "LogOutputWidget.hpp"
-#include "StyleSheets.hpp"
+#include "src/GUI/Style/LogOutputWidgetStyle.hpp"
 #include "src/Core/Memory.hpp"
 
 using namespace ShaderIDE::GUI;
 
 LogOutputWidget::LogOutputWidget(QWidget *parent)
-    : QPlainTextEdit    (parent),
-      syntaxHighlighter (nullptr),
-      contextMenu       (nullptr),
-      clearLogAction    (nullptr)
+    : QPlainTextEdit        (parent),
+      logCounter            (0),
+      syntaxHighlighter     (nullptr),
+      contextMenu           (nullptr),
+      clearLogAction        (nullptr)
 {
     setReadOnly(true);
     setMinimumHeight(100);
@@ -55,15 +57,15 @@ LogOutputWidget::~LogOutputWidget() {
 }
 
 void LogOutputWidget::LogMessage(const QString &message) {
-    appendPlainText(message);
+    AppendPlainTextWithAutomaticCleanup(message);
 }
 
 void LogOutputWidget::LogSuccessMessage(const QString &message) {
-    appendPlainText(QString("[SUCCESS] ") + message);
+    AppendPlainTextWithAutomaticCleanup(QString("[SUCCESS] ") + message);
 }
 
 void LogOutputWidget::LogErrorMessage(const QString &message) {
-    appendPlainText(QString("[ERROR] ") + message);
+    AppendPlainTextWithAutomaticCleanup(QString("[ERROR] ") + message);
 }
 
 QString LogOutputWidget::LogGLSLError(GLSLCompileError &error) {
@@ -82,6 +84,7 @@ void LogOutputWidget::contextMenuEvent(QContextMenuEvent *event) {
 }
 
 void LogOutputWidget::sl_ClearLog() {
+    logCounter = 0;
     clear();
 }
 
@@ -139,4 +142,13 @@ void LogOutputWidget::DestroyContextMenu() {
 
 void LogOutputWidget::DestroySyntaxHighlighter() {
     Memory::Release(syntaxHighlighter);
+}
+
+void LogOutputWidget::AppendPlainTextWithAutomaticCleanup(const QString &message) {
+    if (logCounter >= MAX_LOG_MESSAGES) {
+        sl_ClearLog();
+    }
+
+    appendPlainText(message);
+    logCounter++;
 }

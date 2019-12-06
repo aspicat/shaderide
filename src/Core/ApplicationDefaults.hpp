@@ -32,7 +32,8 @@
 #define SHADERIDE_APPLICATION_NAME "Shader IDE"
 #define SHADERIDE_PROJECT_EXTENSION "*.shaderide"
 #define SHADERIDE_STATUSBAR_TIMEOUT 10000 // 10 Seconds
-#define SHADERIDE_LOGO_PATH ":/app/logo_light.png"
+#define SHADERIDE_SURFACEFORMAT_NUM_SAMPLES 8
+#define SHADERIDE_LOGO_PATH ":/app/logo-light.png"
 #define SHADERIDE_LICENSE_URL "https://github.com/aspicat/shaderide/blob/master/LICENSE"
 #define SHADERIDE_GITHUB_URL "https://github.com/aspicat/shaderide"
 #define SHADERIDE_ASPICAT_URL "https://www.aspicat.de/"

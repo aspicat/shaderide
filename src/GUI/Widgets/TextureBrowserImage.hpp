@@ -37,9 +37,8 @@
 namespace ShaderIDE::GUI {
 
     class TextureBrowserImage : public QWidget {
+    Q_OBJECT
         static constexpr int IMAGELABEL_SIZE = 128;
-
-        Q_OBJECT
     public:
         explicit TextureBrowserImage(const QString &name,
                                      const QString &path,

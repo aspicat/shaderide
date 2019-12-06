@@ -33,7 +33,7 @@
 #include <QScrollBar>
 #include <QPainter>
 #include "CodeEditor.hpp"
-#include "src/GUI/StyleSheets.hpp"
+#include "src/GUI/Style/CodeEditorStyle.hpp"
 #include "src/Core/MathUtility.hpp"
 #include "src/Core/Memory.hpp"
 
@@ -52,6 +52,7 @@ CodeEditor::CodeEditor(QWidget *parent)
     setFont(QFont(STYLE_CODEEDITOR_FONT, STYLE_CODEEDITOR_FONT_SIZE));
 
     fontSize = font().pointSizeF();
+    setWordWrapMode(QTextOption::WordWrap);
 
     InitSyntaxHighlighter();
     InitLineNumberArea();
@@ -64,6 +65,9 @@ CodeEditor::CodeEditor(QWidget *parent)
 
     connect(horizontalScrollBar(), SIGNAL(valueChanged(int)),
             this, SLOT(sl_Scrolled(int)));
+
+    connect(this, SIGNAL(cursorPositionChanged()),
+            this, SLOT(sl_CursorPositionChanged()));
 }
 
 CodeEditor::~CodeEditor() {
@@ -77,7 +81,7 @@ void CodeEditor::LoadSyntaxFile(const QString &path) {
     syntaxHighlighter->LoadSyntaxFile(path);
 }
 
-void CodeEditor::HighlightLine(const int &line, const QColor &color) {
+void CodeEditor::HighlightErrorLine(const int &line, const QColor &color) {
     QTextCursor cursor(document()->findBlockByLineNumber(line - 1));
 
     QTextEdit::ExtraSelection selection{};
@@ -85,13 +89,21 @@ void CodeEditor::HighlightLine(const int &line, const QColor &color) {
     selection.format.setProperty(QTextFormat::FullWidthSelection, true);
     selection.cursor = cursor;
     selection.cursor.clearSelection();
-    highlightedLines.append(selection);
-    setExtraSelections(highlightedLines);
+    errorLines.append(selection);
+    ApplyExtraSelections();
 }
 
-void CodeEditor::ResetHighlightedLines() {
-    highlightedLines.clear();
-    setExtraSelections(highlightedLines);
+void CodeEditor::ResetErrorLines() {
+    errorLines.clear();
+    ApplyExtraSelections();
+}
+
+void CodeEditor::ToggleWordWrap() {
+    if (wordWrapMode() == QTextOption::WordWrap) {
+        setWordWrapMode(QTextOption::NoWrap);
+    } else {
+        setWordWrapMode(QTextOption::WordWrap);
+    }
 }
 
 void CodeEditor::sl_IncreaseFontSize() {
@@ -112,6 +124,10 @@ void CodeEditor::sl_Scrolled(int value) {
 
 void CodeEditor::sl_LineNumberAreaUpdated() {
     setViewportMargins(lineNumberArea->width(), 0, 0, 0);
+}
+
+void CodeEditor::sl_CursorPositionChanged() {
+    HighlightCursorLine();
 }
 
 void CodeEditor::keyPressEvent(QKeyEvent *event) {
@@ -172,8 +188,6 @@ void CodeEditor::resizeEvent(QResizeEvent *event) {
 
 void CodeEditor::paintEvent(QPaintEvent *event) {
     QPlainTextEdit::paintEvent(event);
-
-    // TODO Highlight Current Line
 }
 
 void CodeEditor::InitSyntaxHighlighter() {
@@ -243,6 +257,18 @@ void CodeEditor::UpdateLineNumberArea() {
     lineNumberArea->update();
 }
 
+void CodeEditor::HighlightCursorLine() {
+    cursorLines.clear();
+
+    QTextEdit::ExtraSelection selection{};
+    selection.format.setBackground(STYLE_CODEEDITOR_HIGHLIGHT_COLOR);
+    selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+    selection.cursor = textCursor();
+    selection.cursor.clearSelection();
+    cursorLines.append(selection);
+    ApplyExtraSelections();
+}
+
 void CodeEditor::EnableFontScaling() {
     fontScalingEnabled = true;
 }
@@ -261,4 +287,11 @@ void CodeEditor::ApplyFontScale(const float &value) {
     setFont(newFont);
 
     UpdateLineNumberArea();
+}
+
+void CodeEditor::ApplyExtraSelections() {
+    QList<QTextEdit::ExtraSelection> selections{};
+    selections.append(cursorLines);
+    selections.append(errorLines);
+    setExtraSelections(selections);
 }

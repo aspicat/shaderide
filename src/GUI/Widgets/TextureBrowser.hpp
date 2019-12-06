@@ -39,7 +39,7 @@
 namespace ShaderIDE::GUI {
 
     class TextureBrowser : public QWidget {
-        Q_OBJECT
+    Q_OBJECT
         static constexpr int IMAGE_SPACING = 20;
 
     public:

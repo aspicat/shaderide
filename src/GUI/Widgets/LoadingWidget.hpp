@@ -1,5 +1,5 @@
 /**
- * Mesh Class
+ * LoadingWidget Class
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,50 +26,39 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GL_WORLD_MESH_HPP
-#define SHADERIDE_GL_WORLD_MESH_HPP
+#ifndef SHADERIDE_GUI_WIDGETS_LOADINGWIDGET_HPP
+#define SHADERIDE_GUI_WIDGETS_LOADINGWIDGET_HPP
 
-#include <string>
-#include <cstdint>
-#include "Vertex.hpp"
+#include <QWidget>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QTimer>
 
-namespace ShaderIDE::GL {
+namespace ShaderIDE::GUI {
 
-    class Mesh {
+    class LoadingWidget : public QWidget {
+    Q_OBJECT
+        static constexpr int VISIBILITY_TIMEOUT = 500;
+
     public:
-        void AddVertex(const glm::vec3 &vertex);
-        void AddVertexNormal(const glm::vec3 &vertexNormal);
-        void AddVertexUV(const glm::vec2 &vertexUV);
-        void AddIndex(const uint32_t &index);
-        void AddNormalIndex(const uint32_t &normalIndex);
-        void AddUVIndex(const uint32_t &uvIndex);
+        explicit LoadingWidget(QWidget *parent = nullptr);
+        ~LoadingWidget() override;
 
-        std::vector<glm::vec3> Vertices();
-        std::vector<glm::vec3> VertexNormals();
-        std::vector<glm::vec3> VertexIndexedNormals();
-        std::vector<glm::vec2> VertexUVs();
-        std::vector<uint32_t> Indices();
-        std::vector<uint32_t> NormalIndices();
-        std::vector<uint32_t> UVIndices();
-
-        /**
-         * Composed non-indexed vertices, including
-         * normals and UV's.
-         *
-         * @return VertexVec
-         */
-        VertexVec ComposedVertices();
-
-        std::string ComposedVerticesString();
+        void Show(const QString &text = "Loading");
+        void Hide();
 
     protected:
-        std::vector<glm::vec3> vertices;
-        std::vector<glm::vec3> vertexNormals;
-        std::vector<glm::vec2> vertexUVs;
-        std::vector<uint32_t> indices;
-        std::vector<uint32_t> normalIndices;
-        std::vector<uint32_t> uvIndices;
+        void paintEvent(QPaintEvent *event) override;
+
+    private:
+        QHBoxLayout *mainLayout;
+        QLabel *textLabel;
+
+        QTimer visibilityTimer;
+
+        void InitLayout();
+        void InitVisibilityTimer();
     };
 }
 
-#endif // SHADERIDE_GL_WORLD_MESH_HPP
+#endif // SHADERIDE_GUI_WIDGETS_LOADINGWIDGET_HPP

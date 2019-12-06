@@ -30,11 +30,10 @@
 #include <QMouseEvent>
 #include <QFileDialog>
 #include <QMenu>
-#include <QAction>
 #include "TextureBrowserImage.hpp"
 #include "src/Core/Memory.hpp"
 #include "src/Core/QtUtility.hpp"
-#include "src/GUI/StyleSheets.hpp"
+#include "src/GUI/Style/TextureBrowserStyle.hpp"
 
 using namespace ShaderIDE::GUI;
 
@@ -166,7 +165,7 @@ void TextureBrowserImage::InitImageLabel(const QImage &image) {
 void TextureBrowserImage::InitNameLabel(const QString &name) {
 
     // Font
-    auto font = QFont(STYLE_CODEEDITOR_FONT);
+    auto font = QFont(STYLE_TEXTUREBROWSER_FONT);
     font.setPixelSize(14);
 
     // Name Label

@@ -29,7 +29,7 @@
 #include <QDebug>
 #include <QResizeEvent>
 #include "TextureBrowser.hpp"
-#include "src/GUI/StyleSheets.hpp"
+#include "src/GUI/Style/TextureBrowserStyle.hpp"
 #include "src/Core/Memory.hpp"
 #include "src/Core/QtUtility.hpp"
 #include "src/Core/GeneralException.hpp"
@@ -133,7 +133,7 @@ void TextureBrowser::InitLayout() {
 
     // Title Label
     titleLabel = new QLabel("Texture Slots");
-    titleLabel->setObjectName("Title");
+    titleLabel->setProperty("class", "title");
     titleLabel->setContentsMargins(20, 20, 20, 0);
     mainLayout->addWidget(titleLabel);
 
@@ -150,7 +150,12 @@ void TextureBrowser::InitLayout() {
 
     // Scroll Area
     scrollArea = new QScrollArea();
-    scrollArea->setStyleSheet("QWidget { border: none; background: transparent; }");
+
+    scrollArea->setStyleSheet(
+            "QWidget { border: none; background: transparent; }"
+            STYLE_SCROLLBAR
+    );
+
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     scrollArea->setWidget(scrollWidget);
     mainLayout->addWidget(scrollArea);

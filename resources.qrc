@@ -2,13 +2,15 @@
 
     <!-- App -->
     <qresource prefix="/app">
-        <file alias="logo_light.png">assets/app/logo_light.png</file>
+        <file alias="logo-light.png">assets/app/logo-light.png</file>
     </qresource>
 
     <!-- Icons -->
     <qresource prefix="/icons">
         <file alias="icon-aspicat.png">assets/icons/icon-aspicat.png</file>
         <file alias="icon-github.png">assets/icons/icon-github.png</file>
+        <file alias="icon-loading-indicator.png">assets/icons/icon-loading-indicator.png</file>
+        <file alias="icon-menu-check.png">assets/icons/icon-menu-check.png</file>
         <file alias="icon-settings.png">assets/icons/icon-settings.png</file>
     </qresource>
 
@@ -18,6 +20,7 @@
         <file alias="cube.png">assets/images/64/cube.png</file>
         <file alias="sphere.png">assets/images/64/sphere.png</file>
         <file alias="teapot.png">assets/images/64/teapot.png</file>
+        <file alias="torus.png">assets/images/64/torus.png</file>
     </qresource>
 
     <!-- Models -->
@@ -27,6 +30,7 @@
         <file alias="plane.obj">assets/models/plane.obj</file>
         <file alias="sphere.obj">assets/models/sphere.obj</file>
         <file alias="teapot.obj">assets/models/teapot.obj</file>
+        <file alias="torus.obj">assets/models/torus.obj</file>
     </qresource>
 
     <!-- Config -->

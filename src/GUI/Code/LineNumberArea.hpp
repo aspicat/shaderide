@@ -37,7 +37,7 @@ namespace ShaderIDE::GUI {
     class CodeEditor;
 
     class LineNumberArea : public QWidget {
-        Q_OBJECT
+    Q_OBJECT
     public:
         explicit LineNumberArea(CodeEditor *codeEditor);
 

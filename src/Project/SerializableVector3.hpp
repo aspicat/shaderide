@@ -29,10 +29,12 @@
 #ifndef SHADERIDE_PROJECT_SERIALIZABLEVECTOR3_HPP
 #define SHADERIDE_PROJECT_SERIALIZABLEVECTOR3_HPP
 
+#include <QJsonArray>
 #include <glm/glm.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include "src/Core/GeneralException.hpp"
 
 namespace ShaderIDE::Project {
 
@@ -47,6 +49,21 @@ namespace ShaderIDE::Project {
         }
 
     public:
+        static SerializableVector3 FromJsonArray(const QJsonArray &jsonArray) {
+            if (jsonArray.size() != 3) {
+                throw GeneralException(
+                        "Could not create SerializableVector3, "
+                        "invalid amount of values. 3 required."
+                );
+            }
+
+            SerializableVector3 vector(0.0f);
+            vector.x = jsonArray.at(0).toDouble();
+            vector.y = jsonArray.at(1).toDouble();
+            vector.z = jsonArray.at(2).toDouble();
+            return vector;
+        }
+
         explicit SerializableVector3(const glm::vec3 &vector)
             : glm::vec3(vector)
         {}
@@ -65,6 +82,14 @@ namespace ShaderIDE::Project {
             x = vector.x;
             y = vector.y;
             z = vector.z;
+        }
+
+        QJsonArray ToJsonArray() {
+            QJsonArray jsonArray;
+            jsonArray.push_back(x);
+            jsonArray.push_back(y);
+            jsonArray.push_back(z);
+            return jsonArray;
         }
     };
 }

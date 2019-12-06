@@ -1,5 +1,5 @@
 /**
- * EnvSettingsPanel Class
+ * AboutDialog Style Header
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,44 +26,15 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GUI_WIDGETS_ENVSETTINGSPANEL_HPP
-#define SHADERIDE_GUI_WIDGETS_ENVSETTINGSPANEL_HPP
+#ifndef SHADERIDE_GUI_STYLE_ABOUTDIALOGSTYLE_HPP
+#define SHADERIDE_GUI_STYLE_ABOUTDIALOGSTYLE_HPP
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QFormLayout>
-#include "TextureBrowser.hpp"
+#define STYLE_ABOUTDIALOG \
+    "QDialog {" \
+    "    background: rgb(40, 40, 40);" \
+    "}" \
+    "QLabel {" \
+    "    color: #D9D9D9;" \
+    "}"
 
-namespace ShaderIDE::GUI {
-
-    class EnvSettingsPanel : public QWidget {
-    Q_OBJECT
-    public:
-        explicit EnvSettingsPanel(QWidget *parent = nullptr);
-        ~EnvSettingsPanel() override;
-
-        TextureBrowser* GetTextureBrowser();
-
-        void Toggle();
-        void Hide();
-
-        void ResetUI();
-
-    protected:
-        void paintEvent(QPaintEvent *event) override;
-
-    private:
-        QVBoxLayout *mainLayout;
-        TextureBrowser *textureBrowser;
-
-        void InitLayout();
-        void InitTextureBrowser();
-
-        void DestroyTextureBrowser();
-        void DestroyLayout();
-
-        void LoadTextureBrowserSlots();
-    };
-}
-
-#endif // SHADERIDE_GUI_WIDGETS_ENVSETTINGSPANEL_HPP
+#endif // SHADERIDE_GUI_STYLE_ABOUTDIALOGSTYLE_HPP

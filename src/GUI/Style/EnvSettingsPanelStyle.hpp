@@ -1,5 +1,5 @@
 /**
- * EnvSettingsPanel Class
+ * EnvSettingsPanel Style Header
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,44 +26,28 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GUI_WIDGETS_ENVSETTINGSPANEL_HPP
-#define SHADERIDE_GUI_WIDGETS_ENVSETTINGSPANEL_HPP
+#ifndef SHADERIDE_GUI_STYLE_ENVSETTINGSPANELSTYLE_HPP
+#define SHADERIDE_GUI_STYLE_ENVSETTINGSPANELSTYLE_HPP
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QFormLayout>
-#include "TextureBrowser.hpp"
+#include "src/GUI/StyleSheets.hpp"
 
-namespace ShaderIDE::GUI {
+#ifdef WIN32
+#define STYLE_ENVSETTINGSPANEL_TITLE_FONT "Consolas"
+#else
+#define STYLE_ENVSETTINGSPANEL_TITLE_FONT "DejaVu Sans Mono"
+#endif
 
-    class EnvSettingsPanel : public QWidget {
-    Q_OBJECT
-    public:
-        explicit EnvSettingsPanel(QWidget *parent = nullptr);
-        ~EnvSettingsPanel() override;
+#define STYLE_ENVSETTINGSPANEL \
+    "#EnvSettingsPanel {" \
+    "    border-top: 4px solid #233151;" \
+    "    background: rgba(10, 10, 10, 0.95);" \
+    "}" \
+    "#EnvSettingsPanel QLabel.title {" \
+    "    font-family: \"" STYLE_ENVSETTINGSPANEL_TITLE_FONT "\";" \
+    "    font-size: 12pt;" \
+    "    font-weight: bold;" \
+    "    color: #fafafa;" \
+    "    background: transparent;" \
+    "}"
 
-        TextureBrowser* GetTextureBrowser();
-
-        void Toggle();
-        void Hide();
-
-        void ResetUI();
-
-    protected:
-        void paintEvent(QPaintEvent *event) override;
-
-    private:
-        QVBoxLayout *mainLayout;
-        TextureBrowser *textureBrowser;
-
-        void InitLayout();
-        void InitTextureBrowser();
-
-        void DestroyTextureBrowser();
-        void DestroyLayout();
-
-        void LoadTextureBrowserSlots();
-    };
-}
-
-#endif // SHADERIDE_GUI_WIDGETS_ENVSETTINGSPANEL_HPP
+#endif // SHADERIDE_GUI_STYLE_ENVSETTINGSPANELSTYLE_HPP

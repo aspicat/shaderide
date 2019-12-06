@@ -1,5 +1,5 @@
 /**
- * Mesh Class
+ * SettingsDialog Class
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,50 +26,60 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GL_WORLD_MESH_HPP
-#define SHADERIDE_GL_WORLD_MESH_HPP
+#ifndef SHADERIDE_GUI_DIALOGS_SETTINGSDIALOG_HPP
+#define SHADERIDE_GUI_DIALOGS_SETTINGSDIALOG_HPP
 
-#include <string>
-#include <cstdint>
-#include "Vertex.hpp"
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGroupBox>
+#include <QPushButton>
+#include <QLabel>
+#include <QFormLayout>
+#include <QCheckBox>
+#include <QComboBox>
 
-namespace ShaderIDE::GL {
+namespace ShaderIDE::GUI {
 
-    class Mesh {
+    // MainWindow Forward Declaration
+    class MainWindow;
+
+    class SettingsDialog : public QDialog {
+    Q_OBJECT
     public:
-        void AddVertex(const glm::vec3 &vertex);
-        void AddVertexNormal(const glm::vec3 &vertexNormal);
-        void AddVertexUV(const glm::vec2 &vertexUV);
-        void AddIndex(const uint32_t &index);
-        void AddNormalIndex(const uint32_t &normalIndex);
-        void AddUVIndex(const uint32_t &uvIndex);
-
-        std::vector<glm::vec3> Vertices();
-        std::vector<glm::vec3> VertexNormals();
-        std::vector<glm::vec3> VertexIndexedNormals();
-        std::vector<glm::vec2> VertexUVs();
-        std::vector<uint32_t> Indices();
-        std::vector<uint32_t> NormalIndices();
-        std::vector<uint32_t> UVIndices();
-
-        /**
-         * Composed non-indexed vertices, including
-         * normals and UV's.
-         *
-         * @return VertexVec
-         */
-        VertexVec ComposedVertices();
-
-        std::string ComposedVerticesString();
+        explicit SettingsDialog(MainWindow *mainWindow);
+        ~SettingsDialog() override;
 
     protected:
-        std::vector<glm::vec3> vertices;
-        std::vector<glm::vec3> vertexNormals;
-        std::vector<glm::vec2> vertexUVs;
-        std::vector<uint32_t> indices;
-        std::vector<uint32_t> normalIndices;
-        std::vector<uint32_t> uvIndices;
+        void showEvent(QShowEvent *event) override;
+
+    private slots:
+        void sl_Save();
+
+    private:
+        MainWindow *mainWindow;
+        QVBoxLayout *mainLayout;
+
+        // 3D Viewport
+        QVBoxLayout *viewportLayout;
+        QLabel *viewportTitle;
+        QFormLayout *viewportForm;
+        QComboBox *cboxMultisampling;
+        QLabel *viewportRestartNote;
+
+        // Button Layout
+        QHBoxLayout *buttonLayout;
+        QPushButton *btSave;
+
+        void InitLayout();
+        void InitViewportSection();
+        void InitButtonLayout();
+
+        void Destroy();
+
+        void ApplySettings();
+        void FetchSettings();
     };
 }
 
-#endif // SHADERIDE_GL_WORLD_MESH_HPP
+#endif //SHADERIDE_GUI_DIALOGS_SETTINGSDIALOG_HPP

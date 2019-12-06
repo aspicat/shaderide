@@ -37,7 +37,7 @@
 namespace ShaderIDE::GUI {
 
     class FileTabWidget : public QTabWidget {
-        Q_OBJECT
+    Q_OBJECT
     public:
         explicit FileTabWidget(QWidget *parent = nullptr);
         ~FileTabWidget() override;
@@ -49,6 +49,11 @@ namespace ShaderIDE::GUI {
 
         void SetFragmentShaderSource(const QString &source);
         QString FragmentShaderSource();
+
+        void ToggleWordWrap();
+        void SetWordWrapMode(QTextOption::WrapMode &mode);
+        QTextOption::WrapMode WordWrapMode();
+        bool WordWrap();
 
         CodeEditor* GetVSCodeEditor();
         CodeEditor* GetFSCodeEditor();
@@ -75,6 +80,7 @@ namespace ShaderIDE::GUI {
         EnvSettingsPanel *envSettingsPanel;
         ImageButton *envSettingsPanelToggle;
 
+        void InitLayout();
         void InitCodeEditors();
         void InitEnvSettingsPanel();
 

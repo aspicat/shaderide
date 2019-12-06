@@ -1,5 +1,5 @@
 /**
- * Mesh Class
+ * AboutDialog Class
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,50 +26,40 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GL_WORLD_MESH_HPP
-#define SHADERIDE_GL_WORLD_MESH_HPP
+#ifndef SHADERIDE_GUI_DIALOGS_ABOUTDIALOG_HPP
+#define SHADERIDE_GUI_DIALOGS_ABOUTDIALOG_HPP
 
-#include <string>
-#include <cstdint>
-#include "Vertex.hpp"
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QSpacerItem>
 
-namespace ShaderIDE::GL {
+namespace ShaderIDE::GUI {
 
-    class Mesh {
+    class AboutDialog : public QDialog {
     public:
-        void AddVertex(const glm::vec3 &vertex);
-        void AddVertexNormal(const glm::vec3 &vertexNormal);
-        void AddVertexUV(const glm::vec2 &vertexUV);
-        void AddIndex(const uint32_t &index);
-        void AddNormalIndex(const uint32_t &normalIndex);
-        void AddUVIndex(const uint32_t &uvIndex);
+        explicit AboutDialog(QWidget *parent = nullptr);
+        ~AboutDialog() override;
 
-        std::vector<glm::vec3> Vertices();
-        std::vector<glm::vec3> VertexNormals();
-        std::vector<glm::vec3> VertexIndexedNormals();
-        std::vector<glm::vec2> VertexUVs();
-        std::vector<uint32_t> Indices();
-        std::vector<uint32_t> NormalIndices();
-        std::vector<uint32_t> UVIndices();
+    private:
+        QVBoxLayout *mainLayout;
+        QLabel *logoLabel;
+        QLabel *versionLabel;
+        QLabel *copyrightLabel;
+        QLabel *licenseLinkLabel;
+        QSpacerItem *bottomLayoutSpacer;
 
-        /**
-         * Composed non-indexed vertices, including
-         * normals and UV's.
-         *
-         * @return VertexVec
-         */
-        VertexVec ComposedVertices();
+        QHBoxLayout *bottomLayout;
+        QLabel *linkLabel;
+        QPushButton *closeButton;
 
-        std::string ComposedVerticesString();
+        void InitLayout();
+        void InitBottomLayout();
 
-    protected:
-        std::vector<glm::vec3> vertices;
-        std::vector<glm::vec3> vertexNormals;
-        std::vector<glm::vec2> vertexUVs;
-        std::vector<uint32_t> indices;
-        std::vector<uint32_t> normalIndices;
-        std::vector<uint32_t> uvIndices;
+        void DestroyBottomLayout();
+        void DestroyLayout();
     };
 }
 
-#endif // SHADERIDE_GL_WORLD_MESH_HPP
+#endif // SHADERIDE_GUI_DIALOGS_ABOUTDIALOG_HPP

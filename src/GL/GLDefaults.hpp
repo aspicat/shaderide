@@ -96,9 +96,9 @@
 #define GLSL_TEXTURE_SLOT_3_NAME "tex3"
 
 #define OPENGLWIDGET_DEFAULT_MODEL_ROTATION \
-    glm::vec3(glm::radians(30.0f), glm::radians(45.0f), 0)
+    glm::vec3(glm::radians(35.0f), glm::radians(45.0f), 0)
 
 #define OPENGLWIDGET_DEFAULT_CAMERA_POSITION \
-    glm::vec3(0.0f, 0.0f, -3.0f)
+    glm::vec3(0.0f, 0.0f, -2.5f)
 
 #endif // SHADERIDE_GL_GLDEFAULTS_HPP

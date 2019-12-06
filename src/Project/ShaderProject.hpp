@@ -56,7 +56,10 @@ namespace ShaderIDE::Project {
         }
 
     public:
+        [[deprecated("Use LoadFromJSON(...).")]]
         static ShaderProject* Load(const std::string &path);
+
+        static ShaderProject* LoadFromJSON(const std::string &path);
 
         explicit ShaderProject(std::string path);
 
@@ -71,6 +74,7 @@ namespace ShaderIDE::Project {
         glm::vec3 ModelRotation();
         glm::vec3 CameraPosition();
 
+        void SetFileVersion(const std::string &newFileVersion);
         void SetPath(const std::string &newPath);
         void SetVertexShaderSource(const std::string &newVSSource);
         void SetFragmentShaderSource(const std::string &newFSSource);
@@ -83,9 +87,16 @@ namespace ShaderIDE::Project {
         void SetTexturePath(const std::string &name, const std::string &texturePath);
         void ClearTexturePath(const std::string &name);
 
+        [[deprecated("Use SaveAsJSON(...).")]]
         void Save();
 
+        void SaveAsJSON();
+
     private:
+        static void CheckPath(const std::string &filePath);
+        static std::ifstream OpenInputFile(const std::string &filePath);
+        static std::ofstream OpenOutputFile(const std::string &filePath);
+
         std::string file_version;
         std::string path;
         std::string vsSource;
@@ -96,6 +107,8 @@ namespace ShaderIDE::Project {
         bool plane2D;
         SerializableVector3 modelRotation;
         SerializableVector3 cameraPosition;
+
+        QJsonObject MakeJsonObjectFromTexturePaths();
     };
 }
 
