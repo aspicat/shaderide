@@ -66,7 +66,8 @@ The following predefined shader variables are supported as of version 1.2.0:
 * **uniform sampler2D tex3**
 
 ### Uniforms (All Shaders)
+* **uniform float time**
+* **uniform vec2 resolution**
 * **uniform mat4 modelMat**
 * **uniform mat4 viewMat**
 * **uniform mat4 projectionMat**
-* **uniform float time**

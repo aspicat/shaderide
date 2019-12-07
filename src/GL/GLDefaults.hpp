@@ -41,10 +41,12 @@
     "in vec3 normal;\n" \
     "in vec2 uv;\n" \
     "\n" \
+    "uniform float time;\n" \
+    "uniform vec2 resolution;\n" \
+    "\n" \
     "uniform mat4 modelMat;\n" \
     "uniform mat4 viewMat;\n" \
     "uniform mat4 projectionMat;\n" \
-    "uniform float time;\n" \
     "\n" \
     "out vec3 vPosition;\n" \
     "out vec3 vNormal;\n" \
@@ -68,10 +70,12 @@
     "uniform sampler2D tex2;\n" \
     "uniform sampler2D tex3;\n" \
     "\n" \
+    "uniform float time;\n" \
+    "uniform vec2 resolution;\n" \
+    "\n" \
     "uniform mat4 modelMat;\n" \
     "uniform mat4 viewMat;\n" \
     "uniform mat4 projectionMat;\n" \
-    "uniform float time;\n" \
     "\n" \
     "in vec3 vPosition;\n" \
     "in vec3 vNormal;\n" \

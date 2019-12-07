@@ -819,6 +819,9 @@ bool MainWindow::ApplyUIFromProject() {
     openGLWidget->sl_CompileShaders();
     openGLWidget->SelectMesh(QString::fromStdString(shaderProject->MeshName()));
 
+    // Textures
+    fileTabWidget->GetTextureBrowser()->ClearImages();
+
     for (auto &texture : shaderProject->TexturePaths()) {
         auto path = QString::fromStdString(texture.second);
 

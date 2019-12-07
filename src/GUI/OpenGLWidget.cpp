@@ -426,18 +426,20 @@ void OpenGLWidget::paintGL() {
     // Shader Uniforms
     glUseProgram(program);
 
+    auto timeLocation           = glGetUniformLocation(program, "time");
+    auto resolutionLocation     = glGetUniformLocation(program, "resolution");
     auto modelMatLocation       = glGetUniformLocation(program, "modelMat");
     auto viewMatLocation        = glGetUniformLocation(program, "viewMat");
     auto projectionMatLocation  = glGetUniformLocation(program, "projectionMat");
-    auto timeLocation           = glGetUniformLocation(program, "time");
 
     // TODO Lights, math constants, camera position etc.
 
     // Apply Uniform Data
+    glUniform1f(timeLocation, renderTime);
+    glUniform2fv(resolutionLocation, 1, glm::value_ptr(glm::vec2(width(), height())));
     glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, GetModelMatrix());
     glUniformMatrix4fv(viewMatLocation, 1, GL_FALSE, GetViewMatrix());
     glUniformMatrix4fv(projectionMatLocation, 1, GL_FALSE, GetProjectionMatrix());
-    glUniform1f(timeLocation, renderTime);
 
     // Samplers (Textures)
     BindTextures();

@@ -275,7 +275,7 @@ namespace ShaderIDE::GUI {
         void CacheVertices();
         void ApplyVerticesFromCache();
 
-        // Matrices
+        // Value Pointers
         GLfloat* GetModelMatrix();
         GLfloat* GetViewMatrix();
         GLfloat* GetProjectionMatrix();
