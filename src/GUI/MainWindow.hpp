@@ -81,7 +81,6 @@ namespace ShaderIDE::GUI {
         // Menu / View
         void sl_Menu_View_SwapLayout();
         void sl_Menu_View_ResetLayout();
-        void sl_Menu_View_SaveLayout();
         void sl_Menu_View_ToggleLog();
 
         // Menu / Code
@@ -136,7 +135,6 @@ namespace ShaderIDE::GUI {
         QMenu *viewMenu;
         QAction *swapLayoutAction;
         QAction *resetLayoutAction;
-        QAction *saveLayoutAction;
         QAction *toggleLogAction;
 
         // Code Menu

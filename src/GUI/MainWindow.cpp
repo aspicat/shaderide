@@ -74,7 +74,6 @@ MainWindow::MainWindow(QWidget *parent)
       viewMenu                          (nullptr),
       swapLayoutAction                  (nullptr),
       resetLayoutAction                 (nullptr),
-      saveLayoutAction                  (nullptr),
       toggleLogAction                   (nullptr),
       codeMenu                          (nullptr),
       compileCodeAction                 (nullptr),
@@ -292,6 +291,8 @@ void MainWindow::sl_Menu_File_Exit() {
         return;
     }
 
+    SaveLayoutConfig();
+
     // Disable realtime compilation before closing, to
     // avoid another compilation step after the code editors
     // were cleared by Qt. This caused an error in the
@@ -311,14 +312,9 @@ void MainWindow::sl_Menu_View_ResetLayout() {
     ResetLayout();
 }
 
-void MainWindow::sl_Menu_View_SaveLayout() {
-    SaveLayoutConfig();
-}
-
 void MainWindow::sl_Menu_View_ToggleLog() {
     logOutputWidget->setVisible(!logOutputWidget->isVisible());
     toggleLogAction->setIconVisibleInMenu(logOutputWidget->isVisible());
-    SaveLayoutConfig();
 }
 
 void MainWindow::sl_Menu_Code_Compile() {
@@ -330,13 +326,11 @@ void MainWindow::sl_Menu_Code_Compile() {
 void MainWindow::sl_Menu_Code_ToggleRealtimeCompilation() {
     openGLWidget->ToggleRealtimeCompilation();
     toggleRealtimeCompilationAction->setIconVisibleInMenu(openGLWidget->RealtimeCompilation());
-    SaveLayoutConfig();
 }
 
 void MainWindow::sl_Menu_Code_ToggleWordWrap() {
     fileTabWidget->ToggleWordWrap();
     toggleWordWrapAction->setIconVisibleInMenu(fileTabWidget->WordWrap());
-    SaveLayoutConfig();
 }
 
 void MainWindow::sl_Menu_Help_About() {
@@ -478,7 +472,6 @@ void MainWindow::InitMenuView() {
 
     swapLayoutAction    = new QAction("Swap Layout");
     resetLayoutAction   = new QAction("Reset Layout");
-    saveLayoutAction    = new QAction("Save Layout");
 
     toggleLogAction = new QAction("Toggle Log");
     toggleLogAction->setIcon(QIcon(":/icons/icon-menu-check.png"));
@@ -487,7 +480,6 @@ void MainWindow::InitMenuView() {
 
     viewMenu->addAction(swapLayoutAction);
     viewMenu->addAction(resetLayoutAction);
-    viewMenu->addAction(saveLayoutAction);
     viewMenu->addSeparator();
     viewMenu->addAction(toggleLogAction);
 
@@ -496,9 +488,6 @@ void MainWindow::InitMenuView() {
 
     connect(resetLayoutAction, SIGNAL(triggered(bool)),
             this, SLOT(sl_Menu_View_ResetLayout()));
-
-    connect(saveLayoutAction, SIGNAL(triggered(bool)),
-            this, SLOT(sl_Menu_View_SaveLayout()));
 
     connect(toggleLogAction, SIGNAL(triggered(bool)),
             this, SLOT(sl_Menu_View_ToggleLog()));
@@ -656,7 +645,6 @@ void MainWindow::DestroyMenuBar() {
 
     // View Menu
     Memory::Release(toggleLogAction);
-    Memory::Release(saveLayoutAction);
     Memory::Release(resetLayoutAction);
     Memory::Release(swapLayoutAction);
     Memory::Release(viewMenu);
@@ -693,6 +681,10 @@ void MainWindow::SwapLayout() {
     fileTabWidget->hide();
     openGLWidget->hide();
 
+    // Store Width
+    auto w0_width = mainSplitter->widget(0)->width();
+    auto w1_width = mainSplitter->widget(1)->width();
+
     // We use bit negation to swap the index of 0 and 1.
     // Not a perfect solution right here, but we cannot simply
     // swap widgets inside a splitter. If we have more than two
@@ -701,6 +693,14 @@ void MainWindow::SwapLayout() {
     auto openGLWidgetIndex = mainSplitter->indexOf(openGLWidget);
     mainSplitter->insertWidget(~openGLWidgetIndex, openGLWidget);
     mainSplitter->insertWidget(openGLWidgetIndex, fileTabWidget);
+
+    // Swap width values for widgets from stored sizes.
+    // For some reason after swapping the widgets, the size
+    // is reset to either 400.
+    auto *w0 = mainSplitter->widget(0);
+    auto *w1 = mainSplitter->widget(1);
+    w0->resize(w1_width, w0->height());
+    w1->resize(w0_width, w1->height());
 
     fileTabWidget->show();
     openGLWidget->show();
@@ -952,10 +952,10 @@ void MainWindow::SaveLayoutConfig() {
 
     // Layout
     QJsonObject config_layout;
-    config_layout["swapped"]     = mainSplitter->indexOf(openGLWidget) == 1; // See SwapLayout();
-    config_layout["width_left"]  = mainSplitter->widget(0)->width(); // See SwapLayout();
-    config_layout["width_right"] = mainSplitter->widget(1)->width(); // See SwapLayout();
-    config_layout["show_log"]    = logOutputWidget->isVisible();
+    config_layout["swapped"]        = mainSplitter->indexOf(openGLWidget) == 1; // See SwapLayout();
+    config_layout["width_left"]     = mainSplitter->widget(0)->width(); // See SwapLayout();
+    config_layout["width_right"]    = mainSplitter->widget(1)->width(); // See SwapLayout();
+    config_layout["show_log"]       = logOutputWidget->isVisible();
     config["layout"] = config_layout;
 
     // Window
