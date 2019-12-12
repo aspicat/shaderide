@@ -793,6 +793,8 @@ void MainWindow::ResetProject() {
 }
 
 void MainWindow::OpenProject(const QString &path) {
+    fileTabWidget->GetTextureBrowser()->ClearImages();
+
     try {
         shaderProject = ShaderProject::LoadFromJSON(path.toStdString());
         shaderProject->SetPath(path.toStdString());
@@ -852,9 +854,6 @@ bool MainWindow::ApplyUIFromProject() {
     openGLWidget->sl_CompileShaders();
     openGLWidget->SelectMesh(QString::fromStdString(shaderProject->MeshName()));
 
-    // Textures
-    fileTabWidget->GetTextureBrowser()->ClearImages();
-
     for (auto &texture : shaderProject->TexturePaths()) {
         auto path = QString::fromStdString(texture.second);
 
@@ -874,6 +873,7 @@ bool MainWindow::ApplyUIFromProject() {
     openGLWidget->CheckRealtime(shaderProject->Realtime());
     openGLWidget->RotateModel(shaderProject->ModelRotation());
     openGLWidget->MoveCamera(shaderProject->CameraPosition());
+    openGLWidget->repaint();
 
     UpdateWindowTitle();
 
