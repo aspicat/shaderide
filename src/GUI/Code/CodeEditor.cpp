@@ -48,6 +48,7 @@ CodeEditor::CodeEditor(QWidget *parent)
       increaseFontSizeSC    (nullptr),
       decreaseFontSizeSC    (nullptr)
 {
+    setAcceptDrops(false);
     setStyleSheet(STYLE_CODEEDITOR);
     setFont(QFont(STYLE_CODEEDITOR_FONT, STYLE_CODEEDITOR_FONT_SIZE));
 

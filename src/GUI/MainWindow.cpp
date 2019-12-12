@@ -32,6 +32,11 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QApplication>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDragLeaveEvent>
+#include <QDropEvent>
+#include <QMimeData>
 #include <QStandardPaths>
 #include <QJsonDocument>
 #include "MainWindow.hpp"
@@ -79,6 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
       aboutAction                       (nullptr),
       shaderProject                     (nullptr)
 {
+    setAcceptDrops(true);
     LoadSettings();
 
     // Apply default surface format for Anti-Aliasing.
@@ -217,18 +223,7 @@ void MainWindow::sl_Menu_File_OpenProject() {
             QString("Shader IDE Files (") + SHADERIDE_PROJECT_EXTENSION + ")"
     );
 
-    try {
-        shaderProject = ShaderProject::LoadFromJSON(path.toStdString());
-        shaderProject->SetPath(path.toStdString());
-
-        if (ApplyUIFromProject()) {
-            sl_UpdateStatusBarMessage(QString("Shader project loaded: ") + path);
-        }
-
-    } catch (GeneralException &e) {
-        sl_GeneralError(e);
-        return;
-    }
+    OpenProject(path);
 }
 
 void MainWindow::sl_Menu_File_SaveProject() {
@@ -346,6 +341,31 @@ void MainWindow::sl_Menu_Code_ToggleWordWrap() {
 
 void MainWindow::sl_Menu_Help_About() {
     aboutDialog->show();
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
+    event->acceptProposedAction();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent *event) {
+    event->acceptProposedAction();
+}
+
+void MainWindow::dragLeaveEvent(QDragLeaveEvent *event) {
+    event->accept();
+}
+
+void MainWindow::dropEvent(QDropEvent *event) {
+    const QMimeData *mimeData = event->mimeData();
+
+    if (mimeData->hasUrls()) {
+        QList<QUrl> urls = mimeData->urls();
+
+        // Only load one project file.
+        if (!urls.empty()) {
+            OpenProject(urls.at(0).toLocalFile());
+        }
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -772,6 +792,21 @@ void MainWindow::ResetProject() {
     ApplyUIFromProject();
 }
 
+void MainWindow::OpenProject(const QString &path) {
+    try {
+        shaderProject = ShaderProject::LoadFromJSON(path.toStdString());
+        shaderProject->SetPath(path.toStdString());
+
+        if (ApplyUIFromProject()) {
+            sl_UpdateStatusBarMessage(QString("Shader project loaded: ") + path);
+        }
+
+    } catch (GeneralException &e) {
+        sl_GeneralError(e);
+        return;
+    }
+}
+
 bool MainWindow::ApplyProjectFromUI() {
     shaderProject->SetVertexShaderSource(
             fileTabWidget->VertexShaderSource().toStdString());
@@ -812,9 +847,7 @@ bool MainWindow::ApplyUIFromProject() {
     fileTabWidget->SetVertexShaderSource(shaderProject->VertexShaderSource().c_str());
     fileTabWidget->SetFragmentShaderSource(shaderProject->FragmentShaderSource().c_str());
 
-    if (shaderProject->Plane2D()) {
-        openGLWidget->EnablePlane2DAfterModelLoaded();
-    }
+    openGLWidget->CheckPlane2D(shaderProject->Plane2D());
 
     openGLWidget->sl_CompileShaders();
     openGLWidget->SelectMesh(QString::fromStdString(shaderProject->MeshName()));

@@ -68,6 +68,7 @@ namespace ShaderIDE::GUI {
         static constexpr float MODEL_ROTATION_INTENSITY = 0.5f;
         static constexpr float MODEL_ZOOM_INTENSITY     = 0.02f;
         static constexpr float MODEL_SHIFT_INTENSITY    = 0.008f;
+        static constexpr uint8_t STRIDE_SIZE            = 8;
 
     public:
         enum class SLOT {
@@ -80,14 +81,12 @@ namespace ShaderIDE::GUI {
         explicit OpenGLWidget(QWidget *parent = nullptr);
         ~OpenGLWidget() override;
 
-        void LoadOBJMesh(const QString &path);
         QString SelectedMeshName();
         void SelectMesh(const QString &meshName);
 
         void CheckRealtime(bool realtimeChecked);
         bool Realtime();
 
-        void EnablePlane2DAfterModelLoaded();
         void CheckPlane2D(bool plane2DChecked);
         bool Plane2D();
 
@@ -122,7 +121,6 @@ namespace ShaderIDE::GUI {
         void sl_CompileShaders();
 
     private slots:
-        void sl_LoadModelPlane();
         void sl_LoadModelCube();
         void sl_LoadModelSphere();
         void sl_LoadModelTorus();
@@ -151,7 +149,6 @@ namespace ShaderIDE::GUI {
         GLuint vao;
         GLuint vertexBuffer;
         VertexVec vertices;
-        VertexVec planeVertices;
         VertexVec cubeVertices;
         VertexVec sphereVertices;
         VertexVec torusVertices;
@@ -159,8 +156,9 @@ namespace ShaderIDE::GUI {
         VertexVec bunnyVertices;
         QString selectedMeshName;
 
-        // Vertex Cache
-        VertexVec vertexCache;
+        GLuint planeVAO;
+        GLuint planeVertexBuffer;
+        VertexVec planeVertices;
 
         // Overlay Layout
         QVBoxLayout *overlayLayout;
@@ -191,7 +189,6 @@ namespace ShaderIDE::GUI {
 
         bool realtime;
         bool plane2D;
-        bool deferEnablePlane2D;
         bool realtimeCompilation;
 
         // Render Time
@@ -221,6 +218,7 @@ namespace ShaderIDE::GUI {
         // Init
         void InitShaders();
         void InitVAO();
+        void InitPlaneVAO();
         void InitOverlay();
         void InitTopLeftLayout();
         void InitQuickModelButtons();
@@ -246,7 +244,6 @@ namespace ShaderIDE::GUI {
         // Plane 2D
         void EnablePlane2D();
         void DisablePlane2D();
-        void DeferCheckPlane2D();
 
         // Mouse Model Controls
         void EnableMouseDrag();
@@ -264,16 +261,17 @@ namespace ShaderIDE::GUI {
         void ResetCameraPosition();
 
         // Model
+        void LoadOBJMesh(const QString &path);
+        void LoadPlaneMesh();
+
         void LoadModelAsync(const QString &name,
                             const QString &file,
                             VertexVec &vertexStore);
 
-        void LoadOBJMeshIntoBuffer(const QString &file,VertexVec &buffer);
+        void LoadOBJMeshIntoBuffer(const QString &file,
+                                   VertexVec &buffer);
 
         void ApplyVertices(const VertexVec &newVertices);
-
-        void CacheVertices();
-        void ApplyVerticesFromCache();
 
         // Value Pointers
         GLfloat* GetModelMatrix();
@@ -295,8 +293,10 @@ namespace ShaderIDE::GUI {
         void ReleaseTextures();
 
         // GL
+        void InitAttribsForVAO();
         void LinkProgramAndRepaint();
-        void UpdateVAOAndRepaint();
+        void DrawVAO();
+        void DrawPlaneVAO();
     };
 }
 

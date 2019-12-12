@@ -93,6 +93,10 @@ namespace ShaderIDE::GUI {
         void sl_Menu_Help_About();
 
     protected:
+        void dragEnterEvent(QDragEnterEvent *event) override;
+        void dragMoveEvent(QDragMoveEvent *event) override;
+        void dragLeaveEvent(QDragLeaveEvent *event) override;
+        void dropEvent(QDropEvent *event) override;
         void closeEvent(QCloseEvent *event) override;
 
     private:
@@ -178,6 +182,7 @@ namespace ShaderIDE::GUI {
 
         // Project
         void ResetProject();
+        void OpenProject(const QString &path);
         bool ApplyProjectFromUI();
         bool ApplyUIFromProject();
         void ExportShaders(const QUrl &directory);

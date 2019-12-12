@@ -44,7 +44,9 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
     : QOpenGLWidget             (parent),
       program                   (0),
       vao                       (0),
+      planeVAO                  (0),
       vertexBuffer              (0),
+      planeVertexBuffer         (0),
       selectedMeshName          (""),
       overlayLayout             (nullptr),
       topLeftLayout             (nullptr),
@@ -63,7 +65,6 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
       slot3Texture              (nullptr),
       realtime                  (false),
       plane2D                   (false),
-      deferEnablePlane2D        (false),
       realtimeCompilation       (false),
       renderTime                (0.0f),
       dragStartX                (0),
@@ -93,6 +94,7 @@ OpenGLWidget::OpenGLWidget(QWidget *parent)
 
     // Load Default Mesh
     LoadOBJMesh(":/models/cube.obj");
+    LoadPlaneMesh();
 
     // TODO Preload all default meshes for the quick actions...
 
@@ -110,17 +112,6 @@ OpenGLWidget::~OpenGLWidget() {
 
     modelLoaderThread.quit();
     modelLoaderThread.wait();
-}
-
-void OpenGLWidget::LoadOBJMesh(const QString &path) {
-    try {
-        auto meshLoader = OBJMeshLoader(path);
-        auto mesh = meshLoader.GetMesh();
-        vertices = mesh.ComposedVertices();
-
-    } catch (GeneralException &e) {
-        emit si_GeneralError(e);
-    }
 }
 
 QString OpenGLWidget::SelectedMeshName() {
@@ -141,10 +132,6 @@ void OpenGLWidget::CheckRealtime(bool realtimeChecked) {
 
 bool OpenGLWidget::Realtime() {
     return realtime;
-}
-
-void OpenGLWidget::EnablePlane2DAfterModelLoaded() {
-    deferEnablePlane2D = true;
 }
 
 void OpenGLWidget::CheckPlane2D(bool plane2DChecked) {
@@ -322,17 +309,6 @@ void OpenGLWidget::sl_CompileShaders() {
     LinkProgramAndRepaint();
 }
 
-void OpenGLWidget::sl_LoadModelPlane() {
-
-    // Load immediately, instead of using LoadModelAsync(...).
-    if (planeVertices.empty()) {
-        LoadOBJMeshIntoBuffer(":/models/plane.obj", planeVertices);
-    }
-
-    ApplyVertices(planeVertices);
-    sl_ModelLoaded("Plane");
-}
-
 void OpenGLWidget::sl_LoadModelCube() {
     LoadModelAsync("Cube", ":/models/cube.obj", cubeVertices);
 }
@@ -355,10 +331,11 @@ void OpenGLWidget::sl_LoadModelBunny() {
 
 void OpenGLWidget::sl_ModelLoaded(const QString &name) {
     loadingWidget->Hide();
-    emit si_StateUpdated(QString("Model \"") + name + "\" loaded.");
     selectedMeshName = name;
-    UpdateVAOAndRepaint();
-    DeferCheckPlane2D();
+    emit si_StateUpdated(QString("Model \"") + name + "\" loaded.");
+
+    InitVAO();
+    repaint();
 }
 
 void OpenGLWidget::sl_RealtimeUpdateStateChanged(const int &state) {
@@ -401,6 +378,7 @@ void OpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
     InitShaders();
     InitVAO();
+    InitPlaneVAO();
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
@@ -445,9 +423,8 @@ void OpenGLWidget::paintGL() {
     BindTextures();
 
     // Draw
-    glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size()));
-    glBindVertexArray(0);
+    DrawVAO();
+    DrawPlaneVAO();
 
     // Reset Shader Program
     glUseProgram(0);
@@ -525,44 +502,41 @@ void OpenGLWidget::InitShaders() {
 }
 
 void OpenGLWidget::InitVAO() {
-
-    // VAO
     if (!vao) {
         glGenVertexArrays(1, &vao);
     }
 
     glBindVertexArray(vao);
 
-    // Vertex Buffer
     if (!vertexBuffer) {
         glGenBuffers(1, &vertexBuffer);
     }
 
-    const auto stride = 8;
-
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * stride * sizeof(GLfloat),
-            vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * STRIDE_SIZE * sizeof(GLfloat),
+                 vertices.data(), GL_STATIC_DRAW);
 
-    // Vertex Position Attrib
-    auto vPosLocation = glGetAttribLocation(program, "position");
-    glEnableVertexAttribArray(vPosLocation);
-    glVertexAttribPointer(vPosLocation, 3, GL_FLOAT, GL_FALSE,
-                          GLUtility::StrideSize(stride), GLUtility::StridePtr(0));
+    InitAttribsForVAO();
+    glBindVertexArray(0);
 
-    // Normal Attrib
-    auto vNormalLocation = glGetAttribLocation(program, "normal");
-    glEnableVertexAttribArray(vNormalLocation);
-    glVertexAttribPointer(vNormalLocation, 3, GL_FLOAT, GL_FALSE,
-                          GLUtility::StrideSize(stride), GLUtility::StridePtr(3));
+}
 
-    // UV Attrib
-    auto vTexUVLocation = glGetAttribLocation(program, "uv");
-    glEnableVertexAttribArray(vTexUVLocation);
-    glVertexAttribPointer(vTexUVLocation, 2, GL_FLOAT, GL_FALSE,
-                          GLUtility::StrideSize(stride), GLUtility::StridePtr(6));
+void OpenGLWidget::InitPlaneVAO() {
+    if (!planeVAO) {
+        glGenVertexArrays(1, &planeVAO);
+    }
 
-    // Unbind VAO
+    glBindVertexArray(planeVAO);
+
+    if (!planeVertexBuffer) {
+        glGenBuffers(1, &planeVertexBuffer);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, planeVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, planeVertices.size() * STRIDE_SIZE * sizeof(GLfloat),
+                 planeVertices.data(), GL_STATIC_DRAW);
+
+    InitAttribsForVAO();
     glBindVertexArray(0);
 }
 
@@ -671,7 +645,9 @@ void OpenGLWidget::DestroyOverlay() {
 }
 
 void OpenGLWidget::DestroyVAO() {
+    glDeleteBuffers(1, &planeVertexBuffer);
     glDeleteBuffers(1, &vertexBuffer);
+    glDeleteVertexArrays(1, &planeVAO);
     glDeleteVertexArrays(1, &vao);
     glDeleteProgram(program);
 }
@@ -709,34 +685,14 @@ void OpenGLWidget::UpdateRealtime() {
 
 void OpenGLWidget::EnablePlane2D() {
     plane2D = true;
-    CacheVertices();
-    sl_LoadModelPlane();
     HideQuickLoadModelsLayout();
+    repaint();
 }
 
 void OpenGLWidget::DisablePlane2D() {
     plane2D = false;
-    ApplyVerticesFromCache();
     ShowQuickLoadModelsLayout();
-}
-
-void OpenGLWidget::DeferCheckPlane2D() {
-
-    // This is actually not a good solution, but
-    // rather a quick fix. When loading a project, which has
-    // "Plane 2D" mode enabled, the model loads asynchronously and
-    // overrides the 2D mesh later. To avoid this, we check the
-    // "Plane 2D" checkbox after the actual model is loaded.
-
-    // TODO Decouple "Plane 2D" mode completely from
-    //      the model mesh system in future versions.
-    //      Just place a 2D plane on top of the 3D
-    //      view instead, which can be shown and hidden.
-
-    if (deferEnablePlane2D) {
-        CheckPlane2D(true);
-        deferEnablePlane2D = false;
-    }
+    repaint();
 }
 
 void OpenGLWidget::EnableMouseDrag() {
@@ -828,6 +784,28 @@ void OpenGLWidget::ResetCameraPosition() {
     MoveCamera(OPENGLWIDGET_DEFAULT_CAMERA_POSITION);
 }
 
+void OpenGLWidget::LoadOBJMesh(const QString &path) {
+    try {
+        auto meshLoader = OBJMeshLoader(path);
+        auto mesh = meshLoader.GetMesh();
+        vertices = mesh.ComposedVertices();
+
+    } catch (GeneralException &e) {
+        emit si_GeneralError(e);
+    }
+}
+
+void OpenGLWidget::LoadPlaneMesh() {
+    try {
+        auto meshLoader = OBJMeshLoader(":/models/plane.obj");
+        auto mesh = meshLoader.GetMesh();
+        planeVertices = mesh.ComposedVertices();
+
+    } catch (GeneralException &e) {
+        emit si_GeneralError(e);
+    }
+}
+
 void OpenGLWidget::LoadModelAsync(const QString &name,
                                   const QString &file,
                                   VertexVec &vertexStore)
@@ -870,16 +848,6 @@ void OpenGLWidget::ApplyVertices(const VertexVec &newVertices) {
     modelLoaderMutex.lock();
     vertices = newVertices;
     modelLoaderMutex.unlock();
-}
-
-void OpenGLWidget::CacheVertices() {
-    vertexCache = vertices;
-}
-
-void OpenGLWidget::ApplyVerticesFromCache() {
-    ApplyVertices(vertexCache);
-    vertexCache.clear();
-    UpdateVAOAndRepaint();
 }
 
 GLfloat* OpenGLWidget::GetModelMatrix() {
@@ -953,12 +921,50 @@ void OpenGLWidget::ReleaseTextures() {
     if (slot3Texture) slot3Texture->release();
 }
 
-void OpenGLWidget::LinkProgramAndRepaint() {
-    glLinkProgram(program);
-    UpdateVAOAndRepaint();
+void OpenGLWidget::InitAttribsForVAO() {
+
+    // Vertex Position Attrib
+    auto vPosLocation = glGetAttribLocation(program, "position");
+    glEnableVertexAttribArray(vPosLocation);
+    glVertexAttribPointer(vPosLocation, 3, GL_FLOAT, GL_FALSE,
+                          GLUtility::StrideSize(STRIDE_SIZE), GLUtility::StridePtr(0));
+
+    // Normal Attrib
+    auto vNormalLocation = glGetAttribLocation(program, "normal");
+    glEnableVertexAttribArray(vNormalLocation);
+    glVertexAttribPointer(vNormalLocation, 3, GL_FLOAT, GL_FALSE,
+                          GLUtility::StrideSize(STRIDE_SIZE), GLUtility::StridePtr(3));
+
+    // UV Attrib
+    auto vTexUVLocation = glGetAttribLocation(program, "uv");
+    glEnableVertexAttribArray(vTexUVLocation);
+    glVertexAttribPointer(vTexUVLocation, 2, GL_FLOAT, GL_FALSE,
+                          GLUtility::StrideSize(STRIDE_SIZE), GLUtility::StridePtr(6));
 }
 
-void OpenGLWidget::UpdateVAOAndRepaint() {
+void OpenGLWidget::LinkProgramAndRepaint() {
+    glLinkProgram(program);
     InitVAO();
+    InitPlaneVAO();
     repaint();
+}
+
+void OpenGLWidget::DrawVAO() {
+    if (plane2D) {
+        return;
+    }
+
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size()));
+    glBindVertexArray(0);
+}
+
+void OpenGLWidget::DrawPlaneVAO() {
+    if (!plane2D) {
+        return;
+    }
+
+    glBindVertexArray(planeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(planeVertices.size()));
+    glBindVertexArray(0);
 }
