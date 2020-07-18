@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,14 +31,22 @@
 
 namespace ShaderIDE {
 
-    class MathUtility {
+    class MathUtility
+    {
     public:
         MathUtility() = delete;
         ~MathUtility() = delete;
 
-        static float clamp(const float &value, const float &min, const float &max) {
-            if (value > max) { return max; }
-            if (value < min) { return min; }
+        static float clamp(const float& value, const float& min, const float& max)
+        {
+            if (value > max) {
+                return max;
+            }
+
+            if (value < min) {
+                return min;
+            }
+            
             return value;
         }
     };

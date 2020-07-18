@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,46 +38,46 @@
 
 namespace ShaderIDE::GUI {
 
-    class TextureBrowser : public QWidget {
-    Q_OBJECT
+    class TextureBrowser : public QWidget
+    {
+        Q_OBJECT
         static constexpr int IMAGE_SPACING = 20;
 
     public:
-        explicit TextureBrowser(QWidget *parent = nullptr);
+        explicit TextureBrowser(QWidget* parent = nullptr);
         ~TextureBrowser() override;
 
-        void AddImage(const QString &name, const QString &path);
-        TextureBrowserImage* GetImage(const QString &name);
+        void AddImage(const QString& name, const QString& path);
+        TextureBrowserImage* GetImage(const QString& name);
         QMap<QString, TextureBrowserImage*> Images();
-        void RemoveImage(const QString &name);
+        void RemoveImage(const QString& name);
 
         void ClearImages();
 
     signals:
-        void si_ImageChanged(TextureBrowserImage *image);
-        void si_ImageCleared(TextureBrowserImage *image);
-        void si_ImagePathChanged(TextureBrowserImage *image);
+        void NotifyImageChanged(TextureBrowserImage* image);
+        void NotifyImageCleared(TextureBrowserImage* image);
+        void NotifyImagePathChanged(TextureBrowserImage* image);
 
     protected:
-        void paintEvent(QPaintEvent *event) override;
+        void paintEvent(QPaintEvent* event) override;
 
     private slots:
-        void sl_ImageChanged(TextureBrowserImage *image);
-        void sl_ImageCleared(TextureBrowserImage *image);
-        void sl_ImagePathChanged(TextureBrowserImage *image);
+        void OnImageChanged(TextureBrowserImage* image);
+        void OnImageCleared(TextureBrowserImage* image);
+        void OnImagePathChanged(TextureBrowserImage* image);
 
     private:
-        QVBoxLayout *mainLayout;
-        QWidget *scrollWidget;
-        QLabel *titleLabel;
-        QHBoxLayout *scrollLayout;
-        QScrollArea *scrollArea;
+        QVBoxLayout* mainLayout{ nullptr };
+        QWidget* scrollWidget{ nullptr };
+        QLabel* titleLabel{ nullptr };
+        QHBoxLayout* scrollLayout{ nullptr };
+        QScrollArea* scrollArea{ nullptr };
         QMap<QString, TextureBrowserImage*> images;
 
         void InitLayout();
 
         void DestroyImages();
-        void DestroyLayout();
 
         void ResizeScrollWidget();
     };

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,24 +35,26 @@
 
 namespace ShaderIDE::GL {
 
-    struct Vertex {
+    struct Vertex
+    {
         glm::vec3 vertex;
         glm::vec3 normal;
         glm::vec2 uv;
 
         Vertex() = default;
 
-        explicit Vertex(const float &posX, const float &posY, const float &posZ,
-                        const float &normalX, const float &normalY, const float &normalZ,
-                        const float &uvX, const float &uvY)
-            : vertex(posX, posY, posZ),
-              normal(normalX, normalY, normalZ),
-              uv(uvX, uvY)
+        explicit Vertex(const float& posX, const float& posY, const float& posZ,
+                        const float& normalX, const float& normalY, const float& normalZ,
+                        const float& uvX, const float& uvY)
+                : vertex(posX, posY, posZ),
+                  normal(normalX, normalY, normalZ),
+                  uv(uvX, uvY)
         {}
 
         ~Vertex() = default;
 
-        Vertex& operator= (const float vtx[8]) {
+        Vertex& operator=(const float vtx[8])
+        {
             vertex = { vtx[0], vtx[1], vtx[2] };
             normal = { vtx[3], vtx[4], vtx[5] };
             uv = { vtx[6], vtx[7] };

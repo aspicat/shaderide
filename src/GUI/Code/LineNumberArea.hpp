@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,29 +36,30 @@ namespace ShaderIDE::GUI {
     // CodeEditor Class Forward Declaration
     class CodeEditor;
 
-    class LineNumberArea : public QWidget {
-    Q_OBJECT
+    class LineNumberArea : public QWidget
+    {
+        Q_OBJECT
     public:
-        explicit LineNumberArea(CodeEditor *codeEditor);
+        explicit LineNumberArea(CodeEditor* codeEditor);
 
-        void SetFontSize(const float &newFontSize);
+        void SetFontSize(const float& newFontSize);
 
     signals:
-        void si_Updated();
+        void NotifyUpdated();
 
     public slots:
-        void sl_CodeChanged(const QString &code);
+        void OnCodeChanged(const QString& code);
 
     protected:
-        void paintEvent(QPaintEvent *event) override;
-        void resizeEvent(QResizeEvent *event) override;
+        void paintEvent(QPaintEvent* event) override;
+        void resizeEvent(QResizeEvent* event) override;
 
     private:
-        float fontSize;
-        CodeEditor *codeEditor;
+        float fontSize{ 10.0f };
+        CodeEditor* codeEditor{ nullptr };
 
-        void DrawBackground(QPainter &painter);
-        void DrawBlocks(QPainter &painter);
+        void DrawBackground(QPainter& painter);
+        void DrawBlocks(QPainter& painter);
     };
 }
 

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,35 +31,16 @@
 
 #include <string>
 #include <unordered_map>
-#include <boost/serialization/unordered_map.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
 #include "SerializableVector3.hpp"
+#include "src/version.hpp"
+#include "src/GL/GLDefaults.hpp"
 
 namespace ShaderIDE::Project {
 
-    class ShaderProject {
-        friend class boost::serialization::access;
-
-        template <typename Archive>
-        void serialize(Archive &ar, const uint32_t version) {
-            ar & file_version;
-            ar & path;
-            ar & vsSource;
-            ar & fsSource;
-            ar & meshName;
-            ar & texturePaths;
-            ar & realtime;
-            ar & plane2D;
-            ar & modelRotation;
-            ar & cameraPosition;
-        }
-
+    class ShaderProject
+    {
     public:
-        [[deprecated("Use LoadFromJSON(...).")]]
-        static ShaderProject* Load(const std::string &path);
-
-        static ShaderProject* LoadFromJSON(const std::string &path);
+        static ShaderProject* Load(const std::string& path);
 
         explicit ShaderProject(std::string path);
 
@@ -68,47 +49,48 @@ namespace ShaderIDE::Project {
         std::string VertexShaderSource();
         std::string FragmentShaderSource();
         std::string MeshName();
-        std::unordered_map<std::string, std::string> TexturePaths();
-        bool Realtime();
-        bool Plane2D();
+        std::unordered_map<std::string, std::string> TextureData();
+        bool Realtime() const;
+        bool Plane2D() const;
         glm::vec3 ModelRotation();
         glm::vec3 CameraPosition();
 
-        void SetFileVersion(const std::string &newFileVersion);
-        void SetPath(const std::string &newPath);
-        void SetVertexShaderSource(const std::string &newVSSource);
-        void SetFragmentShaderSource(const std::string &newFSSource);
-        void SetMeshName(const std::string &newMeshName);
+        std::string PathOnly();
+
+        void SetFileVersion(const std::string& newFileVersion);
+        void SetPath(const std::string& newPath);
+        void SetVertexShaderSource(const std::string& newVSSource);
+        void SetFragmentShaderSource(const std::string& newFSSource);
+        void SetMeshName(const std::string& newMeshName);
         void SetRealtime(bool newRealtime);
         void SetPlane2D(bool newPlane2D);
-        void SetModelRotation(const glm::vec3 &newModelRotation);
-        void SetCameraPosition(const glm::vec3 &newCameraPosition);
+        void SetModelRotation(const glm::vec3& newModelRotation);
+        void SetCameraPosition(const glm::vec3& newCameraPosition);
 
-        void SetTexturePath(const std::string &name, const std::string &texturePath);
-        void ClearTexturePath(const std::string &name);
+        void SetTextureData(const std::string& name, const std::string& data);
+        void ClearTextureData(const std::string& name);
 
-        [[deprecated("Use SaveAsJSON(...).")]]
         void Save();
 
-        void SaveAsJSON();
-
     private:
-        static void CheckPath(const std::string &filePath);
-        static std::ifstream OpenInputFile(const std::string &filePath);
-        static std::ofstream OpenOutputFile(const std::string &filePath);
+        static void CheckPath(const std::string& filePath);
+        static std::ifstream OpenInputFile(const std::string& filePath);
+        static std::ofstream OpenOutputFile(const std::string& filePath);
 
-        std::string file_version;
-        std::string path;
-        std::string vsSource;
-        std::string fsSource;
-        std::string meshName;
-        std::unordered_map<std::string, std::string> texturePaths;
-        bool realtime;
-        bool plane2D;
-        SerializableVector3 modelRotation;
-        SerializableVector3 cameraPosition;
+        std::string file_version{ SHADERIDE_VERSION };
+        std::string path{ "" };
+        std::string vsSource{ "" };
+        std::string fsSource{ "" };
+        std::string meshName{ "" };
+        std::unordered_map<std::string, std::string> textureData;
+        bool realtime{ false };
+        bool plane2D{ false };
+        SerializableVector3 modelRotation{ OPENGLWIDGET_DEFAULT_MODEL_ROTATION };
+        SerializableVector3 cameraPosition{ OPENGLWIDGET_DEFAULT_CAMERA_POSITION };
 
-        QJsonObject MakeJsonObjectFromTexturePaths();
+        QJsonObject MakeJsonObjectFromTextureData();
+
+        size_t LastSlashPos();
     };
 }
 

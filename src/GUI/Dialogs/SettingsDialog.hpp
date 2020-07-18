@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,38 +44,37 @@ namespace ShaderIDE::GUI {
     // MainWindow Forward Declaration
     class MainWindow;
 
-    class SettingsDialog : public QDialog {
-    Q_OBJECT
+    class SettingsDialog : public QDialog
+    {
+        Q_OBJECT
     public:
-        explicit SettingsDialog(MainWindow *mainWindow);
+        explicit SettingsDialog(MainWindow* mainWindow);
         ~SettingsDialog() override;
 
     protected:
-        void showEvent(QShowEvent *event) override;
+        void showEvent(QShowEvent* event) override;
 
     private slots:
-        void sl_Save();
+        void OnSave();
 
     private:
-        MainWindow *mainWindow;
-        QVBoxLayout *mainLayout;
+        MainWindow* mainWindow{ nullptr };
+        QVBoxLayout* mainLayout{ nullptr };
 
         // 3D Viewport
-        QVBoxLayout *viewportLayout;
-        QLabel *viewportTitle;
-        QFormLayout *viewportForm;
-        QComboBox *cboxMultisampling;
-        QLabel *viewportRestartNote;
+        QVBoxLayout* viewportLayout{ nullptr };
+        QLabel* viewportTitle{ nullptr };
+        QFormLayout* viewportForm{ nullptr };
+        QComboBox* cboxMultisampling{ nullptr };
+        QLabel* viewportRestartNote{ nullptr };
 
         // Button Layout
-        QHBoxLayout *buttonLayout;
-        QPushButton *btSave;
+        QHBoxLayout* buttonLayout{ nullptr };
+        QPushButton* btSave{ nullptr };
 
         void InitLayout();
         void InitViewportSection();
         void InitButtonLayout();
-
-        void Destroy();
 
         void ApplySettings();
         void FetchSettings();

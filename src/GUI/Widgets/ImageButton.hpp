@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,13 +33,14 @@
 
 namespace ShaderIDE::GUI {
 
-    class ImageButton : public QPushButton {
+    class ImageButton : public QPushButton
+    {
     public:
-        explicit ImageButton(const QString &imagePath,
-                             QWidget *parent = nullptr);
+        explicit ImageButton(const QString& imagePath,
+                             QWidget* parent = nullptr);
 
     protected:
-        void ApplyIcon(const QString &imagePath);
+        void ApplyIcon(const QString& imagePath);
     };
 }
 

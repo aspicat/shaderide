@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,90 +36,97 @@
 
 using namespace ShaderIDE::GUI;
 
-TextureBrowser::TextureBrowser(QWidget *parent)
-    : QWidget       (parent),
-      mainLayout    (nullptr),
-      titleLabel    (nullptr),
-      scrollWidget  (nullptr),
-      scrollLayout  (nullptr),
-      scrollArea    (nullptr)
+TextureBrowser::TextureBrowser(QWidget* parent)
+        : QWidget(parent)
 {
     InitLayout();
 }
 
-TextureBrowser::~TextureBrowser() {
+TextureBrowser::~TextureBrowser()
+{
     DestroyImages();
-    DestroyLayout();
+    Memory::Release(scrollArea);
 }
 
-void TextureBrowser::AddImage(const QString &name, const QString &path) {
+void TextureBrowser::AddImage(const QString& name, const QString& path)
+{
 
     // Check if image already exists.
-    if (images.find(name) != images.end()) {
+    if (images.find(name) != images.end())
+    {
         throw GeneralException(
                 (QString("Image \"") + name + " already available in texture browser.")
-                .toStdString()
+                        .toStdString()
         );
     }
 
     // Create and apply texture browser image.
-    auto *image = new TextureBrowserImage(name, path);
+    auto* image = new TextureBrowserImage(name, path);
     images[image->Name()] = image;
     scrollLayout->addWidget(image);
     ResizeScrollWidget();
 
-    connect(image, SIGNAL(si_ImageChanged(TextureBrowserImage*)),
-            this, SLOT(sl_ImageChanged(TextureBrowserImage*)));
+    connect(image, SIGNAL(NotifyImageChanged(TextureBrowserImage*)),
+            this, SLOT(OnImageChanged(TextureBrowserImage*)));
 
-    connect(image, SIGNAL(si_ImageCleared(TextureBrowserImage*)),
-            this, SLOT(sl_ImageCleared(TextureBrowserImage*)));
+    connect(image, SIGNAL(NotifyImageCleared(TextureBrowserImage*)),
+            this, SLOT(OnImageCleared(TextureBrowserImage*)));
 
-    connect(image, SIGNAL(si_PathChanged(TextureBrowserImage*)),
-            this, SLOT(sl_ImagePathChanged(TextureBrowserImage*)));
+    connect(image, SIGNAL(NotifyPathChanged(TextureBrowserImage*)),
+            this, SLOT(OnImagePathChanged(TextureBrowserImage*)));
 }
 
-TextureBrowserImage* TextureBrowser::GetImage(const QString &name) {
+TextureBrowserImage* TextureBrowser::GetImage(const QString& name)
+{
     auto it = images.find(name);
     return (it != images.end()) ? *it : nullptr;
 }
 
-QMap<QString, TextureBrowserImage*> TextureBrowser::Images() {
+QMap<QString, TextureBrowserImage*> TextureBrowser::Images()
+{
     return images;
 }
 
-void TextureBrowser::RemoveImage(const QString &name) {
+void TextureBrowser::RemoveImage(const QString& name)
+{
     auto it = images.find(name);
 
-    if (it != images.end()) {
+    if (it != images.end())
+    {
         images.erase(it);
         Memory::Release(*it);
     }
 }
 
-void TextureBrowser::ClearImages() {
-    for (auto *image : Images()) {
-        image->sl_ClearImage();
+void TextureBrowser::ClearImages()
+{
+    for (auto* image : Images()) {
+        image->OnClearImage();
     }
 }
 
-void TextureBrowser::paintEvent(QPaintEvent *event) {
+void TextureBrowser::paintEvent(QPaintEvent* event)
+{
     QtUtility::PaintQObjectStyleSheets(this);
 }
 
-void TextureBrowser::sl_ImageChanged(TextureBrowserImage *image) {
-    emit si_ImageChanged(image);
+void TextureBrowser::OnImageChanged(TextureBrowserImage* image)
+{
+    emit NotifyImageChanged(image);
 }
 
-void TextureBrowser::sl_ImageCleared(TextureBrowserImage *image) {
-    emit si_ImageCleared(image);
+void TextureBrowser::OnImageCleared(TextureBrowserImage* image)
+{
+    emit NotifyImageCleared(image);
 }
 
-void TextureBrowser::sl_ImagePathChanged(TextureBrowserImage *image) {
-    emit si_ImagePathChanged(image);
+void TextureBrowser::OnImagePathChanged(TextureBrowserImage* image)
+{
+    emit NotifyImagePathChanged(image);
 }
 
-void TextureBrowser::InitLayout() {
-
+void TextureBrowser::InitLayout()
+{
     setMinimumHeight(240);
     setObjectName("TextureBrowser");
     setStyleSheet(STYLE_TEXTUREBROWSER);
@@ -161,11 +168,13 @@ void TextureBrowser::InitLayout() {
     mainLayout->addWidget(scrollArea);
 }
 
-void TextureBrowser::DestroyImages() {
+void TextureBrowser::DestroyImages()
+{
     auto it = images.begin();
 
-    while (it != images.end()) {
-        auto *image = it.value();
+    while (it != images.end())
+    {
+        auto* image = it.value();
         Memory::Release(image);
         it++;
     }
@@ -173,16 +182,14 @@ void TextureBrowser::DestroyImages() {
     images.clear();
 }
 
-void TextureBrowser::DestroyLayout() {
-    Memory::Release(scrollArea);
-}
-
-void TextureBrowser::ResizeScrollWidget() {
+void TextureBrowser::ResizeScrollWidget()
+{
     auto it = images.begin();
     int totalWidth = 0;
 
-    while (it != images.end()) {
-        auto *image = it.value();
+    while (it != images.end())
+    {
+        auto* image = it.value();
         totalWidth += image->width() + IMAGE_SPACING;
         it++;
     }

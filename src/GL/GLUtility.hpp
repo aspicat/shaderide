@@ -7,7 +7,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,13 +35,16 @@
 
 namespace ShaderIDE::GL {
 
-    class GLUtility {
+    class GLUtility
+    {
     public:
-        static GLsizei StrideSize(const uint8_t &count) {
+        static GLsizei StrideSize(const uint8_t& count)
+        {
             return sizeof(GLfloat) * count;
         }
 
-        static const void* StridePtr(const uint8_t &offset) {
+        static const void* StridePtr(const uint8_t& offset)
+        {
             return (const void*) (sizeof(GLfloat) * offset);
         }
     };

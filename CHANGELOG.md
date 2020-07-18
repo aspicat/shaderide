@@ -3,6 +3,25 @@
 You can find all changes in detail per version in this file.
 The listed notes are not ordered by priority.
 
+## Version 1.3.0 - July 18, 2020
+### Added
+- Uniform variable "uniform vec2 resolution", which holds the viewport screen resolution.
+- Drag and drop support for project files.
+- Basic search bar for shader code editors (Ctrl + F).
+- Testing environment with project test module.
+- Prepared SPIR-V export in code, but disabled due to incompatibility with legacy GLSL code
+  yet. This might be a feature for an upcoming major release with Vulkan and/or OpenGL 4.6 support.
+
+### Changed
+- General code refactoring and clean up.
+- Added separate plane 2D VAO to decouple the plane mesh from other preview objects.
+- Layout changes are now stored automatically on exit.
+- Set the FPS limit to 60 by changing the one shot delay from 33ms to 16.33ms (rounded).
+- Project files can now contain all images as Base64 within the JSON file format. This excludes the
+  requirement to have the files stored on the computer with an absolute path. This is also an improvement
+  to painlessly exchanging the projects. Another advantage might be the ability to parse the project
+  file in web services for WebGL etc. in future versions.
+
 ## Version 1.2.0 - December 6, 2019
 ### Added
 - Toggle word wrap via "Code" menu.
@@ -22,7 +41,7 @@ The listed notes are not ordered by priority.
 
 ### Fixed
 - Layout sizes in splitter (width_left, width_right) were not saved for maximized window.
-Fixed by applying layout settings first.
+  Fixed by applying layout settings first.
 
 ## Version 1.1.0 - December 2, 2019
 ### Added

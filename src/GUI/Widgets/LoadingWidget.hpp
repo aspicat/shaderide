@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,23 +36,24 @@
 
 namespace ShaderIDE::GUI {
 
-    class LoadingWidget : public QWidget {
-    Q_OBJECT
+    class LoadingWidget : public QWidget
+    {
+        Q_OBJECT
         static constexpr int VISIBILITY_TIMEOUT = 500;
 
     public:
-        explicit LoadingWidget(QWidget *parent = nullptr);
+        explicit LoadingWidget(QWidget* parent = nullptr);
         ~LoadingWidget() override;
 
-        void Show(const QString &text = "Loading");
+        void Show(const QString& text = "Loading");
         void Hide();
 
     protected:
-        void paintEvent(QPaintEvent *event) override;
+        void paintEvent(QPaintEvent* event) override;
 
     private:
-        QHBoxLayout *mainLayout;
-        QLabel *textLabel;
+        QHBoxLayout* mainLayout{ nullptr };
+        QLabel* textLabel{ nullptr };
 
         QTimer visibilityTimer;
 

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,40 +39,38 @@ using namespace ShaderIDE::GL;
 
 namespace ShaderIDE::GUI {
 
-    class LogOutputWidget : public QPlainTextEdit {
-    Q_OBJECT
+    class LogOutputWidget : public QPlainTextEdit
+    {
+        Q_OBJECT
         constexpr static uint16_t MAX_LOG_MESSAGES = 100;
 
     public:
-        explicit LogOutputWidget(QWidget *parent = nullptr);
+        explicit LogOutputWidget(QWidget* parent = nullptr);
         ~LogOutputWidget() override;
 
-        void LogMessage(const QString &message);
-        void LogSuccessMessage(const QString &message);
-        void LogErrorMessage(const QString &message);
-        QString LogGLSLError(GLSLCompileError &error);
+        void LogMessage(const QString& message);
+        void LogSuccessMessage(const QString& message);
+        void LogErrorMessage(const QString& message);
+        QString LogGLSLError(GLSLCompileError& error);
 
     protected:
-        void contextMenuEvent(QContextMenuEvent *event) override;
+        void contextMenuEvent(QContextMenuEvent* event) override;
 
     private slots:
-        void sl_ClearLog();
+        void OnClearLog();
 
     private:
-        uint16_t logCounter;
+        uint16_t logCounter{ 0 };
 
-        SyntaxHighlighter *syntaxHighlighter;
-        QMenu *contextMenu;
-        QAction *clearLogAction;
+        SyntaxHighlighter* syntaxHighlighter{ nullptr };
+        QMenu* contextMenu{ nullptr };
+        QAction* clearLogAction{ nullptr };
 
         void InitFont();
         void InitSyntaxHighlighter();
         void InitContextMenu();
 
-        void DestroyContextMenu();
-        void DestroySyntaxHighlighter();
-
-        void AppendPlainTextWithAutomaticCleanup(const QString &message);
+        void AppendPlainTextWithAutomaticCleanup(const QString& message);
     };
 }
 

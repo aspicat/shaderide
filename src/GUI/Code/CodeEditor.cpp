@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,14 +39,8 @@
 
 using namespace ShaderIDE::GUI;
 
-CodeEditor::CodeEditor(QWidget *parent)
-    : QPlainTextEdit        (parent),
-      syntaxHighlighter     (nullptr),
-      lineNumberArea        (nullptr),
-      fontSize              (10.0f),
-      fontScalingEnabled    (false),
-      increaseFontSizeSC    (nullptr),
-      decreaseFontSizeSC    (nullptr)
+CodeEditor::CodeEditor(QWidget* parent)
+        : QPlainTextEdit(parent)
 {
     setAcceptDrops(false);
     setStyleSheet(STYLE_CODEEDITOR);
@@ -59,30 +53,34 @@ CodeEditor::CodeEditor(QWidget *parent)
     InitLineNumberArea();
     InitShortcuts();
 
-    connect(this, SIGNAL(textChanged()), this, SLOT(sl_CodeChanged()));
+    connect(this, SIGNAL(textChanged()),
+            this, SLOT(OnCodeChanged()));
 
     connect(verticalScrollBar(), SIGNAL(valueChanged(int)),
-            this, SLOT(sl_Scrolled(int)));
+            this, SLOT(OnScrolled(int)));
 
     connect(horizontalScrollBar(), SIGNAL(valueChanged(int)),
-            this, SLOT(sl_Scrolled(int)));
+            this, SLOT(OnScrolled(int)));
 
     connect(this, SIGNAL(cursorPositionChanged()),
-            this, SLOT(sl_CursorPositionChanged()));
+            this, SLOT(OnCursorPositionChanged()));
 }
 
-CodeEditor::~CodeEditor() {
+CodeEditor::~CodeEditor()
+{
     Memory::Release(decreaseFontSizeSC);
     Memory::Release(increaseFontSizeSC);
     Memory::Release(lineNumberArea);
     Memory::Release(syntaxHighlighter);
 }
 
-void CodeEditor::LoadSyntaxFile(const QString &path) {
+void CodeEditor::LoadSyntaxFile(const QString& path)
+{
     syntaxHighlighter->LoadSyntaxFile(path);
 }
 
-void CodeEditor::HighlightErrorLine(const int &line, const QColor &color) {
+void CodeEditor::HighlightErrorLine(const int& line, const QColor& color)
+{
     QTextCursor cursor(document()->findBlockByLineNumber(line - 1));
 
     QTextEdit::ExtraSelection selection{};
@@ -94,12 +92,14 @@ void CodeEditor::HighlightErrorLine(const int &line, const QColor &color) {
     ApplyExtraSelections();
 }
 
-void CodeEditor::ResetErrorLines() {
+void CodeEditor::ResetErrorLines()
+{
     errorLines.clear();
     ApplyExtraSelections();
 }
 
-void CodeEditor::ToggleWordWrap() {
+void CodeEditor::ToggleWordWrap()
+{
     if (wordWrapMode() == QTextOption::WordWrap) {
         setWordWrapMode(QTextOption::NoWrap);
     } else {
@@ -107,48 +107,102 @@ void CodeEditor::ToggleWordWrap() {
     }
 }
 
-void CodeEditor::sl_IncreaseFontSize() {
+void CodeEditor::Find(const QString& text,
+                      bool caseSensitive,
+                      bool words)
+{
+    ResetSearchLines();
+
+    QTextDocument::FindFlags flags;
+
+    if (caseSensitive) {
+        flags |= QTextDocument::FindCaseSensitively;
+    }
+
+    if (words) {
+        flags |= QTextDocument::FindWholeWords;
+    }
+
+    auto cursor = textCursor();
+    const auto savedCursor = textCursor();
+
+    cursor.movePosition(QTextCursor::Start);
+    setTextCursor(cursor);
+
+    QTextCharFormat format;
+    format.setUnderlineStyle(QTextCharFormat::NoUnderline);
+    format.setBackground(QBrush(QColor("#4B6F93")));
+
+    while (find(text, flags))
+    {
+        QTextEdit::ExtraSelection selection{ textCursor(), format };
+        searchLines.append(selection);
+    }
+
+    ApplyExtraSelections();
+
+    // Reset text cursor to previous user position.
+    setTextCursor(savedCursor);
+}
+
+void CodeEditor::ResetSearchLines()
+{
+    searchLines.clear();
+    ApplyExtraSelections();
+}
+
+void CodeEditor::OnIncreaseFontSize()
+{
     ApplyFontScale(1.0f);
 }
 
-void CodeEditor::sl_DecreaseFontSize() {
+void CodeEditor::OnDecreaseFontSize()
+{
     ApplyFontScale(-1.0f);
 }
 
-void CodeEditor::sl_CodeChanged() {
-    emit si_CodeChanged(toPlainText());
+void CodeEditor::OnCodeChanged()
+{
+    emit NotifyCodeChanged(toPlainText());
 }
 
-void CodeEditor::sl_Scrolled(int value) {
+void CodeEditor::OnScrolled(int value)
+{
     lineNumberArea->update();
 }
 
-void CodeEditor::sl_LineNumberAreaUpdated() {
+void CodeEditor::OnLineNumberAreaUpdated()
+{
     setViewportMargins(lineNumberArea->width(), 0, 0, 0);
 }
 
-void CodeEditor::sl_CursorPositionChanged() {
+void CodeEditor::OnCursorPositionChanged()
+{
     HighlightCursorLine();
 }
 
-void CodeEditor::keyPressEvent(QKeyEvent *event) {
+void CodeEditor::keyPressEvent(QKeyEvent* event)
+{
     QPlainTextEdit::keyPressEvent(event);
 
     // Tab
-    if (event->key() == Qt::Key_Tab) {
+    if (event->key() == Qt::Key_Tab)
+    {
         ReplaceTabStopsWithSpaces();
         UpdateLineNumberArea();
         return;
     }
 
     // Control
-    if (event->key() == Qt::Key_Control) {
+    if (event->key() == Qt::Key_Control)
+    {
         EnableFontScaling();
         return;
     }
 }
 
-void CodeEditor::keyReleaseEvent(QKeyEvent *event) {
+void CodeEditor::keyReleaseEvent(QKeyEvent* event)
+{
     QPlainTextEdit::keyReleaseEvent(event);
 
     // Control
@@ -157,18 +211,22 @@ void CodeEditor::keyReleaseEvent(QKeyEvent *event) {
     }
 }
 
-void CodeEditor::mousePressEvent(QMouseEvent *event) {
+void CodeEditor::mousePressEvent(QMouseEvent* event)
+{
     QPlainTextEdit::mousePressEvent(event);
     UpdateLineNumberArea();
 }
 
-void CodeEditor::mouseReleaseEvent(QMouseEvent *event) {
+void CodeEditor::mouseReleaseEvent(QMouseEvent* event)
+{
     QPlainTextEdit::mouseReleaseEvent(event);
-    emit si_MouseReleased();
+    emit NotifyMouseReleased();
 }
 
-void CodeEditor::wheelEvent(QWheelEvent *event) {
-    if (fontScalingEnabled) {
+void CodeEditor::wheelEvent(QWheelEvent* event)
+{
+    if (fontScalingEnabled)
+    {
         ApplyFontScale(static_cast<float>(event->angleDelta().y()) / 120.0f);
         return;
     }
@@ -176,45 +234,50 @@ void CodeEditor::wheelEvent(QWheelEvent *event) {
     QPlainTextEdit::wheelEvent(event);
 }
 
-void CodeEditor::contextMenuEvent(QContextMenuEvent *event) {
+void CodeEditor::contextMenuEvent(QContextMenuEvent* event)
+{
     auto contextMenu = createStandardContextMenu();
     contextMenu->setStyleSheet(STYLE_CONTEXTMENU);
     contextMenu->exec(event->globalPos());
 }
 
-void CodeEditor::resizeEvent(QResizeEvent *event) {
+void CodeEditor::resizeEvent(QResizeEvent* event)
+{
     QPlainTextEdit::resizeEvent(event);
     UpdateLineNumberArea();
 }
 
-void CodeEditor::paintEvent(QPaintEvent *event) {
+void CodeEditor::paintEvent(QPaintEvent* event)
+{
     QPlainTextEdit::paintEvent(event);
 }
 
-void CodeEditor::InitSyntaxHighlighter() {
+void CodeEditor::InitSyntaxHighlighter()
+{
     syntaxHighlighter = new SyntaxHighlighter(document());
 }
 
-void CodeEditor::InitLineNumberArea() {
+void CodeEditor::InitLineNumberArea()
+{
     lineNumberArea = new LineNumberArea(this);
     lineNumberArea->SetFontSize(font().pointSizeF());
 
-    connect(this, SIGNAL(si_CodeChanged(const QString&)),
-            lineNumberArea, SLOT(sl_CodeChanged(const QString&)));
+    connect(this, SIGNAL(NotifyCodeChanged(const QString&)),
+            lineNumberArea, SLOT(OnCodeChanged(const QString&)));
 
-    connect(lineNumberArea, SIGNAL(si_Updated()),
-            this, SLOT(sl_LineNumberAreaUpdated()));
+    connect(lineNumberArea, SIGNAL(NotifyUpdated()),
+            this, SLOT(OnLineNumberAreaUpdated()));
 }
 
-void CodeEditor::InitShortcuts() {
-
+void CodeEditor::InitShortcuts()
+{
     // Increase Font Size Shortcut
     increaseFontSizeSC = new QShortcut(
             QKeySequence(Qt::CTRL + Qt::Key_Plus), this
     );
 
     connect(increaseFontSizeSC, SIGNAL(activated()),
-            this, SLOT(sl_IncreaseFontSize()));
+            this, SLOT(OnIncreaseFontSize()));
 
     // Decrease Font Size Shortcut
     decreaseFontSizeSC = new QShortcut(
@@ -222,10 +285,11 @@ void CodeEditor::InitShortcuts() {
     );
 
     connect(decreaseFontSizeSC, SIGNAL(activated()),
-            this, SLOT(sl_DecreaseFontSize()));
+            this, SLOT(OnDecreaseFontSize()));
 }
 
-void CodeEditor::ReplaceTabStopsWithSpaces() {
+void CodeEditor::ReplaceTabStopsWithSpaces()
+{
     // TODO Fetch number of spaces from config.
 
     constexpr int numSpaces = 4;
@@ -233,13 +297,14 @@ void CodeEditor::ReplaceTabStopsWithSpaces() {
     QString spaces{};
     spaces.resize(numSpaces, ' ');
 
-    auto cursor     = textCursor();
-    auto blockPos   = cursor.positionInBlock();
-    auto lastPos    = cursor.position();
-    auto nextPos    = lastPos + 3;
+    auto cursor = textCursor();
+    auto blockPos = cursor.positionInBlock();
+    auto lastPos = cursor.position();
+    auto nextPos = lastPos + 3;
 
     // Calculate Even Tab Width
-    if ((blockPos - 1) % numSpaces != 0) {
+    if ((blockPos - 1) % numSpaces != 0)
+    {
         auto offset = (blockPos - 1) % numSpaces;
         nextPos = lastPos + (numSpaces - offset - 1);
         spaces.resize(numSpaces - offset, ' ');
@@ -251,14 +316,16 @@ void CodeEditor::ReplaceTabStopsWithSpaces() {
     setTextCursor(cursor);
 }
 
-void CodeEditor::UpdateLineNumberArea() {
+void CodeEditor::UpdateLineNumberArea()
+{
     setViewportMargins(lineNumberArea->width(), 0, 0, 0);
     lineNumberArea->SetFontSize(fontSize);
     lineNumberArea->resize(lineNumberArea->width(), height());
     lineNumberArea->update();
 }
 
-void CodeEditor::HighlightCursorLine() {
+void CodeEditor::HighlightCursorLine()
+{
     cursorLines.clear();
 
     QTextEdit::ExtraSelection selection{};
@@ -270,18 +337,19 @@ void CodeEditor::HighlightCursorLine() {
     ApplyExtraSelections();
 }
 
-void CodeEditor::EnableFontScaling() {
+void CodeEditor::EnableFontScaling()
+{
     fontScalingEnabled = true;
 }
 
-void CodeEditor::DisableFontScaling() {
+void CodeEditor::DisableFontScaling()
+{
     fontScalingEnabled = false;
 }
 
-void CodeEditor::ApplyFontScale(const float &value) {
-    fontSize = MathUtility::clamp(
-            fontSize + value, FONT_SIZE_MIN, FONT_SIZE_MAX
-    );
+void CodeEditor::ApplyFontScale(const float& value)
+{
+    fontSize = MathUtility::clamp(fontSize + value, FONT_SIZE_MIN, FONT_SIZE_MAX);
 
     auto newFont = font();
     newFont.setPointSizeF(fontSize);
@@ -290,9 +358,11 @@ void CodeEditor::ApplyFontScale(const float &value) {
     UpdateLineNumberArea();
 }
 
-void CodeEditor::ApplyExtraSelections() {
+void CodeEditor::ApplyExtraSelections()
+{
     QList<QTextEdit::ExtraSelection> selections{};
     selections.append(cursorLines);
     selections.append(errorLines);
+    selections.append(searchLines);
     setExtraSelections(selections);
 }

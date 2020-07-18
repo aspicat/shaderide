@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,12 +34,8 @@
 
 using namespace ShaderIDE::GUI;
 
-LogOutputWidget::LogOutputWidget(QWidget *parent)
-    : QPlainTextEdit        (parent),
-      logCounter            (0),
-      syntaxHighlighter     (nullptr),
-      contextMenu           (nullptr),
-      clearLogAction        (nullptr)
+LogOutputWidget::LogOutputWidget(QWidget* parent)
+        : QPlainTextEdit(parent)
 {
     setReadOnly(true);
     setMinimumHeight(100);
@@ -51,24 +47,30 @@ LogOutputWidget::LogOutputWidget(QWidget *parent)
     InitContextMenu();
 }
 
-LogOutputWidget::~LogOutputWidget() {
-    DestroyContextMenu();
-    DestroySyntaxHighlighter();
+LogOutputWidget::~LogOutputWidget()
+{
+    Memory::Release(clearLogAction);
+    Memory::Release(contextMenu);
+    Memory::Release(syntaxHighlighter);
 }
 
-void LogOutputWidget::LogMessage(const QString &message) {
+void LogOutputWidget::LogMessage(const QString& message)
+{
     AppendPlainTextWithAutomaticCleanup(message);
 }
 
-void LogOutputWidget::LogSuccessMessage(const QString &message) {
+void LogOutputWidget::LogSuccessMessage(const QString& message)
+{
     AppendPlainTextWithAutomaticCleanup(QString("[SUCCESS] ") + message);
 }
 
-void LogOutputWidget::LogErrorMessage(const QString &message) {
+void LogOutputWidget::LogErrorMessage(const QString& message)
+{
     AppendPlainTextWithAutomaticCleanup(QString("[ERROR] ") + message);
 }
 
-QString LogOutputWidget::LogGLSLError(GLSLCompileError &error) {
+QString LogOutputWidget::LogGLSLError(GLSLCompileError& error)
+{
     QString err("[GLSL] [");
     err.append(error.File());
     err.append("] Syntax error at line ");
@@ -79,16 +81,19 @@ QString LogOutputWidget::LogGLSLError(GLSLCompileError &error) {
     return err;
 }
 
-void LogOutputWidget::contextMenuEvent(QContextMenuEvent *event) {
+void LogOutputWidget::contextMenuEvent(QContextMenuEvent* event)
+{
     contextMenu->exec(event->globalPos());
 }
 
-void LogOutputWidget::sl_ClearLog() {
+void LogOutputWidget::OnClearLog()
+{
     logCounter = 0;
     clear();
 }
 
-void LogOutputWidget::InitFont() {
+void LogOutputWidget::InitFont()
+{
     setFont(QFont(STYLE_LOGOUTPUTWIDGET_FONT, STYLE_LOGOUTPUTWIDGET_FONT_SIZE));
     setCenterOnScroll(true);
     setWordWrapMode(QTextOption::NoWrap);
@@ -100,7 +105,8 @@ void LogOutputWidget::InitFont() {
 #endif
 }
 
-void LogOutputWidget::InitSyntaxHighlighter() {
+void LogOutputWidget::InitSyntaxHighlighter()
+{
     syntaxHighlighter = new SyntaxHighlighter(document());
 
     // Success Messages
@@ -124,7 +130,8 @@ void LogOutputWidget::InitSyntaxHighlighter() {
     });
 }
 
-void LogOutputWidget::InitContextMenu() {
+void LogOutputWidget::InitContextMenu()
+{
     contextMenu = createStandardContextMenu();
     contextMenu->setStyleSheet(STYLE_CONTEXTMENU);
 
@@ -132,21 +139,13 @@ void LogOutputWidget::InitContextMenu() {
     clearLogAction = new QAction("Clear Log");
     contextMenu->addAction(clearLogAction);
     connect(clearLogAction, SIGNAL(triggered()),
-            this, SLOT(sl_ClearLog()));
+            this, SLOT(OnClearLog()));
 }
 
-void LogOutputWidget::DestroyContextMenu() {
-    Memory::Release(clearLogAction);
-    Memory::Release(contextMenu);
-}
-
-void LogOutputWidget::DestroySyntaxHighlighter() {
-    Memory::Release(syntaxHighlighter);
-}
-
-void LogOutputWidget::AppendPlainTextWithAutomaticCleanup(const QString &message) {
+void LogOutputWidget::AppendPlainTextWithAutomaticCleanup(const QString& message)
+{
     if (logCounter >= MAX_LOG_MESSAGES) {
-        sl_ClearLog();
+        OnClearLog();
     }
 
     appendPlainText(message);

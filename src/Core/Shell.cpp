@@ -1,5 +1,5 @@
 /**
- * Shader Class
+ * Shell Class
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,70 +26,32 @@
  * SOFTWARE.
  */
 
+#include <cstdio>
 #include <array>
-#include "Shader.hpp"
-#include "src/Core/SyntaxErrorException.hpp"
+#include <memory>
+#include "Shell.hpp"
 
-using namespace ShaderIDE::GL;
+using namespace ShaderIDE;
 
-ShaderSPtr Shader::MakeShared(const QString& source, GLenum shaderType)
+std::string Shell::Exec(const std::string& cmd)
 {
-    return QSharedPointer<Shader>::create(source, shaderType);
-}
+    const auto bufSize = 1024;
 
-Shader::Shader(const QString& source, GLenum type)
-{
-    InitializeShader(type);
-    SetSource(source);
-}
+    std::string output;
+    std::array<char, bufSize> buffer{};
 
-Shader::~Shader()
-{
-    glDeleteShader(shader);
-}
+    std::unique_ptr<FILE, decltype(&pclose)>
+            pipe(popen(cmd.c_str(), "r"), pclose);
 
-void Shader::SetSource(const QString& source)
-{
-    cSource = source.trimmed().toStdString();
-}
-
-void Shader::Compile(GLuint program)
-{
-    // Apply Source
-    auto src = cSource.c_str();
-    glShaderSource(shader, 1, &src, nullptr);
-
-    // Compile
-    glCompileShader(shader);
-    HandleCompilationErrors();
-    glAttachShader(program, shader);
-}
-
-void Shader::SetFile(const std::string& newFile)
-{
-    file = newFile;
-}
-
-std::string Shader::File()
-{
-    return file;
-}
-
-void Shader::InitializeShader(GLenum type)
-{
-    initializeOpenGLFunctions();
-    shader = glCreateShader(type);
-}
-
-void Shader::HandleCompilationErrors()
-{
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (!success)
-    {
-        std::array<char, INFOLOG_BUFFER_SIZE> infoLog{};
-        glGetShaderInfoLog(shader, INFOLOG_BUFFER_SIZE, nullptr, infoLog.data());
-        throw SyntaxErrorException(file, std::string(infoLog.data()));
+    if (pipe == nullptr) {
+        return output;
     }
+
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        output += buffer.data();
+    }
+
+    // TODO Handle stderr.
+
+    return output;
 }

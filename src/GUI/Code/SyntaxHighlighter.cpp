@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,24 +35,26 @@
 
 using namespace ShaderIDE::GUI;
 
-SyntaxHighlighter::SyntaxHighlighter(QObject *parent)
-    : QSyntaxHighlighter(parent)
+SyntaxHighlighter::SyntaxHighlighter(QObject* parent)
+        : QSyntaxHighlighter(parent)
 {}
 
-SyntaxHighlighter::SyntaxHighlighter(QTextDocument *parent)
-    : QSyntaxHighlighter(parent)
+SyntaxHighlighter::SyntaxHighlighter(QTextDocument* parent)
+        : QSyntaxHighlighter(parent)
 {}
 
-void SyntaxHighlighter::LoadSyntaxFile(const QString &path) {
+void SyntaxHighlighter::LoadSyntaxFile(const QString& path)
+{
     QFile file(path);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
 
-    if (!file.isOpen()) {
+    if (!file.isOpen())
+    {
         throw GeneralException(
                 QString("Could not open syntax file \"")
-                .append(path)
-                .append("\".")
-                .toStdString()
+                        .append(path)
+                        .append("\".")
+                        .toStdString()
         );
     }
 
@@ -62,20 +64,25 @@ void SyntaxHighlighter::LoadSyntaxFile(const QString &path) {
     file.close();
 }
 
-void SyntaxHighlighter::AddMatchBlock(const MatchBlock &matchBlock) {
+void SyntaxHighlighter::AddMatchBlock(const MatchBlock& matchBlock)
+{
     matchBlocks.push_back(matchBlock);
 }
 
-void SyntaxHighlighter::highlightBlock(const QString &text) {
+void SyntaxHighlighter::highlightBlock(const QString& text)
+{
     HighlightMatchBlocks(text);
 }
 
-void SyntaxHighlighter::HighlightMatchBlocks(const QString &text) {
-    for (const auto &matchBlock : matchBlocks) {
+void SyntaxHighlighter::HighlightMatchBlocks(const QString& text)
+{
+    for (const auto& matchBlock : matchBlocks)
+    {
         QRegularExpression expr(matchBlock.expression);
         auto it = expr.globalMatch(text);
 
-        while (it.hasNext()) {
+        while (it.hasNext())
+        {
             auto match = it.next();
             setFormat(match.capturedStart(),
                       match.capturedLength(),
@@ -84,8 +91,8 @@ void SyntaxHighlighter::HighlightMatchBlocks(const QString &text) {
     }
 }
 
-void SyntaxHighlighter::ApplyFromSyntaxFile(const QJsonObject &json) {
-
+void SyntaxHighlighter::ApplyFromSyntaxFile(const QJsonObject& json)
+{
     // Spec
     auto spec = json.value("spec").toString();
 
@@ -155,10 +162,12 @@ void SyntaxHighlighter::ApplyFromSyntaxFile(const QJsonObject &json) {
     AddMatchBlock({ commentFormat, "(\\/\\/.*)" });
 }
 
-QString SyntaxHighlighter::MakeRegexKeywordExpression(const QJsonArray &keywords) {
+QString SyntaxHighlighter::MakeRegexKeywordExpression(const QJsonArray& keywords)
+{
     QString expr("\\b(");
 
-    for (auto i = 0; i < keywords.size(); ++i) {
+    for (auto i = 0; i < keywords.size(); ++i)
+    {
         expr.append(keywords.at(i).toString());
 
         if (i + 1 < keywords.size()) {

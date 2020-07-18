@@ -1,5 +1,5 @@
 /**
- * Shader Class
+ * Shell Class
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,70 +26,16 @@
  * SOFTWARE.
  */
 
-#include <array>
-#include "Shader.hpp"
-#include "src/Core/SyntaxErrorException.hpp"
+#ifndef SHADERIDE_CORE_SHELL_HPP
+#define SHADERIDE_CORE_SHELL_HPP
 
-using namespace ShaderIDE::GL;
+namespace ShaderIDE {
 
-ShaderSPtr Shader::MakeShared(const QString& source, GLenum shaderType)
-{
-    return QSharedPointer<Shader>::create(source, shaderType);
-}
-
-Shader::Shader(const QString& source, GLenum type)
-{
-    InitializeShader(type);
-    SetSource(source);
-}
-
-Shader::~Shader()
-{
-    glDeleteShader(shader);
-}
-
-void Shader::SetSource(const QString& source)
-{
-    cSource = source.trimmed().toStdString();
-}
-
-void Shader::Compile(GLuint program)
-{
-    // Apply Source
-    auto src = cSource.c_str();
-    glShaderSource(shader, 1, &src, nullptr);
-
-    // Compile
-    glCompileShader(shader);
-    HandleCompilationErrors();
-    glAttachShader(program, shader);
-}
-
-void Shader::SetFile(const std::string& newFile)
-{
-    file = newFile;
-}
-
-std::string Shader::File()
-{
-    return file;
-}
-
-void Shader::InitializeShader(GLenum type)
-{
-    initializeOpenGLFunctions();
-    shader = glCreateShader(type);
-}
-
-void Shader::HandleCompilationErrors()
-{
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (!success)
+    class Shell
     {
-        std::array<char, INFOLOG_BUFFER_SIZE> infoLog{};
-        glGetShaderInfoLog(shader, INFOLOG_BUFFER_SIZE, nullptr, infoLog.data());
-        throw SyntaxErrorException(file, std::string(infoLog.data()));
-    }
+    public:
+        static std::string Exec(const std::string& cmd);
+    };
 }
+
+#endif // SHADERIDE_CORE_SHELL_HPP

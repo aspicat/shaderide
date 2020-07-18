@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,10 +31,12 @@
 
 namespace ShaderIDE {
 
-    class Memory {
+    class Memory
+    {
     public:
-        template <typename T>
-        static void Release(T *t) {
+        template<typename T>
+        static void Release(T* t)
+        {
             delete t;
             t = nullptr;
         }

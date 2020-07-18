@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,34 +33,37 @@
 
 using namespace ShaderIDE::GUI;
 
-LoadingWidget::LoadingWidget(QWidget *parent)
-    : QWidget       (parent),
-      mainLayout    (nullptr),
-      textLabel     (nullptr)
+LoadingWidget::LoadingWidget(QWidget* parent)
+        : QWidget(parent)
 {
     InitLayout();
     InitVisibilityTimer();
 }
 
-LoadingWidget::~LoadingWidget() {
+LoadingWidget::~LoadingWidget()
+{
     Memory::Release(textLabel);
     Memory::Release(mainLayout);
 }
 
-void LoadingWidget::Show(const QString &text) {
+void LoadingWidget::Show(const QString& text)
+{
     textLabel->setText(text);
     show();
 }
 
-void LoadingWidget::Hide() {
+void LoadingWidget::Hide()
+{
     visibilityTimer.start();
 }
 
-void LoadingWidget::paintEvent(QPaintEvent *event) {
+void LoadingWidget::paintEvent(QPaintEvent* event)
+{
     QtUtility::PaintQObjectStyleSheets(this);
 }
 
-void LoadingWidget::InitLayout() {
+void LoadingWidget::InitLayout()
+{
     setObjectName("LoadingWidget");
     setFixedHeight(60);
     setMinimumWidth(220);
@@ -81,7 +84,8 @@ void LoadingWidget::InitLayout() {
     // TODO Add animations for fade-in and loading indicator.
 }
 
-void LoadingWidget::InitVisibilityTimer() {
+void LoadingWidget::InitVisibilityTimer()
+{
     visibilityTimer.setSingleShot(true);
     visibilityTimer.setInterval(VISIBILITY_TIMEOUT);
 

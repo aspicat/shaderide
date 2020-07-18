@@ -12,6 +12,8 @@
         <file alias="icon-loading-indicator.png">assets/icons/icon-loading-indicator.png</file>
         <file alias="icon-menu-check.png">assets/icons/icon-menu-check.png</file>
         <file alias="icon-settings.png">assets/icons/icon-settings.png</file>
+        <file alias="icon-find.png">assets/icons/icon-find.png</file>
+        <file alias="icon-exit.png">assets/icons/icon-exit.png</file>
     </qresource>
 
     <!-- Images -->

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,10 +32,12 @@
 #include <QWidget>
 #include <QStyleOption>
 #include <QPainter>
+#include <QBuffer>
 
 namespace ShaderIDE {
 
-    class QtUtility {
+    class QtUtility
+    {
     public:
 
         /**
@@ -47,13 +49,52 @@ namespace ShaderIDE {
          *
          * @param QWidget* widget
          */
-        static void PaintQObjectStyleSheets(QWidget *widget) {
+        static void PaintQObjectStyleSheets(QWidget* widget)
+        {
             QStyleOption styleOption;
             styleOption.initFrom(widget);
             QPainter painter(widget);
             widget->style()->drawPrimitive(
                     QStyle::PE_Widget, &styleOption, &painter, widget
             );
+        }
+
+        /**
+         * Make base64 From Image
+         *
+         * Converts the given image to base64 as JPEG.
+         *
+         * @param QImage image
+         * @return std::string
+         */
+        static std::string MakeBase64FromImage(QImage image)
+        {
+            QByteArray bytes;
+            QBuffer buffer(&bytes);
+
+            buffer.open(QIODevice::WriteOnly);
+
+            if (!buffer.isOpen()) {
+                return "";
+            }
+
+            image.save(&buffer, "JPG");
+            buffer.close();
+
+            return QString::fromLatin1(bytes.toBase64().data()).toStdString();
+        }
+
+        /**
+         * Make QImage From base64
+         *
+         * @param const QString& data
+         * @return QImage
+         */
+        static QImage MakeQImageFromBase64(const QString& data)
+        {
+            const auto bytes = QByteArray::fromBase64(data.toLatin1());
+            auto image = QImage::fromData(bytes);
+            return image;
         }
     };
 }

@@ -1,5 +1,5 @@
 /**
- * Shader Class
+ * FindWidget Class
  *
  * --------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
@@ -26,70 +26,53 @@
  * SOFTWARE.
  */
 
-#include <array>
-#include "Shader.hpp"
-#include "src/Core/SyntaxErrorException.hpp"
+#ifndef SHADERIDE_GUI_WIDGETS_FINDWIDGET_HPP
+#define SHADERIDE_GUI_WIDGETS_FINDWIDGET_HPP
 
-using namespace ShaderIDE::GL;
+#include <QWidget>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
+#include "src/GUI/Widgets/ImageButton.hpp"
 
-ShaderSPtr Shader::MakeShared(const QString& source, GLenum shaderType)
-{
-    return QSharedPointer<Shader>::create(source, shaderType);
-}
+namespace ShaderIDE::GUI {
 
-Shader::Shader(const QString& source, GLenum type)
-{
-    InitializeShader(type);
-    SetSource(source);
-}
+    // CodeEditor Forward Declaration
+    class CodeEditor;
 
-Shader::~Shader()
-{
-    glDeleteShader(shader);
-}
-
-void Shader::SetSource(const QString& source)
-{
-    cSource = source.trimmed().toStdString();
-}
-
-void Shader::Compile(GLuint program)
-{
-    // Apply Source
-    auto src = cSource.c_str();
-    glShaderSource(shader, 1, &src, nullptr);
-
-    // Compile
-    glCompileShader(shader);
-    HandleCompilationErrors();
-    glAttachShader(program, shader);
-}
-
-void Shader::SetFile(const std::string& newFile)
-{
-    file = newFile;
-}
-
-std::string Shader::File()
-{
-    return file;
-}
-
-void Shader::InitializeShader(GLenum type)
-{
-    initializeOpenGLFunctions();
-    shader = glCreateShader(type);
-}
-
-void Shader::HandleCompilationErrors()
-{
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (!success)
+    class FindWidget : public QWidget
     {
-        std::array<char, INFOLOG_BUFFER_SIZE> infoLog{};
-        glGetShaderInfoLog(shader, INFOLOG_BUFFER_SIZE, nullptr, infoLog.data());
-        throw SyntaxErrorException(file, std::string(infoLog.data()));
-    }
+        Q_OBJECT
+    public:
+        explicit FindWidget(QWidget* parent = nullptr);
+        ~FindWidget() override;
+
+        void SetCodeEditor(CodeEditor* newCodeEditor);
+
+    public slots:
+        void Show();
+        void Hide();
+
+    protected:
+        void paintEvent(QPaintEvent* event) override;
+
+    private slots:
+        void OnSearchTextChanged(const QString& text);
+
+    private:
+        QString lastKeyword{ "" };
+        CodeEditor* codeEditor{ nullptr };
+        QHBoxLayout* mainLayout{ nullptr };
+        QLabel* searchLabel{ nullptr };
+        QLineEdit* searchLineEdit{ nullptr };
+        ImageButton* btClose{ nullptr };
+
+        void InitLayout();
+
+        void TriggerSearch(const QString& text);
+    };
 }
+
+#endif // SHADERIDE_GUI_WIDGETS_FINDWIDGET_HPP

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,41 +36,45 @@
 
 using namespace ShaderIDE::GUI;
 
-LineNumberArea::LineNumberArea(CodeEditor *codeEditor)
-    : QWidget       (codeEditor),
-      fontSize      (10.0f),
-      codeEditor    (codeEditor)
+LineNumberArea::LineNumberArea(CodeEditor* codeEditor)
+        : QWidget(codeEditor),
+          codeEditor(codeEditor)
 {
     // Initial Size
     resize(60, height());
 }
 
-void LineNumberArea::SetFontSize(const float &newFontSize) {
+void LineNumberArea::SetFontSize(const float& newFontSize)
+{
     fontSize = newFontSize;
 }
 
-void LineNumberArea::sl_CodeChanged(const QString &code) {
+void LineNumberArea::OnCodeChanged(const QString& code)
+{
     update();
 }
 
-void LineNumberArea::paintEvent(QPaintEvent *event) {
+void LineNumberArea::paintEvent(QPaintEvent* event)
+{
     QWidget::paintEvent(event);
     QPainter painter(this);
     DrawBackground(painter);
     DrawBlocks(painter);
 }
 
-void LineNumberArea::resizeEvent(QResizeEvent *event) {
+void LineNumberArea::resizeEvent(QResizeEvent* event)
+{
     QWidget::resizeEvent(event);
-    emit si_Updated();
+    emit NotifyUpdated();
 }
 
-void LineNumberArea::DrawBackground(QPainter &painter) {
+void LineNumberArea::DrawBackground(QPainter& painter)
+{
     painter.fillRect(rect(), QBrush(STYLE_LINENUMBERAREA_BG_COLOR));
 }
 
-void LineNumberArea::DrawBlocks(QPainter &painter) {
-
+void LineNumberArea::DrawBlocks(QPainter& painter)
+{
     // Pen
     auto penColor = STYLE_LINENUMBERAREA_FONT_COLOR;
 
@@ -95,15 +99,17 @@ void LineNumberArea::DrawBlocks(QPainter &painter) {
     auto blockNumber = block.blockNumber();
 
     auto top = static_cast<int>(codeEditor->blockBoundingGeometry(block)
-            .translated(codeEditor->contentOffset()).top() + marginTop);
+                                        .translated(codeEditor->contentOffset()).top() + marginTop);
 
     auto bottom = top + static_cast<int>(codeEditor->blockBoundingRect(block).height());
 
     // ++ Loop Blocks ++
     // The layout is calculated by using one character width as margin
     // on the left and the right side -> Example: |-1-|, |-1000-|.
-    while (block.isValid() && top <= rect().bottom()) {
-        if (block.isVisible() && bottom >= rect().top()) {
+    while (block.isValid() && top <= rect().bottom())
+    {
+        if (block.isVisible() && bottom >= rect().top())
+        {
             QString number = QString::number(blockNumber + 1);
 
             // Highlight current block position.
@@ -114,6 +120,7 @@ void LineNumberArea::DrawBlocks(QPainter &painter) {
             }
 
             painter.setPen(pen);
+
             painter.drawText(charWidth,
                              top,
                              width() - (2 * charWidth),

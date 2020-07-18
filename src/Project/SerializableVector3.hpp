@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,19 +38,23 @@
 
 namespace ShaderIDE::Project {
 
-    class SerializableVector3 : public glm::vec3 {
+    class SerializableVector3 : public glm::vec3
+    {
         friend class boost::serialization::access;
 
-        template <typename Archive>
-        void serialize(Archive &ar, const uint32_t version) {
+        template<typename Archive>
+        void serialize(Archive& ar, const uint32_t version)
+        {
             ar & x;
             ar & y;
             ar & z;
         }
 
     public:
-        static SerializableVector3 FromJsonArray(const QJsonArray &jsonArray) {
-            if (jsonArray.size() != 3) {
+        static SerializableVector3 FromJsonArray(const QJsonArray& jsonArray)
+        {
+            if (jsonArray.size() != 3)
+            {
                 throw GeneralException(
                         "Could not create SerializableVector3, "
                         "invalid amount of values. 3 required."
@@ -64,27 +68,29 @@ namespace ShaderIDE::Project {
             return vector;
         }
 
-        explicit SerializableVector3(const glm::vec3 &vector)
-            : glm::vec3(vector)
+        explicit SerializableVector3(const glm::vec3& vector)
+                : glm::vec3(vector)
         {}
 
-        explicit SerializableVector3(const float &scalar)
-            : glm::vec3(scalar)
+        explicit SerializableVector3(const float& scalar)
+                : glm::vec3(scalar)
         {}
 
-        SerializableVector3(const float &x,
-                            const float &y,
-                            const float &z)
-            : glm::vec3(x, y, z)
+        SerializableVector3(const float& x,
+                            const float& y,
+                            const float& z)
+                : glm::vec3(x, y, z)
         {}
 
-        void operator= (const glm::vec3 &vector) {
+        void operator=(const glm::vec3& vector)
+        {
             x = vector.x;
             y = vector.y;
             z = vector.z;
         }
 
-        QJsonArray ToJsonArray() {
+        QJsonArray ToJsonArray()
+        {
             QJsonArray jsonArray;
             jsonArray.push_back(x);
             jsonArray.push_back(y);

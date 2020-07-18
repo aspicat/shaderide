@@ -7,7 +7,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,34 +55,38 @@
 #include "src/GL/World/Mesh.hpp"
 #include "src/GL/Shader.hpp"
 #include "src/GL/GLSLCompileError.hpp"
-#include "OpenGLWidget_ModelLoader.hpp"
+#include "AsyncModelLoader.hpp"
 
 using namespace ShaderIDE::GL;
 
 namespace ShaderIDE::GUI {
 
     class OpenGLWidget : public QOpenGLWidget,
-                         protected QOpenGLFunctions_4_5_Core {
-    Q_OBJECT
-        friend class OpenGLWidget_ModelLoader;
+                         protected QOpenGLFunctions_4_5_Core
+    {
+        Q_OBJECT
+
+        friend class AsyncModelLoader;
+
         static constexpr float MODEL_ROTATION_INTENSITY = 0.5f;
-        static constexpr float MODEL_ZOOM_INTENSITY     = 0.02f;
-        static constexpr float MODEL_SHIFT_INTENSITY    = 0.008f;
-        static constexpr uint8_t STRIDE_SIZE            = 8;
+        static constexpr float MODEL_ZOOM_INTENSITY = 0.02f;
+        static constexpr float MODEL_SHIFT_INTENSITY = 0.008f;
+        static constexpr uint8_t STRIDE_SIZE = 8;
 
     public:
-        enum class SLOT {
+        enum class SLOT
+        {
             TEX_0,
             TEX_1,
             TEX_2,
             TEX_3
         };
 
-        explicit OpenGLWidget(QWidget *parent = nullptr);
+        explicit OpenGLWidget(QWidget* parent = nullptr);
         ~OpenGLWidget() override;
 
         QString SelectedMeshName();
-        void SelectMesh(const QString &meshName);
+        void SelectMesh(const QString& meshName);
 
         void CheckRealtime(bool realtimeChecked);
         bool Realtime();
@@ -90,130 +94,130 @@ namespace ShaderIDE::GUI {
         void CheckPlane2D(bool plane2DChecked);
         bool Plane2D();
 
-        void RotateModel(const glm::vec3 &rotation);
-        void MoveCamera(const glm::vec3 &position);
+        void RotateModel(const glm::vec3& rotation);
+        void MoveCamera(const glm::vec3& position);
 
         glm::vec3 ModelRotation();
         glm::vec3 CameraPosition();
 
-        void SetVertexShaderSource(const QString &source);
-        void SetFragmentShaderSource(const QString &source);
+        void SetVertexShaderSource(const QString& source);
+        void SetFragmentShaderSource(const QString& source);
 
         void SetRealtimeCompilationEnabled(bool value);
         void ToggleRealtimeCompilation();
         bool RealtimeCompilation();
 
-        static SLOT FindSlotByName(const QString &slotName);
-        void ApplyTextureToSlot(const QImage &image, SLOT slot);
+        static SLOT FindSlotByName(const QString& slotName);
+        void ApplyTextureToSlot(const QImage& image, SLOT slot);
         void ClearTextureSlot(SLOT slot);
 
         void ResetUI();
 
     signals:
-        void si_GLInitialized();
-        void si_CompileSuccess(const QString &message);
-        void si_CompileError(GLSLCompileError &error);
-        void si_StateUpdated(const QString &message);
-        void si_GeneralError(const GeneralException &error);
-        void si_TriggerModelLoading();
+        void NotifyGLInitialized();
+        void NotifyCompileSuccess(const QString& message);
+        void NotifyCompileError(GLSLCompileError& error);
+        void NotifyStateUpdated(const QString& message);
+        void NotifyGeneralError(const GeneralException& error);
+        void NotifyTriggerModelLoading();
 
     public slots:
-        void sl_CompileShaders();
+        void OnCompileShaders();
 
     private slots:
-        void sl_LoadModelCube();
-        void sl_LoadModelSphere();
-        void sl_LoadModelTorus();
-        void sl_LoadModelTeapot();
-        void sl_LoadModelBunny();
-        void sl_ModelLoaded(const QString &name);
-        void sl_RealtimeUpdateStateChanged(const int &state);
-        void sl_Plane2DStateChanged(const int &state);
-        void sl_Tick();
+        void OnLoadModelCube();
+        void OnLoadModelSphere();
+        void OnLoadModelTorus();
+        void OnLoadModelTeapot();
+        void OnLoadModelBunny();
+        void OnModelLoaded(const QString& name);
+        void OnRealtimeUpdateStateChanged(const int& state);
+        void OnPlane2DStateChanged(const int& state);
+        void OnTick();
 
     protected:
         void initializeGL() override;
         void resizeGL(int w, int h) override;
         void paintGL() override;
 
-        void mousePressEvent(QMouseEvent *event) override;
-        void mouseDoubleClickEvent(QMouseEvent *event) override;
-        void mouseReleaseEvent(QMouseEvent *event) override;
-        void mouseMoveEvent(QMouseEvent *event) override;
+        void mousePressEvent(QMouseEvent* event) override;
+        void mouseDoubleClickEvent(QMouseEvent* event) override;
+        void mouseReleaseEvent(QMouseEvent* event) override;
+        void mouseMoveEvent(QMouseEvent* event) override;
 
     private:
-        GLuint program;
+        GLuint program{ 0 };
         ShaderSPtr vertexShader;
         ShaderSPtr fragmentShader;
 
-        GLuint vao;
-        GLuint vertexBuffer;
+        GLuint vao{ 0 };
+        GLuint vertexBuffer{ 0 };
         VertexVec vertices;
         VertexVec cubeVertices;
         VertexVec sphereVertices;
         VertexVec torusVertices;
         VertexVec teapotVertices;
         VertexVec bunnyVertices;
-        QString selectedMeshName;
+        QString selectedMeshName{ "" };
 
-        GLuint planeVAO;
-        GLuint planeVertexBuffer;
+        GLuint planeVAO{ 0 };
+        GLuint planeVertexBuffer{ 0 };
         VertexVec planeVertices;
 
         // Overlay Layout
-        QVBoxLayout *overlayLayout;
+        QVBoxLayout* overlayLayout{ nullptr };
 
         // Top Left Layout
-        QHBoxLayout *topLeftLayout;
-        QCheckBox *cbRealtimeUpdate;
-        QCheckBox *cbPlane2D;
+        QHBoxLayout* topLeftLayout{ nullptr };
+        QCheckBox* cbRealtimeUpdate{ nullptr };
+        QCheckBox* cbPlane2D{ nullptr };
 
         // Bottom Left (Quick Load Models)
-        QHBoxLayout *quickLoadModelsLayout;
-        ImageButton *btLoadCube;
-        ImageButton *btLoadSphere;
-        ImageButton *btLoadTorus;
-        ImageButton *btLoadTeapot;
-        ImageButton *btLoadBunny;
+        QHBoxLayout* quickLoadModelsLayout{ nullptr };
+        ImageButton* btLoadCube{ nullptr };
+        ImageButton* btLoadSphere{ nullptr };
+        ImageButton* btLoadTorus{ nullptr };
+        ImageButton* btLoadTeapot{ nullptr };
+        ImageButton* btLoadBunny{ nullptr };
 
         // Loading Widget
         QThread modelLoaderThread;
         QMutex modelLoaderMutex;
-        LoadingWidget *loadingWidget;
+        LoadingWidget* loadingWidget{ nullptr };
 
         // Texture Slots
-        QOpenGLTexture *slot0Texture;
-        QOpenGLTexture *slot1Texture;
-        QOpenGLTexture *slot2Texture;
-        QOpenGLTexture *slot3Texture;
+        QOpenGLTexture* slot0Texture{ nullptr };
+        QOpenGLTexture* slot1Texture{ nullptr };
+        QOpenGLTexture* slot2Texture{ nullptr };
+        QOpenGLTexture* slot3Texture{ nullptr };
 
-        bool realtime;
-        bool plane2D;
-        bool realtimeCompilation;
+        bool realtime{ false };
+        bool plane2D{ false };
+        bool realtimeCompilation{ false };
 
         // Render Time
         QDateTime startTime;
-        float renderTime;
+        float renderTime{ 0.0f };
 
         // Mouse Model Controls
-        int dragStartX;
-        int dragStartY;
-        int zoomStart;
-        float zoomLastPosition;
-        int shiftStartX;
-        int shiftStartY;
-        bool mouseDragEnabled;
-        bool mouseZoomEnabled;
-        bool mouseShiftEnabled;
+        int dragStartX{ 0 };
+        int dragStartY{ 0 };
+        int zoomStart{ 0 };
+        float zoomLastPosition{ 0.0f };
+        int shiftStartX{ 0 };
+        int shiftStartY{ 0 };
+        bool mouseDragEnabled{ false };
+        bool mouseZoomEnabled{ false };
+        bool mouseShiftEnabled{ false };
 
-        glm::vec3 modelStartRotation;
-        glm::vec3 modelRotation;
-        glm::vec3 cameraPosition;
-        glm::vec3 cameraStartPosition;
-        glm::mat4 modelMatrix;
-        glm::mat4 viewMatrix;
-        glm::mat4 projectionMatrix;
-        glm::mat4 identityMatrix;
+        glm::vec3 modelStartRotation{ glm::vec3(0.0f) };
+        glm::vec3 modelRotation{ glm::vec3(0.0f) };
+        glm::vec3 cameraPosition{ glm::vec3(0.0f) };
+        glm::vec3 cameraStartPosition{ glm::vec3(0.0f) };
+        glm::mat4 modelMatrix{ glm::mat4(1.0f) };
+        glm::mat4 viewMatrix{ glm::mat4(1.0f) };
+        glm::mat4 projectionMatrix{ glm::mat4(1.0f) };
+        glm::mat4 identityMatrix{ glm::mat4(1.0f) };
 
         // Init
         void InitShaders();
@@ -223,14 +227,6 @@ namespace ShaderIDE::GUI {
         void InitTopLeftLayout();
         void InitQuickModelButtons();
         void InitLoadingWidget();
-
-        // Destroy
-        void DestroyLoadingWidget();
-        void DestroyTextureSlots();
-        void DestroyQuickModelButtons();
-        void DestroyTopLeftLayout();
-        void DestroyOverlay();
-        void DestroyVAO();
 
         // Layouts
         void ShowQuickLoadModelsLayout();
@@ -253,25 +249,25 @@ namespace ShaderIDE::GUI {
         void EnableMouseShift();
         void DisableMouseShift();
 
-        void ApplyMouseDrag(QMouseEvent *event);
-        void ApplyMouseZoom(QMouseEvent *event);
-        void ApplyMouseShift(QMouseEvent *event);
+        void ApplyMouseDrag(QMouseEvent* event);
+        void ApplyMouseZoom(QMouseEvent* event);
+        void ApplyMouseShift(QMouseEvent* event);
 
         void ResetModelRotation();
         void ResetCameraPosition();
 
         // Model
-        void LoadOBJMesh(const QString &path);
+        void LoadOBJMesh(const QString& path);
         void LoadPlaneMesh();
 
-        void LoadModelAsync(const QString &name,
-                            const QString &file,
-                            VertexVec &vertexStore);
+        void LoadModelAsync(const QString& name,
+                            const QString& file,
+                            VertexVec& vertexStore);
 
-        void LoadOBJMeshIntoBuffer(const QString &file,
-                                   VertexVec &buffer);
+        void LoadOBJMeshIntoBuffer(const QString& file,
+                                   VertexVec& buffer);
 
-        void ApplyVertices(const VertexVec &newVertices);
+        void ApplyVertices(const VertexVec& newVertices);
 
         // Value Pointers
         GLfloat* GetModelMatrix();
@@ -283,11 +279,11 @@ namespace ShaderIDE::GUI {
         void UpdateRenderTime();
 
         // Textures
-        void RecreateTexture(QOpenGLTexture *texture, const QImage &image);
+        void RecreateTexture(QOpenGLTexture* texture, const QImage& image);
 
-        void BindTexture(QOpenGLTexture *texture,
-                         const QString &location,
-                         const uint8_t &unit);
+        void BindTexture(QOpenGLTexture* texture,
+                         const QString& location,
+                         const uint8_t& unit);
 
         void BindTextures();
         void ReleaseTextures();

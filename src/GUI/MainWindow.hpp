@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,7 @@
 #include "OpenGLWidget.hpp"
 #include "LogOutputWidget.hpp"
 #include "Widgets/FileTabWidget.hpp"
+#include "src/Core/ApplicationDefaults.hpp"
 #include "src/GUI/Dialogs/SettingsDialog.hpp"
 #include "src/GUI/Dialogs/AboutDialog.hpp"
 #include "src/GL/Shader.hpp"
@@ -47,108 +48,113 @@ using namespace ShaderIDE::Project;
 
 namespace ShaderIDE::GUI {
 
-    class MainWindow : public QMainWindow {
-    Q_OBJECT
+    class MainWindow : public QMainWindow
+    {
+        Q_OBJECT
+
         friend class SettingsDialog;
+
         static constexpr const char* CONFIG_FILE_NAME = "config.json";
         static constexpr const char* SETTINGS_FILE_NAME = "settings.json";
 
     public:
-        explicit MainWindow(QWidget *parent = nullptr);
+        explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
 
     private slots:
-        void sl_VSCodeChanged(const QString &code);
-        void sl_FSCodeChanged(const QString &code);
-        void sl_TextureBrowserImageChanged(TextureBrowserImage *image);
-        void sl_TextureBrowserImageCleared(TextureBrowserImage *image);
-        void sl_TextureBrowserImagePathChanged(TextureBrowserImage *image);
-        void sl_GLInitialized();
-        void sl_CompileSuccess(const QString &message);
-        void sl_CompileError(GLSLCompileError &error);
-        void sl_GeneralError(const GeneralException &e);
-        void sl_UpdateStatusBarMessage(const QString &message);
+        void OnVSCodeChanged(const QString& code);
+        void OnFSCodeChanged(const QString& code);
+        void OnTextureBrowserImageChanged(TextureBrowserImage* image);
+        void OnTextureBrowserImageCleared(TextureBrowserImage* image);
+        void OnGLInitialized();
+        void OnCompileSuccess(const QString& message);
+        void OnCompileError(GLSLCompileError& error);
+        void OnGeneralError(const QString& error);
+        void OnGeneralError(const GeneralException& e);
+        void OnUpdateStatusBarMessage(const QString& message);
 
         // Menu / File
-        void sl_Menu_File_NewProject();
-        void sl_Menu_File_OpenProject();
-        void sl_Menu_File_SaveProject();
-        void sl_Menu_File_SaveProjectAs();
-        void sl_Menu_File_ExportShaders();
-        void sl_Menu_File_Settings();
-        void sl_Menu_File_Exit();
+        void OnMenuFileNewProject();
+        void OnMenuFileOpenProject();
+        void OnMenuFileSaveProject();
+        void OnMenuFileSaveProjectAs();
+        void OnMenuFileExportShaders();
+        void OnMenuFileExportSPIRV();
+        void OnMenuFileSettings();
+        void OnMenuFileExit();
 
         // Menu / View
-        void sl_Menu_View_SwapLayout();
-        void sl_Menu_View_ResetLayout();
-        void sl_Menu_View_ToggleLog();
+        void OnMenuViewSwapLayout();
+        void OnMenuViewResetLayout();
+        void OnMenuViewToggleLog();
 
         // Menu / Code
-        void sl_Menu_Code_Compile();
-        void sl_Menu_Code_ToggleRealtimeCompilation();
-        void sl_Menu_Code_ToggleWordWrap();
+        void OnMenuCodeCompile();
+        void OnMenuCodeToggleRealtimeCompilation();
+        void OnMenuCodeToggleWordWrap();
 
         // Menu / Help
-        void sl_Menu_Help_About();
+        void OnMenuHelpAbout();
 
     protected:
-        void dragEnterEvent(QDragEnterEvent *event) override;
-        void dragMoveEvent(QDragMoveEvent *event) override;
-        void dragLeaveEvent(QDragLeaveEvent *event) override;
-        void dropEvent(QDropEvent *event) override;
-        void closeEvent(QCloseEvent *event) override;
+        void dragEnterEvent(QDragEnterEvent* event) override;
+        void dragMoveEvent(QDragMoveEvent* event) override;
+        void dragLeaveEvent(QDragLeaveEvent* event) override;
+        void dropEvent(QDropEvent* event) override;
+        void closeEvent(QCloseEvent* event) override;
 
     private:
         static QString GetConfigPath();
         static bool AppConfigDirExists();
 
         // Settings
-        int numSamples;
+        int numSamples{ SHADERIDE_SURFACEFORMAT_NUM_SAMPLES };
 
-        QJsonObject config; // Layout
+        QJsonObject config;
         QJsonObject settings;
 
         // Widgets
-        QWidget *centralWidget;
-        QVBoxLayout *verticalLayout;
-        QSplitter *verticalSplitter;
-        QSplitter *mainSplitter;
-        QMenuBar *menuBar;
-        OpenGLWidget *openGLWidget;
-        FileTabWidget *fileTabWidget;
-        LogOutputWidget *logOutputWidget;
-        SettingsDialog *settingsDialog;
-        AboutDialog *aboutDialog;
-        QStatusBar *statusBar;
+        QWidget* centralWidget{ nullptr };
+        QVBoxLayout* verticalLayout{ nullptr };
+        QSplitter* verticalSplitter{ nullptr };
+        QSplitter* mainSplitter{ nullptr };
+        QMenuBar* menuBar{ nullptr };
+        OpenGLWidget* openGLWidget{ nullptr };
+        FileTabWidget* fileTabWidget{ nullptr };
+        LogOutputWidget* logOutputWidget{ nullptr };
+        SettingsDialog* settingsDialog{ nullptr };
+        AboutDialog* aboutDialog{ nullptr };
+        QStatusBar* statusBar{ nullptr };
 
         // File Menu
-        QMenu *fileMenu;
-        QAction *newProjectAction;
-        QAction *openProjectAction;
-        QAction *saveProjectAction;
-        QAction *saveProjectAsAction;
-        QAction *exportShadersAction;
-        QAction *settingsAction;
-        QAction *exitAction;
+        QMenu* fileMenu{ nullptr };
+        QAction* newProjectAction{ nullptr };
+        QAction* openProjectAction{ nullptr };
+        QAction* saveProjectAction{ nullptr };
+        QAction* saveProjectAsAction{ nullptr };
+        QAction* exportShadersAction{ nullptr };
+        QAction* exportSPIRVAction{ nullptr };
+        QAction* settingsAction{ nullptr };
+        QAction* exitAction{ nullptr };
 
         // View Menu
-        QMenu *viewMenu;
-        QAction *swapLayoutAction;
-        QAction *resetLayoutAction;
-        QAction *toggleLogAction;
+        QMenu* viewMenu{ nullptr };
+        QAction* swapLayoutAction{ nullptr };
+        QAction* resetLayoutAction{ nullptr };
+        QAction* toggleLogAction{ nullptr };
 
         // Code Menu
-        QMenu *codeMenu;
-        QAction *compileCodeAction;
-        QAction *toggleRealtimeCompilationAction;
-        QAction *toggleWordWrapAction;
+        QMenu* codeMenu{ nullptr };
+        QAction* compileCodeAction{ nullptr };
+        QAction* toggleRealtimeCompilationAction{ nullptr };
+        QAction* toggleWordWrapAction{ nullptr };
 
         // Help Menu
-        QMenu *helpMenu;
-        QAction *aboutAction;
+        QMenu* helpMenu{ nullptr };
+        QAction* aboutAction{ nullptr };
 
         // Project
-        ShaderProject *shaderProject;
+        ShaderProject* shaderProject{ nullptr };
 
         // Init
         void InitLayout();
@@ -165,25 +171,24 @@ namespace ShaderIDE::GUI {
         void InitStatusBar();
         void InitShaderProject();
 
-        // Destroy
-        void DestroyShaderProject();
-        void DestroyMenuBar();
-        void DestroyLayout();
-
         // UI
         void SwapLayout();
         void ResetLayout();
         void UpdateWindowTitle();
         void ApplyTextureSlots();
 
-        void LogMessage(const QString &message);
+        void LogMessage(const QString& message);
 
         // Project
         void ResetProject();
-        void OpenProject(const QString &path);
+        void OpenProject(const QString& path);
         bool ApplyProjectFromUI();
         bool ApplyUIFromProject();
-        void ExportShaders(const QUrl &directory);
+        void ExportShaders(const QUrl& directory);
+        void ExportSPIRV(const QUrl& directory);
+
+        QString MakeVSPath(const QUrl& directory);
+        QString MakeFSPath(const QUrl& directory);
 
         // Layout Config & Settings
         void CreateAppConfigDirectory();

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,39 +33,40 @@
 
 using namespace ShaderIDE::GUI;
 
-SettingsDialog::SettingsDialog(MainWindow *mainWindow)
-    : QDialog               (nullptr),
-      mainWindow            (mainWindow),
-      mainLayout            (nullptr),
-      viewportLayout        (nullptr),
-      viewportTitle         (nullptr),
-      viewportForm          (nullptr),
-      cboxMultisampling     (nullptr),
-      viewportRestartNote   (nullptr),
-      buttonLayout          (nullptr),
-      btSave                (nullptr)
+SettingsDialog::SettingsDialog(MainWindow* mainWindow)
+        : QDialog(nullptr)
 {
     InitLayout();
     InitViewportSection();
     InitButtonLayout();
 }
 
-SettingsDialog::~SettingsDialog() {
-    Destroy();
+SettingsDialog::~SettingsDialog()
+{
+    Memory::Release(btSave);
+    Memory::Release(buttonLayout);
+    Memory::Release(viewportRestartNote);
+    Memory::Release(cboxMultisampling);
+    Memory::Release(viewportForm);
+    Memory::Release(viewportTitle);
+    Memory::Release(viewportLayout);
+    Memory::Release(mainLayout);
 }
 
-void SettingsDialog::showEvent(QShowEvent *event) {
+void SettingsDialog::showEvent(QShowEvent* event)
+{
     QDialog::showEvent(event);
     FetchSettings();
 }
 
-void SettingsDialog::sl_Save() {
+void SettingsDialog::OnSave()
+{
     ApplySettings();
     close();
 }
 
-void SettingsDialog::InitLayout() {
-
+void SettingsDialog::InitLayout()
+{
     // Window
     setWindowTitle("Settings");
     setWindowFlags(Qt::WindowCloseButtonHint);
@@ -81,7 +82,8 @@ void SettingsDialog::InitLayout() {
     setLayout(mainLayout);
 }
 
-void SettingsDialog::InitViewportSection() {
+void SettingsDialog::InitViewportSection()
+{
     viewportLayout = new QVBoxLayout();
     mainLayout->addLayout(viewportLayout);
 
@@ -107,17 +109,15 @@ void SettingsDialog::InitViewportSection() {
     viewportForm->setAlignment(cboxMultisampling, Qt::AlignRight);
 
     // Restart Note
-    viewportRestartNote = new QLabel(
-            "Application restart required for multisampling "
-            "to be applied."
-    );
+    viewportRestartNote = new QLabel("Application restart required for multisampling to be applied.");
 
     viewportRestartNote->setObjectName("restart_note");
     viewportRestartNote->setWordWrap(true);
     viewportLayout->addWidget(viewportRestartNote);
 }
 
-void SettingsDialog::InitButtonLayout() {
+void SettingsDialog::InitButtonLayout()
+{
     buttonLayout = new QHBoxLayout();
     buttonLayout->setAlignment(Qt::AlignBottom | Qt::AlignRight);
     buttonLayout->setContentsMargins(0, 0, 0, 0);
@@ -128,40 +128,21 @@ void SettingsDialog::InitButtonLayout() {
     buttonLayout->addWidget(btSave);
 
     connect(btSave, SIGNAL(clicked(bool)),
-            this, SLOT(sl_Save()));
+            this, SLOT(OnSave()));
 }
 
-void SettingsDialog::Destroy() {
-
-    // Button Layout
-    Memory::Release(btSave);
-    Memory::Release(buttonLayout);
-
-    // 3D Viewport
-    Memory::Release(viewportRestartNote);
-    Memory::Release(cboxMultisampling);
-    Memory::Release(viewportForm);
-    Memory::Release(viewportTitle);
-    Memory::Release(viewportLayout);
-
-    // Main Layout
-    Memory::Release(mainLayout);
-}
-
-void SettingsDialog::ApplySettings() {
-
+void SettingsDialog::ApplySettings()
+{
     // Multisampling, number of samples.
-    mainWindow->numSamples =
-            cboxMultisampling->itemData(cboxMultisampling->currentIndex())
-            .toInt();
-
+    mainWindow->numSamples = cboxMultisampling->itemData(cboxMultisampling->currentIndex()).toInt();
     mainWindow->SaveSettings();
 }
 
-void SettingsDialog::FetchSettings() {
-
+void SettingsDialog::FetchSettings()
+{
     // Multisampling, number of samples.
-    switch (mainWindow->numSamples) {
+    switch (mainWindow->numSamples)
+    {
         case 2:
             cboxMultisampling->setCurrentIndex(1);
             break;

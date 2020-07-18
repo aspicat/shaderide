@@ -9,7 +9,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,26 +41,28 @@ namespace ShaderIDE::GL {
 
     // Forward Declaration / ShaderSPtr
     class Shader;
+
     using ShaderSPtr = QSharedPointer<Shader>;
 
-    class Shader : protected QOpenGLFunctions_4_5_Core {
+    class Shader : protected QOpenGLFunctions_4_5_Core
+    {
         static constexpr size_t INFOLOG_BUFFER_SIZE = 1024;
 
     public:
-        static ShaderSPtr MakeShared(const QString &source, GLenum shaderType);
-        explicit Shader(const QString &source, GLenum shaderType);
+        static ShaderSPtr MakeShared(const QString& source, GLenum shaderType);
+        explicit Shader(const QString& source, GLenum shaderType);
         ~Shader() override;
 
-        void SetSource(const QString &source);
+        void SetSource(const QString& source);
         void Compile(GLuint program);
 
-        void SetFile(const std::string &newFile);
+        void SetFile(const std::string& newFile);
         std::string File();
 
     private:
-        GLuint shader;
-        std::string cSource;
-        std::string file;
+        GLuint shader{ 0 };
+        std::string cSource{ "" };
+        std::string file{ "" };
 
         void InitializeShader(GLenum type);
         void HandleCompilationErrors();

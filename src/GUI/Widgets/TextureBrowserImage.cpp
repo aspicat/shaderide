@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,80 +37,74 @@
 
 using namespace ShaderIDE::GUI;
 
-TextureBrowserImage::TextureBrowserImage(const QString &name,
-                                         const QString &path,
-                                         QWidget *parent)
-    : QWidget       (parent),
-      mainLayout    (nullptr),
-      imageLabel    (nullptr),
-      nameLabel     (nullptr),
-      imageHQ       (nullptr),
-      path          (path)
+TextureBrowserImage::TextureBrowserImage(const QString& name,
+                                         const QString& path,
+                                         QWidget* parent)
+        : QWidget(parent)
 {
     InitLayout();
     InitImageLabel(path);
     InitNameLabel(name);
 }
 
-TextureBrowserImage::TextureBrowserImage(const QString &name,
-                                         const QImage &image,
-                                         QWidget *parent)
-    : QWidget       (parent),
-      mainLayout    (nullptr),
-      imageLabel    (nullptr),
-      nameLabel     (nullptr),
-      imageHQ       (nullptr),
-      path          ("")
+TextureBrowserImage::TextureBrowserImage(const QString& name,
+                                         const QImage& image,
+                                         QWidget* parent)
+        : QWidget(parent)
 {
     InitLayout();
     InitImageLabel(image);
     InitNameLabel(name);
 }
 
-TextureBrowserImage::~TextureBrowserImage() {
-    DestroyLayout();
+TextureBrowserImage::~TextureBrowserImage()
+{
+    Memory::Release(nameLabel);
+    Memory::Release(imageLabel);
+    Memory::Release(mainLayout);
 }
 
-QString TextureBrowserImage::Name() {
+QString TextureBrowserImage::Name()
+{
     return nameLabel->text();
 }
 
-QImage TextureBrowserImage::Image() {
+QImage TextureBrowserImage::Image()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    return imageLabel->pixmap(Qt::ReturnByValueConstant::ReturnByValue).toImage();
+#else
     return imageLabel->pixmap()->toImage();
+#endif
 }
 
-QImage TextureBrowserImage::ImageHQ() {
+QImage TextureBrowserImage::ImageHQ()
+{
     return imageHQ;
 }
 
-QString TextureBrowserImage::Path() {
-    return path;
-}
-
-void TextureBrowserImage::UpdateImage(const QImage &image) {
+void TextureBrowserImage::UpdateImage(const QImage& image)
+{
     imageHQ = image;
     imageLabel->setPixmap(QPixmap::fromImage(MakeThumbnail(image)));
-    emit si_ImageChanged(this);
+    emit NotifyImageChanged(this);
 }
 
-void TextureBrowserImage::SetPath(const QString &newPath) {
-    path = newPath;
-    emit si_PathChanged(this);
-}
-
-void TextureBrowserImage::sl_ClearImage() {
-    SetPath("");
+void TextureBrowserImage::OnClearImage()
+{
     imageHQ = QImage();
     imageLabel->setPixmap(QPixmap());
     imageLabel->setText(STYLE_TEXTUREBROWSERIMAGE_NOIMAGE_TEXT);
-    emit si_ImageCleared(this);
+    emit NotifyImageCleared(this);
 }
 
-void TextureBrowserImage::paintEvent(QPaintEvent *event) {
+void TextureBrowserImage::paintEvent(QPaintEvent* event)
+{
     QtUtility::PaintQObjectStyleSheets(this);
 }
 
-void TextureBrowserImage::mouseReleaseEvent(QMouseEvent *event) {
+void TextureBrowserImage::mouseReleaseEvent(QMouseEvent* event)
+{
     QWidget::mouseReleaseEvent(event);
 
     if (event->button() == Qt::MouseButton::LeftButton) {
@@ -122,7 +116,8 @@ void TextureBrowserImage::mouseReleaseEvent(QMouseEvent *event) {
     }
 }
 
-QImage TextureBrowserImage::MakeThumbnail(const QImage &image) {
+QImage TextureBrowserImage::MakeThumbnail(const QImage& image)
+{
     return image.scaled(
             IMAGELABEL_SIZE,
             IMAGELABEL_SIZE,
@@ -131,8 +126,8 @@ QImage TextureBrowserImage::MakeThumbnail(const QImage &image) {
     );
 }
 
-void TextureBrowserImage::InitLayout() {
-
+void TextureBrowserImage::InitLayout()
+{
     // Style
     setFixedWidth(160);
     setMinimumHeight(100);
@@ -147,23 +142,24 @@ void TextureBrowserImage::InitLayout() {
     setLayout(mainLayout);
 }
 
-void TextureBrowserImage::InitImageLabel(const QString &newPath) {
-    QImage image {};
+void TextureBrowserImage::InitImageLabel(const QString& path)
+{
+    QImage image{};
 
-    if (!newPath.isEmpty()) {
-        SetPath(newPath);
-        image = QImage(Path());
+    if (!path.isEmpty()) {
+        image = QImage(path);
     }
 
     SetImageLabelImage(image);
 }
 
-void TextureBrowserImage::InitImageLabel(const QImage &image) {
+void TextureBrowserImage::InitImageLabel(const QImage& image)
+{
     SetImageLabelImage(image);
 }
 
-void TextureBrowserImage::InitNameLabel(const QString &name) {
-
+void TextureBrowserImage::InitNameLabel(const QString& name)
+{
     // Font
     auto font = QFont(STYLE_TEXTUREBROWSER_FONT);
     font.setPixelSize(14);
@@ -175,17 +171,13 @@ void TextureBrowserImage::InitNameLabel(const QString &name) {
     mainLayout->addWidget(nameLabel, 1, Qt::AlignBottom);
 }
 
-void TextureBrowserImage::DestroyLayout() {
-    Memory::Release(nameLabel);
-    Memory::Release(imageLabel);
-    Memory::Release(mainLayout);
-}
-
-void TextureBrowserImage::SetImageLabelImage(const QImage &image) {
+void TextureBrowserImage::SetImageLabelImage(const QImage& image)
+{
     imageLabel = new QLabel(STYLE_TEXTUREBROWSERIMAGE_NOIMAGE_TEXT);
     imageLabel->setStyleSheet(STYLE_TEXTUREBROWSERIMAGE_LABEL);
 
-    if (!image.isNull()) {
+    if (!image.isNull())
+    {
         imageHQ = image;
         imageLabel->setText("");
         imageLabel->setPixmap(QPixmap::fromImage(MakeThumbnail(image)));
@@ -196,30 +188,35 @@ void TextureBrowserImage::SetImageLabelImage(const QImage &image) {
     imageLabel->setAlignment(Qt::AlignCenter);
 }
 
-void TextureBrowserImage::OpenImageFileDialog() {
-    auto filePath = QFileDialog::getOpenFileName(
+void TextureBrowserImage::OpenImageFileDialog()
+{
+    auto path = QFileDialog::getOpenFileName(
             this,
             "Open Texture Image",
             QString(),
             QString("Image Files (*.png *.jpg *.jpeg *.tga *.gif *.bmp)")
     );
 
-    if (!filePath.isEmpty()) {
-        SetPath(filePath);
-        UpdateImage(QImage(Path()));
+    if (!path.isEmpty()) {
+        UpdateImage(QImage(path));
     }
 }
 
-void TextureBrowserImage::ShowContextMenu(const QPoint &pos) {
-    QMenu contextMenu {};
+void TextureBrowserImage::ShowContextMenu(const QPoint& pos)
+{
+    QMenu contextMenu{};
 
     // Clear Image Action
     QAction clearImageAction("Clear Image");
 
     connect(&clearImageAction, SIGNAL(triggered()),
-            this, SLOT(sl_ClearImage()));
+            this, SLOT(OnClearImage()));
 
-    if (imageLabel->pixmap() == nullptr) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    if (imageLabel->pixmap(Qt::ReturnByValueConstant::ReturnByValue).isNull()) {
+#else
+    if (imageLabel->pixmap()->isNull()) {
+#endif
         clearImageAction.setDisabled(true);
     }
 

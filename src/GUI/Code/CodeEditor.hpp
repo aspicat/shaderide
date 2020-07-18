@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,58 +36,68 @@
 
 namespace ShaderIDE::GUI {
 
-    class CodeEditor : public QPlainTextEdit {
-    Q_OBJECT
+    class CodeEditor : public QPlainTextEdit
+    {
+        Q_OBJECT
+
         friend class LineNumberArea;
+
         static constexpr float FONT_SIZE_MIN = 6.0f;
         static constexpr float FONT_SIZE_MAX = 100.0f;
 
     public:
-        explicit CodeEditor(QWidget *parent = nullptr);
+        explicit CodeEditor(QWidget* parent = nullptr);
         ~CodeEditor() override;
 
-        void LoadSyntaxFile(const QString &path);
+        void LoadSyntaxFile(const QString& path);
 
-        void HighlightErrorLine(const int &line, const QColor &color);
+        void HighlightErrorLine(const int& line, const QColor& color);
         void ResetErrorLines();
 
         void ToggleWordWrap();
 
+        void Find(const QString& text,
+                  bool caseSensitive = false,
+                  bool words = false);
+
+        void ResetSearchLines();
+
     signals:
-        void si_CodeChanged(const QString &code);
-        void si_MouseReleased();
+        void NotifyCodeChanged(const QString& code);
+        void NotifyMouseReleased();
 
     public slots:
-        void sl_IncreaseFontSize();
-        void sl_DecreaseFontSize();
+        void OnIncreaseFontSize();
+        void OnDecreaseFontSize();
 
     private slots:
-        void sl_CodeChanged();
-        void sl_Scrolled(int value);
-        void sl_LineNumberAreaUpdated();
-        void sl_CursorPositionChanged();
+        void OnCodeChanged();
+        void OnScrolled(int value);
+        void OnLineNumberAreaUpdated();
+        void OnCursorPositionChanged();
 
     protected:
-        void keyPressEvent(QKeyEvent *event) override;
-        void keyReleaseEvent(QKeyEvent *event) override;
-        void mousePressEvent(QMouseEvent *event) override;
-        void mouseReleaseEvent(QMouseEvent *event) override;
-        void wheelEvent(QWheelEvent *event) override;
-        void contextMenuEvent(QContextMenuEvent *event) override;
-        void resizeEvent(QResizeEvent *event) override;
-        void paintEvent(QPaintEvent *event) override;
+        void keyPressEvent(QKeyEvent* event) override;
+        void keyReleaseEvent(QKeyEvent* event) override;
+        void mousePressEvent(QMouseEvent* event) override;
+        void mouseReleaseEvent(QMouseEvent* event) override;
+        void wheelEvent(QWheelEvent* event) override;
+        void contextMenuEvent(QContextMenuEvent* event) override;
+        void resizeEvent(QResizeEvent* event) override;
+        void paintEvent(QPaintEvent* event) override;
 
     private:
-        float fontSize;
-        bool fontScalingEnabled;
+        float fontSize{ 10.0f };
+        bool fontScalingEnabled{ false };
 
-        SyntaxHighlighter *syntaxHighlighter;
-        LineNumberArea *lineNumberArea;
+        SyntaxHighlighter* syntaxHighlighter{ nullptr };
+        LineNumberArea* lineNumberArea{ nullptr };
         QList<QTextEdit::ExtraSelection> errorLines;
         QList<QTextEdit::ExtraSelection> cursorLines;
+        QList<QTextEdit::ExtraSelection> searchLines;
 
-        QShortcut *increaseFontSizeSC;
-        QShortcut *decreaseFontSizeSC;
+        QShortcut* increaseFontSizeSC{ nullptr };
+        QShortcut* decreaseFontSizeSC{ nullptr };
 
         void InitSyntaxHighlighter();
         void InitLineNumberArea();
@@ -99,7 +109,8 @@ namespace ShaderIDE::GUI {
 
         void EnableFontScaling();
         void DisableFontScaling();
-        void ApplyFontScale(const float &value);
+        void ApplyFontScale(const float& value);
+
         void ApplyExtraSelections();
     };
 }

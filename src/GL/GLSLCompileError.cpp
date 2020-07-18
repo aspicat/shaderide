@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,48 +31,51 @@
 
 using namespace ShaderIDE::GL;
 
-GLSLCompileError::GLSLCompileError(const QString &file, const QString &rawError)
-    : line      (0),
-      code      (""),
-      message   (""),
-      raw       (""),
-      file      (file)
+GLSLCompileError::GLSLCompileError(const QString& file, const QString& rawError)
+        : file(file)
 {
     Parse(rawError);
 }
 
-uint32_t GLSLCompileError::Line() {
+uint32_t GLSLCompileError::Line()
+{
     return line;
 }
 
-QString GLSLCompileError::Code() {
+QString GLSLCompileError::Code()
+{
     return code;
 }
 
-QString GLSLCompileError::Message() {
+QString GLSLCompileError::Message()
+{
     return message;
 }
 
-QString GLSLCompileError::Raw() {
+QString GLSLCompileError::Raw()
+{
     return raw;
 }
 
-QString GLSLCompileError::File() {
+QString GLSLCompileError::File()
+{
     return file;
 }
 
-void GLSLCompileError::Parse(const QString &rawError) {
+void GLSLCompileError::Parse(const QString& rawError)
+{
     // 0(0) : error C0000: MESSAGE
     auto errorPattern = R"(\((\d+)\)\s*:\s*error\s*([C0-9]+)\s*:\s*(.*))";
 
     QRegularExpression expr(errorPattern);
     auto matches = expr.globalMatch(rawError);
 
-    while (matches.hasNext()) {
+    while (matches.hasNext())
+    {
         auto match = matches.next();
-        line       = match.captured(1).toUInt();
-        code       = match.captured(2);
-        message    = match.captured(3);
+        line = match.captured(1).toUInt();
+        code = match.captured(2);
+        message = match.captured(3);
     }
 
     raw = rawError;

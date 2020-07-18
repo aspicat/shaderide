@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,29 +36,31 @@
 
 namespace ShaderIDE::GUI {
 
-    struct MatchBlock {
+    struct MatchBlock
+    {
         QTextCharFormat format;
         QString expression;
     };
 
-    class SyntaxHighlighter : public QSyntaxHighlighter {
+    class SyntaxHighlighter : public QSyntaxHighlighter
+    {
     public:
-        explicit SyntaxHighlighter(QObject *parent);
-        explicit SyntaxHighlighter(QTextDocument *parent);
+        explicit SyntaxHighlighter(QObject* parent);
+        explicit SyntaxHighlighter(QTextDocument* parent);
 
-        void LoadSyntaxFile(const QString &path);
-        void AddMatchBlock(const MatchBlock &matchBlock);
+        void LoadSyntaxFile(const QString& path);
+        void AddMatchBlock(const MatchBlock& matchBlock);
 
     protected:
-        void highlightBlock(const QString &text) override;
+        void highlightBlock(const QString& text) override;
 
     private:
         QVector<MatchBlock> matchBlocks;
 
-        void HighlightMatchBlocks(const QString &text);
-        void ApplyFromSyntaxFile(const QJsonObject &json);
+        void HighlightMatchBlocks(const QString& text);
+        void ApplyFromSyntaxFile(const QJsonObject& json);
 
-        static QString MakeRegexKeywordExpression(const QJsonArray &keywords);
+        static QString MakeRegexKeywordExpression(const QJsonArray& keywords);
     };
 }
 

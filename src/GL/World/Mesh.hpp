@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,14 +35,15 @@
 
 namespace ShaderIDE::GL {
 
-    class Mesh {
+    class Mesh
+    {
     public:
-        void AddVertex(const glm::vec3 &vertex);
-        void AddVertexNormal(const glm::vec3 &vertexNormal);
-        void AddVertexUV(const glm::vec2 &vertexUV);
-        void AddIndex(const uint32_t &index);
-        void AddNormalIndex(const uint32_t &normalIndex);
-        void AddUVIndex(const uint32_t &uvIndex);
+        void AddVertex(const glm::vec3& vertex);
+        void AddVertexNormal(const glm::vec3& vertexNormal);
+        void AddVertexUV(const glm::vec2& vertexUV);
+        void AddIndex(const uint32_t& index);
+        void AddNormalIndex(const uint32_t& normalIndex);
+        void AddUVIndex(const uint32_t& uvIndex);
 
         std::vector<glm::vec3> Vertices();
         std::vector<glm::vec3> VertexNormals();

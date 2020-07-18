@@ -11,7 +11,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,37 +42,38 @@
 
 namespace ShaderIDE::GL {
 
-    struct IndexContainer {
+    struct IndexContainer
+    {
         uint32_t numVertexIndices;
         uint32_t numTextureIndices;
         uint32_t numNormalIndices;
     };
 
-    class OBJMeshLoader {
+    class OBJMeshLoader
+    {
     public:
-        explicit OBJMeshLoader(const QString &path);
+        explicit OBJMeshLoader(const QString& path);
 
         Mesh GetMesh();
 
     private:
-        Mesh mesh;
-        uint32_t lineCounter;
+        Mesh mesh{};
+        uint32_t lineCounter{ 0 };
 
-        void ReadFile(const QString &path);
-        void ParseLine(const std::string &line);
-        glm::vec2 ParseVector2(const std::string &line);
-        glm::vec3 ParseVector3(const std::string &line);
+        void ReadFile(const QString& path);
+        void ParseLine(const std::string& line);
+        glm::vec2 ParseVector2(const std::string& line);
+        glm::vec3 ParseVector3(const std::string& line);
 
         std::vector<IndexContainer>
-        ParseIndices(const std::string &line);
+        ParseIndices(const std::string& line);
 
-        bool IsVertex(const std::string &line);
-        bool IsVertexNormal(const std::string &line);
-        bool IsVertexTexture(const std::string &line);
-        bool IsFace(const std::string &line);
+        bool IsVertex(const std::string& line);
+        bool IsVertexNormal(const std::string& line);
+        bool IsVertexTexture(const std::string& line);
+        bool IsFace(const std::string& line);
 
-        bool IdentifyDataType(const std::string &line,
-                              const std::string &pattern);
+        bool IdentifyDataType(const std::string& line, const std::string& pattern);
     };
 }
 

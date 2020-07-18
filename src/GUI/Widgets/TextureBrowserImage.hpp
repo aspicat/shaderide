@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,59 +36,55 @@
 
 namespace ShaderIDE::GUI {
 
-    class TextureBrowserImage : public QWidget {
-    Q_OBJECT
+    class TextureBrowserImage : public QWidget
+    {
+        Q_OBJECT
         static constexpr int IMAGELABEL_SIZE = 128;
-    public:
-        explicit TextureBrowserImage(const QString &name,
-                                     const QString &path,
-                                     QWidget *parent = nullptr);
 
-        explicit TextureBrowserImage(const QString &name,
-                                     const QImage &image,
-                                     QWidget *parent = nullptr);
+    public:
+        explicit TextureBrowserImage(const QString& name,
+                                     const QString& path,
+                                     QWidget* parent = nullptr);
+
+        explicit TextureBrowserImage(const QString& name,
+                                     const QImage& image,
+                                     QWidget* parent = nullptr);
 
         ~TextureBrowserImage() override;
 
         QString Name();
         QImage Image();
         QImage ImageHQ();
-        QString Path();
 
-        void UpdateImage(const QImage &image);
-        void SetPath(const QString &newPath);
+        void UpdateImage(const QImage& image);
 
     signals:
-        void si_ImageChanged(TextureBrowserImage *image);
-        void si_ImageCleared(TextureBrowserImage *image);
-        void si_PathChanged(TextureBrowserImage *image);
+        void NotifyImageChanged(TextureBrowserImage* image);
+        void NotifyImageCleared(TextureBrowserImage* image);
 
     public slots:
-        void sl_ClearImage();
+        void OnClearImage();
 
     protected:
-        void paintEvent(QPaintEvent *event) override;
-        void mouseReleaseEvent(QMouseEvent *event) override;
+        void paintEvent(QPaintEvent* event) override;
+        void mouseReleaseEvent(QMouseEvent* event) override;
 
     private:
-        static QImage MakeThumbnail(const QImage &image);
+        static QImage MakeThumbnail(const QImage& image);
 
-        QVBoxLayout *mainLayout;
-        QLabel *imageLabel;
-        QLabel *nameLabel;
+        QVBoxLayout* mainLayout{ nullptr };
+        QLabel* imageLabel{ nullptr };
+        QLabel* nameLabel{ nullptr };
         QImage imageHQ;
-        QString path;
 
         void InitLayout();
-        void InitImageLabel(const QString &path);
-        void InitImageLabel(const QImage &image);
-        void InitNameLabel(const QString &name);
+        void InitImageLabel(const QString& path);
+        void InitImageLabel(const QImage& image);
+        void InitNameLabel(const QString& name);
 
-        void DestroyLayout();
-
-        void SetImageLabelImage(const QImage &image);
+        void SetImageLabelImage(const QImage& image);
         void OpenImageFileDialog();
-        void ShowContextMenu(const QPoint &pos);
+        void ShowContextMenu(const QPoint& pos);
     };
 }
 

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,41 +34,46 @@
 
 using namespace ShaderIDE::GUI;
 
-EnvSettingsPanel::EnvSettingsPanel(QWidget *parent)
-    : QWidget           (parent),
-      mainLayout        (nullptr),
-      textureBrowser    (nullptr)
+EnvSettingsPanel::EnvSettingsPanel(QWidget* parent)
+        : QWidget(parent)
 {
     InitLayout();
     InitTextureBrowser();
 }
 
-EnvSettingsPanel::~EnvSettingsPanel() {
-    DestroyTextureBrowser();
-    DestroyLayout();
+EnvSettingsPanel::~EnvSettingsPanel()
+{
+    Memory::Release(textureBrowser);
+    Memory::Release(mainLayout);
 }
 
-TextureBrowser* EnvSettingsPanel::GetTextureBrowser() {
+TextureBrowser* EnvSettingsPanel::GetTextureBrowser()
+{
     return textureBrowser;
 }
 
-void EnvSettingsPanel::Toggle() {
+void EnvSettingsPanel::Toggle()
+{
     setVisible(!isVisible());
 }
 
-void EnvSettingsPanel::Hide() {
+void EnvSettingsPanel::Hide()
+{
     setVisible(false);
 }
 
-void EnvSettingsPanel::ResetUI() {
+void EnvSettingsPanel::ResetUI()
+{
     textureBrowser->ClearImages();
 }
 
-void EnvSettingsPanel::paintEvent(QPaintEvent *event) {
+void EnvSettingsPanel::paintEvent(QPaintEvent* event)
+{
     QtUtility::PaintQObjectStyleSheets(this);
 }
 
-void EnvSettingsPanel::InitLayout() {
+void EnvSettingsPanel::InitLayout()
+{
     setMinimumHeight(250);
     setObjectName("EnvSettingsPanel");
     setStyleSheet(STYLE_ENVSETTINGSPANEL);
@@ -81,21 +86,15 @@ void EnvSettingsPanel::InitLayout() {
     setLayout(mainLayout);
 }
 
-void EnvSettingsPanel::InitTextureBrowser() {
+void EnvSettingsPanel::InitTextureBrowser()
+{
     textureBrowser = new TextureBrowser();
     mainLayout->addWidget(textureBrowser, 1, Qt::AlignBottom);
     LoadTextureBrowserSlots();
 }
 
-void EnvSettingsPanel::DestroyTextureBrowser() {
-    Memory::Release(textureBrowser);
-}
-
-void EnvSettingsPanel::DestroyLayout() {
-    Memory::Release(mainLayout);
-}
-
-void EnvSettingsPanel::LoadTextureBrowserSlots() {
+void EnvSettingsPanel::LoadTextureBrowserSlots()
+{
     textureBrowser->AddImage(GLSL_TEXTURE_SLOT_0_NAME, "");
     textureBrowser->AddImage(GLSL_TEXTURE_SLOT_1_NAME, "");
     textureBrowser->AddImage(GLSL_TEXTURE_SLOT_2_NAME, "");

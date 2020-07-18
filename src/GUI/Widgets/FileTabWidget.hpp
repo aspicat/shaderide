@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,28 +30,34 @@
 #define SHADERIDE_GUI_WIDGETS_FILETABWIDGET_HPP
 
 #include <QTabWidget>
+#include <QShortcut>
 #include "src/GUI/Code/CodeEditor.hpp"
 #include "ImageButton.hpp"
 #include "EnvSettingsPanel.hpp"
+#include "FindWidget.hpp"
 
 namespace ShaderIDE::GUI {
 
-    class FileTabWidget : public QTabWidget {
-    Q_OBJECT
+    class FileTabWidget : public QTabWidget
+    {
+        Q_OBJECT
+        static constexpr int VS_TAB_INDEX = 0;
+        static constexpr int FS_TAB_INDEX = 1;
+
     public:
-        explicit FileTabWidget(QWidget *parent = nullptr);
+        explicit FileTabWidget(QWidget* parent = nullptr);
         ~FileTabWidget() override;
 
         bool CodeEditorsReady();
 
-        void SetVertexShaderSource(const QString &source);
+        void SetVertexShaderSource(const QString& source);
         QString VertexShaderSource();
 
-        void SetFragmentShaderSource(const QString &source);
+        void SetFragmentShaderSource(const QString& source);
         QString FragmentShaderSource();
 
         void ToggleWordWrap();
-        void SetWordWrapMode(QTextOption::WrapMode &mode);
+        void SetWordWrapMode(QTextOption::WrapMode& mode);
         QTextOption::WrapMode WordWrapMode();
         bool WordWrap();
 
@@ -62,33 +68,40 @@ namespace ShaderIDE::GUI {
         void ResetUI();
 
     signals:
-        void si_VSCodeChanged(const QString&);
-        void si_FSCodeChanged(const QString&);
+        void NotifyVSCodeChanged(const QString&);
+        void NotifyFSCodeChanged(const QString&);
 
     protected:
-        void resizeEvent(QResizeEvent *event) override;
+        void resizeEvent(QResizeEvent* event) override;
+        void keyPressEvent(QKeyEvent* event) override;
 
     private slots:
-        void sl_VSCodeChanged(const QString &code);
-        void sl_FSCodeChanged(const QString &code);
-        void sl_HideEnvSettingsPanel();
-        void sl_ToggleEnvSettingsPanel();
+        void OnVSCodeChanged(const QString& code);
+        void OnFSCodeChanged(const QString& code);
+        void OnHideEnvSettingsPanel();
+        void OnFindButtonClicked();
+        void OnToggleEnvSettingsPanel();
+        void OnTabChanged(const int& index);
 
     private:
-        CodeEditor *vsCodeEditor;
-        CodeEditor *fsCodeEditor;
-        EnvSettingsPanel *envSettingsPanel;
-        ImageButton *envSettingsPanelToggle;
+        CodeEditor* vsCodeEditor{ nullptr };
+        CodeEditor* fsCodeEditor{ nullptr };
+        EnvSettingsPanel* envSettingsPanel{ nullptr };
+        ImageButton* findButton{ nullptr };
+        ImageButton* envSettingsPanelToggle{ nullptr };
+        FindWidget* findWidget{ nullptr };
+
+        QShortcut* showFindWidgetSC{ nullptr };
 
         void InitLayout();
         void InitCodeEditors();
         void InitEnvSettingsPanel();
-
-        void DestroyEnvSettingsPanel();
-        void DestroyCodeEditors();
+        void InitFindWidget();
+        void InitShortcuts();
 
         void UpdateEnvSettingsPanelGeometry();
-        void UpdateEnvSettingsPanelToggleButton();
+        void UpdateBottomButtons();
+        void UpdateFindWidgetGeometry();
     };
 }
 

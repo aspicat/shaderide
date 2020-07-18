@@ -1,4 +1,6 @@
 .idea/
+.vs/
+.DS_Store
 cmake-build-debug/
 bin/
 lib/

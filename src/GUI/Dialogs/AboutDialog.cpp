@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
  * --------------------------------------------------------------------------
  *
- * Copyright (c) 2019 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,29 +35,31 @@
 
 using namespace ShaderIDE::GUI;
 
-AboutDialog::AboutDialog(QWidget *parent)
-    : QDialog               (parent),
-      mainLayout            (nullptr),
-      logoLabel             (nullptr),
-      versionLabel          (nullptr),
-      copyrightLabel        (nullptr),
-      licenseLinkLabel      (nullptr),
-      bottomLayoutSpacer    (nullptr),
-      bottomLayout          (nullptr),
-      linkLabel             (nullptr),
-      closeButton           (nullptr)
+AboutDialog::AboutDialog(QWidget* parent)
+        : QDialog(parent)
 {
     InitLayout();
     InitBottomLayout();
 }
 
-AboutDialog::~AboutDialog() {
-    DestroyBottomLayout();
-    DestroyLayout();
+AboutDialog::~AboutDialog()
+{
+    // Bottom Layout
+    Memory::Release(closeButton);
+    Memory::Release(linkLabel);
+    Memory::Release(bottomLayout);
+
+    // Main Layout
+    Memory::Release(bottomLayoutSpacer);
+    Memory::Release(licenseLinkLabel);
+    Memory::Release(copyrightLabel);
+    Memory::Release(versionLabel);
+    Memory::Release(logoLabel);
+    Memory::Release(mainLayout);
 }
 
-void AboutDialog::InitLayout() {
-
+void AboutDialog::InitLayout()
+{
     // Window
     setWindowTitle("About");
     setWindowFlags(Qt::FramelessWindowHint);
@@ -93,15 +95,15 @@ void AboutDialog::InitLayout() {
     mainLayout->addWidget(versionLabel, 0, Qt::AlignTop);
 
     // Copyright
-    copyrightLabel = new QLabel("Copyright (c) 2019 Aspicat - Florian Roth");
+    copyrightLabel = new QLabel(SHADERIDE_COPYRIGHT);
     copyrightLabel->setContentsMargins(10, 0, 10, 10);
     mainLayout->addWidget(copyrightLabel, 0, Qt::AlignTop);
 
     // License
     QString licenseLink =
             QString("<a href=\"") + SHADERIDE_LICENSE_URL + "\" "
-            "style=\"color: #3187BE;\">"
-            "Show License</a>";
+                    "style=\"color: #3187BE;\">"
+                    "Show License</a>";
 
     licenseLinkLabel = new QLabel(licenseLink);
     licenseLinkLabel->setTextFormat(Qt::RichText);
@@ -121,8 +123,8 @@ void AboutDialog::InitLayout() {
     mainLayout->addSpacerItem(bottomLayoutSpacer);
 }
 
-void AboutDialog::InitBottomLayout() {
-
+void AboutDialog::InitBottomLayout()
+{
     // Layout
     bottomLayout = new QHBoxLayout();
     bottomLayout->setContentsMargins(10, 0, 10, 10);
@@ -131,13 +133,13 @@ void AboutDialog::InitBottomLayout() {
 
     // Link Label
     QString links = QString("") +
-            "<a href=\"" + SHADERIDE_ASPICAT_URL + "\">"
-                "<img src=\":/icons/icon-aspicat.png\">"
-            "</a>"
-            "&nbsp;&nbsp;"
-            "<a href=\"" + SHADERIDE_GITHUB_URL + "\">"
-                "<img src=\":/icons/icon-github.png\">"
-            "</a>";
+                    "<a href=\"" + SHADERIDE_ASPICAT_URL + "\">"
+                        "<img src=\":/icons/icon-aspicat.png\">"
+                    "</a>"
+                    "&nbsp;&nbsp;"
+                    "<a href=\"" + SHADERIDE_GITHUB_URL + "\">"
+                        "<img src=\":/icons/icon-github.png\">"
+                    "</a>";
 
     linkLabel = new QLabel(links);
     linkLabel->setTextFormat(Qt::RichText);
@@ -151,19 +153,4 @@ void AboutDialog::InitBottomLayout() {
 
     connect(closeButton, SIGNAL(clicked(bool)),
             this, SLOT(close()));
-}
-
-void AboutDialog::DestroyBottomLayout() {
-    Memory::Release(closeButton);
-    Memory::Release(linkLabel);
-    Memory::Release(bottomLayout);
-}
-
-void AboutDialog::DestroyLayout() {
-    Memory::Release(bottomLayoutSpacer);
-    Memory::Release(licenseLinkLabel);
-    Memory::Release(copyrightLabel);
-    Memory::Release(versionLabel);
-    Memory::Release(logoLabel);
-    Memory::Release(mainLayout);
 }
