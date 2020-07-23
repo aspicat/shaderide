@@ -50,7 +50,6 @@ TextureBrowser::~TextureBrowser()
 
 void TextureBrowser::AddImage(const QString& name, const QString& path)
 {
-
     // Check if image already exists.
     if (images.find(name) != images.end())
     {
@@ -71,9 +70,6 @@ void TextureBrowser::AddImage(const QString& name, const QString& path)
 
     connect(image, SIGNAL(NotifyImageCleared(TextureBrowserImage*)),
             this, SLOT(OnImageCleared(TextureBrowserImage*)));
-
-    connect(image, SIGNAL(NotifyPathChanged(TextureBrowserImage*)),
-            this, SLOT(OnImagePathChanged(TextureBrowserImage*)));
 }
 
 TextureBrowserImage* TextureBrowser::GetImage(const QString& name)
@@ -118,11 +114,6 @@ void TextureBrowser::OnImageChanged(TextureBrowserImage* image)
 void TextureBrowser::OnImageCleared(TextureBrowserImage* image)
 {
     emit NotifyImageCleared(image);
-}
-
-void TextureBrowser::OnImagePathChanged(TextureBrowserImage* image)
-{
-    emit NotifyImagePathChanged(image);
 }
 
 void TextureBrowser::InitLayout()

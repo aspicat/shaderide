@@ -57,7 +57,6 @@ namespace ShaderIDE::GUI {
     signals:
         void NotifyImageChanged(TextureBrowserImage* image);
         void NotifyImageCleared(TextureBrowserImage* image);
-        void NotifyImagePathChanged(TextureBrowserImage* image);
 
     protected:
         void paintEvent(QPaintEvent* event) override;
@@ -65,7 +64,6 @@ namespace ShaderIDE::GUI {
     private slots:
         void OnImageChanged(TextureBrowserImage* image);
         void OnImageCleared(TextureBrowserImage* image);
-        void OnImagePathChanged(TextureBrowserImage* image);
 
     private:
         QVBoxLayout* mainLayout{ nullptr };

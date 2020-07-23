@@ -34,7 +34,8 @@
 using namespace ShaderIDE::GUI;
 
 SettingsDialog::SettingsDialog(MainWindow* mainWindow)
-        : QDialog(nullptr)
+        : QDialog(nullptr),
+          mainWindow(mainWindow)
 {
     InitLayout();
     InitViewportSection();

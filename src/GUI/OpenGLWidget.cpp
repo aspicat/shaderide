@@ -1002,7 +1002,6 @@ void OpenGLWidget::ReleaseTextures()
 
 void OpenGLWidget::InitAttribsForVAO()
 {
-
     // Vertex Position Attrib
     auto vPosLocation = glGetAttribLocation(program, "position");
     glEnableVertexAttribArray(vPosLocation);
