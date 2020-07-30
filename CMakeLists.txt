@@ -1,4 +1,4 @@
-# Aspicat ShaderIDE - CMakeLists.txt
+# ShaderIDE - CMakeLists.txt
 #
 # On Windows, don't forget to tell CMAKE these directories (examples):
 # -DCMAKE_PREFIX_PATH="C:/Qt/5.13.0/mingw73_64"

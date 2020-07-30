@@ -1,11 +1,11 @@
 /**
  * ApplicationDefaults Header
  *
- * --------------------------------------------------------------------------
- * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
- * --------------------------------------------------------------------------
+ * -------------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
+ * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,8 +34,8 @@
 #define SHADERIDE_STATUSBAR_TIMEOUT 10000 // 10 Seconds
 #define SHADERIDE_SURFACEFORMAT_NUM_SAMPLES 8
 #define SHADERIDE_LOGO_PATH ":/app/logo-light.png"
-#define SHADERIDE_LICENSE_URL "https://github.com/aspicat/shaderide/blob/master/LICENSE"
-#define SHADERIDE_GITHUB_URL "https://github.com/aspicat/shaderide"
-#define SHADERIDE_ASPICAT_URL "https://www.aspicat.de/"
+#define SHADERIDE_LICENSE_URL "https://github.com/thedamncoder/shaderide/blob/master/LICENSE"
+#define SHADERIDE_GITHUB_URL "https://github.com/thedamncoder/shaderide"
+#define SHADERIDE_TDC_URL "https://github.com/thedamncoder"
 
 #endif // SHADERIDE_CORE_APPLICATIONDEFAULTS_HPP

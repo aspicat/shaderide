@@ -7,7 +7,6 @@
 
     <!-- Icons -->
     <qresource prefix="/icons">
-        <file alias="icon-aspicat.png">assets/icons/icon-aspicat.png</file>
         <file alias="icon-github.png">assets/icons/icon-github.png</file>
         <file alias="icon-loading-indicator.png">assets/icons/icon-loading-indicator.png</file>
         <file alias="icon-menu-check.png">assets/icons/icon-menu-check.png</file>

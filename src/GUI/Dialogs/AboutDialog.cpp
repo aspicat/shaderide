@@ -1,11 +1,11 @@
 /**
  * AboutDialog Class
  *
- * --------------------------------------------------------------------------
- * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
- * --------------------------------------------------------------------------
+ * -------------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
+ * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -133,9 +133,6 @@ void AboutDialog::InitBottomLayout()
 
     // Link Label
     QString links = QString("") +
-                    "<a href=\"" + SHADERIDE_ASPICAT_URL + "\">"
-                        "<img src=\":/icons/icon-aspicat.png\">"
-                    "</a>"
                     "&nbsp;&nbsp;"
                     "<a href=\"" + SHADERIDE_GITHUB_URL + "\">"
                         "<img src=\":/icons/icon-github.png\">"

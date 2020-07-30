@@ -3,11 +3,11 @@
  *
  * This is the main widget for the 3D view (left side).
  *
- * --------------------------------------------------------------------------
- * This file is part of "Shader IDE" -> https://github.com/aspicat/shaderide.
- * --------------------------------------------------------------------------
+ * -------------------------------------------------------------------------------
+ * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
+ * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Aspicat - Florian Roth
+ * Copyright (c) 2017 - 2020 Florian Roth
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
