@@ -706,8 +706,7 @@ void OpenGLWidget::DisableRealtime()
 
 void OpenGLWidget::UpdateRealtime()
 {
-    // Limit FPS to ~60
-    QTimer::singleShot(static_cast<int>(16.33f), this, SLOT(OnTick()));
+    QTimer::singleShot(0.0f, this, SLOT(OnTick()));
 }
 
 void OpenGLWidget::EnablePlane2D()
