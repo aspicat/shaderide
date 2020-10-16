@@ -40,13 +40,14 @@
 
 using namespace ShaderIDE::GUI;
 
-OpenGLWidget::OpenGLWidget(QWidget* parent)
-        : QOpenGLWidget(parent)
+OpenGLWidget::OpenGLWidget(QSplitter* splitter, QWidget* parent)
+        : QOpenGLWidget(parent),
+          splitter(splitter)
 {
     setStyleSheet(STYLE_OPENGLWIDGET);
 
     InitOverlay();
-    InitTopLeftLayout();
+    InitTopLayout();
     InitQuickModelButtons();
     InitLoadingWidget();
 
@@ -82,9 +83,10 @@ OpenGLWidget::~OpenGLWidget()
     Memory::Release(quickLoadModelsLayout);
 
     // Top Left Layout
+    Memory::Release(ibSquareViewport);
     Memory::Release(cbPlane2D);
     Memory::Release(cbRealtimeUpdate);
-    Memory::Release(topLeftLayout);
+    Memory::Release(topLayout);
 
     // Overlay
     Memory::Release(overlayLayout);
@@ -420,6 +422,11 @@ void OpenGLWidget::OnPlane2DStateChanged(const int& state)
     }
 }
 
+void OpenGLWidget::OnSquareViewportClicked()
+{
+    SquareViewportAndUpdateSplitter();
+}
+
 void OpenGLWidget::OnTick()
 {
     if (realtime)
@@ -613,26 +620,34 @@ void OpenGLWidget::InitOverlay()
     setLayout(overlayLayout);
 }
 
-void OpenGLWidget::InitTopLeftLayout()
+void OpenGLWidget::InitTopLayout()
 {
-    // Top Left Layout
-    topLeftLayout = new QHBoxLayout();
-    topLeftLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    overlayLayout->addLayout(topLeftLayout);
+    // Top Layout
+    topLayout = new QHBoxLayout();
+    topLayout->setAlignment(Qt::AlignTop);
+    overlayLayout->addLayout(topLayout);
 
     // Realtime Update Checkbox
     cbRealtimeUpdate = new QCheckBox("Realtime");
-    topLeftLayout->addWidget(cbRealtimeUpdate);
+    topLayout->addWidget(cbRealtimeUpdate);
 
     connect(cbRealtimeUpdate, SIGNAL(stateChanged(int)),
             this, SLOT(OnRealtimeUpdateStateChanged(int)));
 
     // Plane 2D Checkbox
     cbPlane2D = new QCheckBox("Plane 2D");
-    topLeftLayout->addWidget(cbPlane2D);
+    topLayout->addWidget(cbPlane2D);
 
     connect(cbPlane2D, SIGNAL(stateChanged(int)),
             this, SLOT(OnPlane2DStateChanged(int)));
+
+    // Square Viewport
+    ibSquareViewport = new ImageButton(":/images/64/square.png");
+    ibSquareViewport->setToolTip("Square viewport.");
+    topLayout->addWidget(ibSquareViewport, 1, Qt::AlignRight);
+
+    connect(ibSquareViewport, SIGNAL(clicked()),
+            this, SLOT(OnSquareViewportClicked()));
 }
 
 void OpenGLWidget::InitQuickModelButtons()
@@ -641,6 +656,7 @@ void OpenGLWidget::InitQuickModelButtons()
     quickLoadModelsLayout = new QHBoxLayout();
     quickLoadModelsLayout->setSpacing(10);
     quickLoadModelsLayout->setContentsMargins(0, 0, 0, 0);
+    quickLoadModelsLayout->setAlignment(Qt::AlignLeft);
     overlayLayout->addLayout(quickLoadModelsLayout, 0);
 
     // Load Cube
@@ -690,6 +706,27 @@ void OpenGLWidget::HideQuickLoadModelsLayout()
     btLoadTorus->setVisible(false);
     btLoadTeapot->setVisible(false);
     btLoadBunny->setVisible(false);
+}
+
+void OpenGLWidget::SquareViewportAndUpdateSplitter()
+{
+    const auto leftWidth = splitter->widget(0)->width();
+    const auto rightWidth = splitter->widget(1)->width();
+
+    QList<int> sizes;
+
+    if (splitter->widget(0) == this)
+    {
+        int diff = leftWidth - height();
+        sizes << height() << rightWidth + diff;
+    }
+    else
+    {
+        int diff = rightWidth - height();
+        sizes << leftWidth + diff << height();
+    }
+
+    splitter->setSizes(sizes);
 }
 
 void OpenGLWidget::EnableRealtime()

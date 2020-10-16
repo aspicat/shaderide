@@ -623,7 +623,7 @@ void MainWindow::InitMenuHelp()
 
 void MainWindow::InitOpenGLWidget()
 {
-    openGLWidget = new OpenGLWidget();
+    openGLWidget = new OpenGLWidget(mainSplitter);
     openGLWidget->setMinimumWidth(400);
     openGLWidget->resize(800, openGLWidget->height());
     mainSplitter->addWidget(openGLWidget);
@@ -738,9 +738,7 @@ void MainWindow::SwapLayout()
 void MainWindow::ResetLayout()
 {
     // Reset Size
-    QList<int> sizes;
-    sizes << 1 << 1;
-    mainSplitter->setSizes(sizes);
+    mainSplitter->setSizes(QList<int>() << 1 << 1);
 
     // This is just a quick solution, since there are only
     // two widgets inside the splitter. See SwapLayout().

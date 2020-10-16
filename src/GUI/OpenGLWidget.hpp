@@ -48,6 +48,7 @@
 #include <QDateTime>
 #include <QMap>
 #include <QMutex>
+#include <QSplitter>
 #include <glm/glm.hpp>
 #include "src/Core/GeneralException.hpp"
 #include "Widgets/ImageButton.hpp"
@@ -82,7 +83,7 @@ namespace ShaderIDE::GUI {
             TEX_3
         };
 
-        explicit OpenGLWidget(QWidget* parent = nullptr);
+        explicit OpenGLWidget(QSplitter* splitter, QWidget* parent = nullptr);
         ~OpenGLWidget() override;
 
         QString SelectedMeshName();
@@ -133,6 +134,7 @@ namespace ShaderIDE::GUI {
         void OnModelLoaded(const QString& name);
         void OnRealtimeUpdateStateChanged(const int& state);
         void OnPlane2DStateChanged(const int& state);
+        void OnSquareViewportClicked();
         void OnTick();
 
     protected:
@@ -146,6 +148,8 @@ namespace ShaderIDE::GUI {
         void mouseMoveEvent(QMouseEvent* event) override;
 
     private:
+        QSplitter* splitter{ nullptr }; // DO NOT DESTROY
+
         GLuint program{ 0 };
         ShaderSPtr vertexShader;
         ShaderSPtr fragmentShader;
@@ -167,10 +171,11 @@ namespace ShaderIDE::GUI {
         // Overlay Layout
         QVBoxLayout* overlayLayout{ nullptr };
 
-        // Top Left Layout
-        QHBoxLayout* topLeftLayout{ nullptr };
+        // Top Layout
+        QHBoxLayout* topLayout{ nullptr };
         QCheckBox* cbRealtimeUpdate{ nullptr };
         QCheckBox* cbPlane2D{ nullptr };
+        ImageButton* ibSquareViewport{ nullptr };
 
         // Bottom Left (Quick Load Models)
         QHBoxLayout* quickLoadModelsLayout{ nullptr };
@@ -224,13 +229,14 @@ namespace ShaderIDE::GUI {
         void InitVAO();
         void InitPlaneVAO();
         void InitOverlay();
-        void InitTopLeftLayout();
+        void InitTopLayout();
         void InitQuickModelButtons();
         void InitLoadingWidget();
 
         // Layouts
         void ShowQuickLoadModelsLayout();
         void HideQuickLoadModelsLayout();
+        void SquareViewportAndUpdateSplitter();
 
         // Realtime
         void EnableRealtime();

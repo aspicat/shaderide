@@ -22,6 +22,7 @@
         <file alias="sphere.png">assets/images/64/sphere.png</file>
         <file alias="teapot.png">assets/images/64/teapot.png</file>
         <file alias="torus.png">assets/images/64/torus.png</file>
+        <file alias="square.png">assets/images/64/square.png</file>
     </qresource>
 
     <!-- Models -->
