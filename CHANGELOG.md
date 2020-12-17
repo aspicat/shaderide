@@ -3,7 +3,7 @@
 You can find all changes in detail per version in this file.
 The listed notes are not ordered by priority.
 
-## Version 1.4.0 - December 12, 2020
+## Version 1.4.0 - December 17, 2020
 ### Added
 - JetBrains Mono as default font for the code editor and all other monospaced fonts used within
   the application.
