@@ -31,12 +31,6 @@
 
 #include "src/GUI/StyleSheets.hpp"
 
-#ifdef WIN32
-#define STYLE_TEXTUREBROWSER_FONT "Consolas"
-#else
-#define STYLE_TEXTUREBROWSER_FONT "DejaVu Sans Mono"
-#endif
-
 #define STYLE_TEXTUREBROWSER \
     "#TextureBrowser {" \
     "    background: transparent;" \

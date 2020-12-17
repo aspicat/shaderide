@@ -76,6 +76,7 @@ void AboutDialog::InitLayout()
 
     // Logo
     auto logo = QPixmap::fromImage(QImage(SHADERIDE_LOGO_PATH));
+
     logoLabel = new QLabel();
     logoLabel->setPixmap(logo);
     logoLabel->setStyleSheet("background-color: rgb(50, 50, 50);");
@@ -111,6 +112,8 @@ void AboutDialog::InitLayout()
     licenseLinkLabel->setOpenExternalLinks(true);
     licenseLinkLabel->setContentsMargins(10, 0, 10, 0);
     mainLayout->addWidget(licenseLinkLabel);
+
+
 
     // Bottom Layout Spacer
     bottomLayoutSpacer = new QSpacerItem(

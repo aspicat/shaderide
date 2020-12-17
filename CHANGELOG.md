@@ -3,6 +3,15 @@
 You can find all changes in detail per version in this file.
 The listed notes are not ordered by priority.
 
+## Version 1.4.0 - December 12, 2020
+### Added
+- JetBrains Mono as default font for the code editor and all other monospaced fonts used within
+  the application.
+  
+### Changed
+- Updated the Qt version to 6.0.0.
+- Removed Boost serialization dependencies.
+
 ## Version 1.3.0 - July 18, 2020
 ### Added
 - Uniform variable "uniform vec2 resolution", which holds the viewport screen resolution.

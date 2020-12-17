@@ -1,5 +1,5 @@
 /**
- * CodeEditor Style Header
+ * Application Class
  *
  * -------------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
@@ -26,26 +26,20 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GUI_STYLE_CODEEDITORSTYLE_HPP
-#define SHADERIDE_GUI_STYLE_CODEEDITORSTYLE_HPP
+#include <QFontDatabase>
+#include "Application.hpp"
 
-#include "src/GUI/StyleSheets.hpp"
+using namespace ShaderIDE;
 
-// Code Editor
-#define STYLE_CODEEDITOR \
-    "QPlainTextEdit {" \
-    "    border: none;" \
-    "    color: #eaeaea;" \
-    "    background: rgb(30, 30, 30);" \
-    "}" \
-    STYLE_SCROLLBAR
+int Application::monospaceFontID = 0;
 
-#define STYLE_CODEEDITOR_FONT_SIZE 12
-#define STYLE_CODEEDITOR_HIGHLIGHT_COLOR QColor(38, 38, 38)
+QString Application::MonospaceFontFamily()
+{
+    return QFontDatabase::applicationFontFamilies(monospaceFontID).at(0);
+}
 
-// Line Number Area
-#define STYLE_LINENUMBERAREA_BG_COLOR QColor(40, 40, 40, 255)
-#define STYLE_LINENUMBERAREA_FONT_COLOR QColor(80, 80, 80)
-#define STYLE_LINENUMBERAREA_FONT_HIGHLIGHT_COLOR QColor("#4DDCFE")
-
-#endif // SHADERIDE_GUI_STYLE_CODEEDITORSTYLE_HPP
+Application::Application(int argc, char** argv, int flags)
+    : QApplication(argc, argv, flags)
+{
+    monospaceFontID = QFontDatabase::addApplicationFont(":/fonts/JetBrainsMono-Regular.ttf");
+}

@@ -31,20 +31,15 @@
 
 #include "src/GUI/StyleSheets.hpp"
 
-#ifdef WIN32
-#define STYLE_LOADINGWIDGET_FONT "Consolas"
-#else
-#define STYLE_LOADINGWIDGET_FONT "DejaVu Sans Mono"
-#endif
-
 #define STYLE_LOADINGWIDGET \
     "#LoadingWidget {" \
     "    border-radius: 5px;" \
     "    background: rgba(15, 15, 15, 0.8);" \
     "}" \
     "QLabel {" \
-    "    font-family: " STYLE_LOADINGWIDGET_FONT ";"\
-    "    font-size: 10pt;" \
+    "    font-family: Arial;"\
+    "    font-size: 12pt;" \
+    "    font-weight: bold;" \
     "    color: #fafafa;" \
     "    background: transparent;" \
     "}"

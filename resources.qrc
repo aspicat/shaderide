@@ -5,6 +5,12 @@
         <file alias="logo-light.png">assets/app/logo-light.png</file>
     </qresource>
 
+    <!-- Fonts -->
+    <qresource prefix="/fonts">
+        <file alias="JetBrainsMono-Regular.ttf">assets/fonts/JetBrainsMono-Regular.ttf</file>
+        <file alias="JetBrainsMono-Medium.ttf">assets/fonts/JetBrainsMono-Medium.ttf</file>
+    </qresource>
+
     <!-- Icons -->
     <qresource prefix="/icons">
         <file alias="icon-github.png">assets/icons/icon-github.png</file>

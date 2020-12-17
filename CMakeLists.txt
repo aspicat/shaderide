@@ -1,17 +1,17 @@
 # ShaderIDE - CMakeLists.txt
 #
 # On Windows, don't forget to tell CMAKE these directories (examples):
-# -DCMAKE_PREFIX_PATH="C:/Qt/5.13.0/mingw73_64"
+# -DCMAKE_PREFIX_PATH="C:/Qt/6.0.0/mingw81_64"
 # -DGLM_INCLUDE_DIRS="[...]/glm-0.9.9.5"
 # -DGLM_LIBRARY_DIRS="[...]/glm-0.9.9.5/lib"
-# -DBOOST_ROOT="[...]/boost_1_69_0"
-# -DBOOST_LIBS="[...]/boost_1_69_0/stage/lib"
+# -DBOOST_ROOT="[...]/boost_1_74_0"
+# -DBOOST_LIBS="[...]/boost_1_74_0/stage/lib"
 #
 # Also, include the Qt shared libraries (WIN32):
-# Qt5Core(d).dll
-# Qt5Gui(d).dll
-# Qt5OpenGL(d).dll
-# Qt5Widgets(d).dll
+# Qt6Core.dll
+# Qt6Gui.dll
+# Qt6OpenGL.dll
+# Qt6Widgets.dll
 
 cmake_minimum_required(VERSION 3.14)
 project(ShaderIDE)
@@ -37,8 +37,10 @@ file(GLOB_RECURSE INCLUDE_FILES RELATIVE ${CMAKE_SOURCE_DIR} "src/*.hpp")
 file(GLOB_RECURSE SOURCE_FILES RELATIVE ${CMAKE_SOURCE_DIR} "src/*.cpp")
 list(REMOVE_ITEM SOURCE_FILES src/main.cpp)
 
-# Qt5
-find_package(Qt5Widgets REQUIRED)
+# Qt6
+find_package(Qt6Widgets REQUIRED)
+find_package(Qt6OpenGL REQUIRED)
+find_package(Qt6OpenGLWidgets REQUIRED)
 
 # GLM
 include_directories(${GLM_INCLUDE_DIRS})
@@ -56,11 +58,11 @@ ENDIF()
 
 # Link Libraries
 IF(WIN32)
-    set(LINK_LIBRARIES Qt5::Widgets ${Boost_LIBRARIES}
-            "-lopengl32 -lglm_static -lboost_serialization")
+    set(LINK_LIBRARIES Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets ${Boost_LIBRARIES}
+            "-lopengl32 -lglm_static")
 ELSE()
-    set(LINK_LIBRARIES Qt5::Widgets ${Boost_LIBRARIES}
-            "-lGL -lboost_serialization")
+    set(LINK_LIBRARIES Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets ${Boost_LIBRARIES}
+            "-lGL")
 ENDIF()
 
 IF(WIN32)

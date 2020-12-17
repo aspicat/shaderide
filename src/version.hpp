@@ -29,7 +29,7 @@
 #ifndef SHADERIDE_VERSION_HPP
 #define SHADERIDE_VERSION_HPP
 
-#define SHADERIDE_VERSION "1.3.0"
-#define SHADERIDE_COPYRIGHT "Copyright (c) 2017 - 2020 Florian Roth"
+#define SHADERIDE_VERSION "1.4.0"
+#define SHADERIDE_COPYRIGHT "Copyright (c) 2017 - 2020 Florian Roth (The Damn Coder)"
 
 #endif // SHADERIDE_VERSION_HPP

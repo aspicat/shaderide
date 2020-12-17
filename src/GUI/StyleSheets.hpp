@@ -59,12 +59,11 @@
     "}" \
     "QTabBar::tab {" \
     "    padding: 12px 20px;" \
-    "    font-size: 14px;" \
+    "    font-size: 12px;" \
     "    color: #fafafa;" \
     "    background: rgb(40, 40, 40);" \
     "}" \
     "QTabBar::tab:selected {" \
-    "    font-weight: bold;" \
     "    color: #4EC6D5;" \
     "    background: rgb(50, 50, 50);" \
     "}"

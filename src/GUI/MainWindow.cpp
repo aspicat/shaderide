@@ -346,7 +346,7 @@ void MainWindow::OnMenuFileExit()
     // widget is destroyed first (see Destructor).
     openGLWidget->SetRealtimeCompilationEnabled(false);
 
-    QApplication::instance()->quit();
+    exit(0);
 }
 
 void MainWindow::OnMenuViewSwapLayout()
@@ -554,7 +554,7 @@ void MainWindow::InitMenuView()
     toggleLogAction = new QAction("Toggle Log");
     toggleLogAction->setIcon(QIcon(":/icons/icon-menu-check.png"));
     toggleLogAction->setIconVisibleInMenu(false);
-    toggleLogAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_L));
+    toggleLogAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
 
     viewMenu->addAction(swapLayoutAction);
     viewMenu->addAction(resetLayoutAction);
@@ -578,13 +578,13 @@ void MainWindow::InitMenuCode()
 
     // Compile
     compileCodeAction = new QAction("Compile");
-    compileCodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
+    compileCodeAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
 
     // Realtime Compilation
     toggleRealtimeCompilationAction = new QAction("Toggle Realtime Compilation");
     toggleRealtimeCompilationAction->setIcon(QIcon(":/icons/icon-menu-check.png"));
     toggleRealtimeCompilationAction->setIconVisibleInMenu(false);
-    toggleRealtimeCompilationAction->setShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_R));
+    toggleRealtimeCompilationAction->setShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_R));
 
     // Word Wrap
     toggleWordWrapAction = new QAction("Toggle Word Wrap");

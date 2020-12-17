@@ -31,19 +31,13 @@
 
 #include "src/GUI/StyleSheets.hpp"
 
-#ifdef WIN32
-#define STYLE_ENVSETTINGSPANEL_TITLE_FONT "Consolas"
-#else
-#define STYLE_ENVSETTINGSPANEL_TITLE_FONT "DejaVu Sans Mono"
-#endif
-
 #define STYLE_ENVSETTINGSPANEL \
     "#EnvSettingsPanel {" \
     "    border-top: 4px solid #233151;" \
     "    background: rgba(10, 10, 10, 0.95);" \
     "}" \
     "#EnvSettingsPanel QLabel.title {" \
-    "    font-family: \"" STYLE_ENVSETTINGSPANEL_TITLE_FONT "\";" \
+    "    font-family: Arial;" \
     "    font-size: 12pt;" \
     "    font-weight: bold;" \
     "    color: #fafafa;" \

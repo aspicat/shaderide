@@ -253,7 +253,7 @@ void FileTabWidget::InitFindWidget()
 void FileTabWidget::InitShortcuts()
 {
     showFindWidgetSC = new QShortcut(
-            QKeySequence(Qt::CTRL + Qt::Key_F), this
+            QKeySequence(Qt::CTRL | Qt::Key_F), this
     );
 
     connect(showFindWidgetSC, &QShortcut::activated,

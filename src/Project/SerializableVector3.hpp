@@ -31,25 +31,12 @@
 
 #include <QJsonArray>
 #include <glm/glm.hpp>
-#include <boost/serialization/unordered_map.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
 #include "src/Core/GeneralException.hpp"
 
 namespace ShaderIDE::Project {
 
     class SerializableVector3 : public glm::vec3
     {
-        friend class boost::serialization::access;
-
-        template<typename Archive>
-        void serialize(Archive& ar, const uint32_t version)
-        {
-            ar & x;
-            ar & y;
-            ar & z;
-        }
-
     public:
         static SerializableVector3 FromJsonArray(const QJsonArray& jsonArray)
         {

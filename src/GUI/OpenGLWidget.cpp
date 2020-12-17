@@ -511,7 +511,7 @@ void OpenGLWidget::mousePressEvent(QMouseEvent* event)
     }
 
         // Mid Button
-    else if (event->button() == Qt::MouseButton::MidButton) {
+    else if (event->button() == Qt::MouseButton::MiddleButton) {
         EnableMouseZoom();
     }
 

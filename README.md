@@ -20,7 +20,7 @@ See CHANGELOG.md for detailed release notes.
 
 ## Build
 You need the following libraries:
-* Qt5 Core, Gui, Widgets, OpenGL - 5.13.0
+* Qt6 Core, Gui, Widgets, OpenGL - 6.0.0
 * Boost Libraries - 1.69
 * OpenGL Mathematics (GLM) - 0.9.9
 

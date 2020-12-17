@@ -31,10 +31,12 @@
 #include <QFileDialog>
 #include <QMenu>
 #include "TextureBrowserImage.hpp"
+#include "src/Core/Application.hpp"
 #include "src/Core/Memory.hpp"
 #include "src/Core/QtUtility.hpp"
 #include "src/GUI/Style/TextureBrowserStyle.hpp"
 
+using namespace ShaderIDE;
 using namespace ShaderIDE::GUI;
 
 TextureBrowserImage::TextureBrowserImage(const QString& name,
@@ -161,7 +163,7 @@ void TextureBrowserImage::InitImageLabel(const QImage& image)
 void TextureBrowserImage::InitNameLabel(const QString& name)
 {
     // Font
-    auto font = QFont(STYLE_TEXTUREBROWSER_FONT);
+    auto font = QFont(Application::MonospaceFontFamily());
     font.setPixelSize(14);
 
     // Name Label

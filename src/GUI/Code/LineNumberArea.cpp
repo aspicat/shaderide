@@ -31,9 +31,11 @@
 #include <QPainter>
 #include <QResizeEvent>
 #include "LineNumberArea.hpp"
+#include "src/Core/Application.hpp"
 #include "src/GUI/Code/CodeEditor.hpp"
 #include "src/GUI/Style/CodeEditorStyle.hpp"
 
+using namespace ShaderIDE;
 using namespace ShaderIDE::GUI;
 
 LineNumberArea::LineNumberArea(CodeEditor* codeEditor)
@@ -83,7 +85,7 @@ void LineNumberArea::DrawBlocks(QPainter& painter)
     painter.setPen(pen);
 
     // Font
-    QFont font(STYLE_LINENUMBERAREA_FONT);
+    QFont font(Application::MonospaceFontFamily());
     font.setPointSizeF(fontSize);
     font.setWeight(QFont::Bold);
     painter.setFont(font);

@@ -33,9 +33,9 @@
 
 #include <vector>
 #include <array>
-#include <QOpenGLWidget>
-#include <QOpenGLFunctions_4_5_Core>
-#include <QOpenGLTexture>
+#include <QtOpenGLWidgets/QOpenGLWidget>
+#include <QtOpenGL/QOpenGLFunctions_4_5_Core>
+#include <QtOpenGL/QOpenGLTexture>
 #include <QThread>
 #include <QImage>
 #include <QHBoxLayout>
@@ -62,8 +62,7 @@ using namespace ShaderIDE::GL;
 
 namespace ShaderIDE::GUI {
 
-    class OpenGLWidget : public QOpenGLWidget,
-                         protected QOpenGLFunctions_4_5_Core
+    class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
     {
         Q_OBJECT
 

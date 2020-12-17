@@ -34,9 +34,11 @@
 #include <QPainter>
 #include "CodeEditor.hpp"
 #include "src/GUI/Style/CodeEditorStyle.hpp"
+#include "src/Core/Application.hpp"
 #include "src/Core/MathUtility.hpp"
 #include "src/Core/Memory.hpp"
 
+using namespace ShaderIDE;
 using namespace ShaderIDE::GUI;
 
 CodeEditor::CodeEditor(QWidget* parent)
@@ -44,7 +46,8 @@ CodeEditor::CodeEditor(QWidget* parent)
 {
     setAcceptDrops(false);
     setStyleSheet(STYLE_CODEEDITOR);
-    setFont(QFont(STYLE_CODEEDITOR_FONT, STYLE_CODEEDITOR_FONT_SIZE));
+
+    setFont(QFont(Application::MonospaceFontFamily(), STYLE_CODEEDITOR_FONT_SIZE));
 
     fontSize = font().pointSizeF();
     setWordWrapMode(QTextOption::WordWrap);
@@ -273,7 +276,7 @@ void CodeEditor::InitShortcuts()
 {
     // Increase Font Size Shortcut
     increaseFontSizeSC = new QShortcut(
-            QKeySequence(Qt::CTRL + Qt::Key_Plus), this
+            QKeySequence(Qt::CTRL | Qt::Key_Plus), this
     );
 
     connect(increaseFontSizeSC, SIGNAL(activated()),
@@ -281,7 +284,7 @@ void CodeEditor::InitShortcuts()
 
     // Decrease Font Size Shortcut
     decreaseFontSizeSC = new QShortcut(
-            QKeySequence(Qt::CTRL + Qt::Key_Minus), this
+            QKeySequence(Qt::CTRL | Qt::Key_Minus), this
     );
 
     connect(decreaseFontSizeSC, SIGNAL(activated()),

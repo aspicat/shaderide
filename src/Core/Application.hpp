@@ -1,5 +1,5 @@
 /**
- * CodeEditor Style Header
+ * Application Header
  *
  * -------------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
@@ -26,26 +26,23 @@
  * SOFTWARE.
  */
 
-#ifndef SHADERIDE_GUI_STYLE_CODEEDITORSTYLE_HPP
-#define SHADERIDE_GUI_STYLE_CODEEDITORSTYLE_HPP
+#ifndef SHADERIDE_CORE_APPLICATION_HPP
+#define SHADERIDE_CORE_APPLICATION_HPP
 
-#include "src/GUI/StyleSheets.hpp"
+#include <QApplication>
 
-// Code Editor
-#define STYLE_CODEEDITOR \
-    "QPlainTextEdit {" \
-    "    border: none;" \
-    "    color: #eaeaea;" \
-    "    background: rgb(30, 30, 30);" \
-    "}" \
-    STYLE_SCROLLBAR
+namespace ShaderIDE {
 
-#define STYLE_CODEEDITOR_FONT_SIZE 12
-#define STYLE_CODEEDITOR_HIGHLIGHT_COLOR QColor(38, 38, 38)
+    class Application : public QApplication
+    {
+    public:
+        static QString MonospaceFontFamily();
 
-// Line Number Area
-#define STYLE_LINENUMBERAREA_BG_COLOR QColor(40, 40, 40, 255)
-#define STYLE_LINENUMBERAREA_FONT_COLOR QColor(80, 80, 80)
-#define STYLE_LINENUMBERAREA_FONT_HIGHLIGHT_COLOR QColor("#4DDCFE")
+        explicit Application(int argc, char** argv, int flags = ApplicationFlags);
 
-#endif // SHADERIDE_GUI_STYLE_CODEEDITORSTYLE_HPP
+    private:
+        static int monospaceFontID;
+    };
+}
+
+#endif // SHADERIDE_CORE_APPLICATION_HPP

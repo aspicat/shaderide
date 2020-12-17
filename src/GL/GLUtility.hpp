@@ -31,7 +31,7 @@
 #ifndef SHADERIDE_GL_GLUTILITY_HPP
 #define SHADERIDE_GL_GLUTILITY_HPP
 
-#include <QOpenGLFunctions_4_5_Core>
+#include <QtOpenGL/QOpenGLFunctions_4_5_Core>
 
 namespace ShaderIDE::GL {
 

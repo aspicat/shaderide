@@ -35,7 +35,7 @@
 
 #include <QSharedPointer>
 #include <QString>
-#include <QOpenGLFunctions_4_5_Core>
+#include <QtOpenGL/QOpenGLFunctions_4_5_Core>
 
 namespace ShaderIDE::GL {
 
@@ -51,7 +51,7 @@ namespace ShaderIDE::GL {
     public:
         static ShaderSPtr MakeShared(const QString& source, GLenum shaderType);
         explicit Shader(const QString& source, GLenum shaderType);
-        ~Shader() override;
+        ~Shader();
 
         void SetSource(const QString& source);
         void Compile(GLuint program);

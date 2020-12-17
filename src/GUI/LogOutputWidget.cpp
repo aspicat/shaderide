@@ -30,8 +30,10 @@
 #include <QTextCharFormat>
 #include "LogOutputWidget.hpp"
 #include "src/GUI/Style/LogOutputWidgetStyle.hpp"
+#include "src/Core/Application.hpp"
 #include "src/Core/Memory.hpp"
 
+using namespace ShaderIDE;
 using namespace ShaderIDE::GUI;
 
 LogOutputWidget::LogOutputWidget(QWidget* parent)
@@ -94,7 +96,7 @@ void LogOutputWidget::OnClearLog()
 
 void LogOutputWidget::InitFont()
 {
-    setFont(QFont(STYLE_LOGOUTPUTWIDGET_FONT, STYLE_LOGOUTPUTWIDGET_FONT_SIZE));
+    setFont(QFont(Application::MonospaceFontFamily(), STYLE_LOGOUTPUTWIDGET_FONT_SIZE));
     setCenterOnScroll(true);
     setWordWrapMode(QTextOption::NoWrap);
 
