@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,58 +31,74 @@
 
 #include <string>
 #include <unordered_map>
+#include <QObject>
 #include "SerializableVector3.hpp"
 #include "src/version.hpp"
 #include "src/GL/GLDefaults.hpp"
 
+namespace ShaderIDE::GUI {
+    class MainWindow;
+}
+
 namespace ShaderIDE::Project {
 
-    class ShaderProject
+    class ShaderProject : public QObject
     {
+        friend class GUI::MainWindow;
+
+        Q_OBJECT
     public:
-        static ShaderProject* Load(const std::string& path);
+        static ShaderProject* Load(const QString& path);
 
-        explicit ShaderProject(std::string path);
+        explicit ShaderProject(QString path);
 
-        std::string Version();
-        std::string Path();
-        std::string VertexShaderSource();
-        std::string FragmentShaderSource();
-        std::string MeshName();
-        std::unordered_map<std::string, std::string> TextureData();
+        QString Version();
+        QString Path();
+        QString VertexShaderSource();
+        QString FragmentShaderSource();
+        QString MeshName();
+        std::unordered_map<QString, QString> TextureData();
         bool Realtime() const;
         bool Plane2D() const;
         glm::vec3 ModelRotation();
         glm::vec3 CameraPosition();
 
-        std::string PathOnly();
+        QString PathOnly();
 
-        void SetFileVersion(const std::string& newFileVersion);
-        void SetPath(const std::string& newPath);
-        void SetVertexShaderSource(const std::string& newVSSource);
-        void SetFragmentShaderSource(const std::string& newFSSource);
-        void SetMeshName(const std::string& newMeshName);
+        bool Saved() const;
+
+        void SetFileVersion(const QString& newFileVersion);
+        void SetPath(const QString& newPath);
+        void SetVertexShaderSource(const QString& newVSSource);
+        void SetFragmentShaderSource(const QString& newFSSource);
+        void SetMeshName(const QString& newMeshName);
         void SetRealtime(bool newRealtime);
         void SetPlane2D(bool newPlane2D);
         void SetModelRotation(const glm::vec3& newModelRotation);
         void SetCameraPosition(const glm::vec3& newCameraPosition);
 
-        void SetTextureData(const std::string& name, const std::string& data);
-        void ClearTextureData(const std::string& name);
+        void SetTextureData(const QString& name, const QString& data);
+        void ClearTextureData(const QString& name);
 
         void Save();
 
-    private:
-        static void CheckPath(const std::string& filePath);
-        static std::ifstream OpenInputFile(const std::string& filePath);
-        static std::ofstream OpenOutputFile(const std::string& filePath);
+    signals:
+        void NotifyMarkSaved();
+        void NotifyMarkUnsaved();
 
-        std::string file_version{ SHADERIDE_VERSION };
-        std::string path{ "" };
-        std::string vsSource{ "" };
-        std::string fsSource{ "" };
-        std::string meshName{ "" };
-        std::unordered_map<std::string, std::string> textureData;
+    private:
+        static void CheckPath(const QString& filePath);
+        static std::ifstream OpenInputFile(const QString& filePath);
+        static std::ofstream OpenOutputFile(const QString& filePath);
+
+        bool saved{ false };
+
+        QString file_version{ SHADERIDE_VERSION };
+        QString path{ "" };
+        QString vsSource{ "" };
+        QString fsSource{ "" };
+        QString meshName{ "" };
+        std::unordered_map<QString, QString> textureData;
         bool realtime{ false };
         bool plane2D{ false };
         SerializableVector3 modelRotation{ OPENGLWIDGET_DEFAULT_MODEL_ROTATION };
@@ -91,6 +107,9 @@ namespace ShaderIDE::Project {
         QJsonObject MakeJsonObjectFromTextureData();
 
         size_t LastSlashPos();
+
+        void MarkSaved();
+        void MarkUnsaved();
     };
 }
 

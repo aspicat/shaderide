@@ -3,7 +3,20 @@
 You can find all changes in detail per version in this file.
 The listed notes are not ordered by priority.
 
-## Version 1.4.0 - December 17, 2020
+## Version 1.5.0 - April 14, 2021
+### Added
+- Cache path from last opened project.
+- Mouse coordinates which may be accessed by **uniform vec2 mousePos**.
+- "Tab Width" to application settings.
+
+### Changed
+- Detect unsaved changes for loaded projects and prompt save request message box on exit.
+- Select "Fragment Shader" tab on startup.
+
+### Fixed
+- Tab character replacement with spaces.
+
+## Version 1.4.0 - December 12, 2020
 ### Added
 - JetBrains Mono as default font for the code editor and all other monospaced fonts used within
   the application.

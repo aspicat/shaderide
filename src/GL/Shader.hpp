@@ -9,7 +9,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,27 +44,32 @@ namespace ShaderIDE::GL {
 
     using ShaderSPtr = QSharedPointer<Shader>;
 
+    enum class ShaderType {
+        VertexShader = GL_VERTEX_SHADER,
+        FragmentShader = GL_FRAGMENT_SHADER
+    };
+
     class Shader : protected QOpenGLFunctions_4_5_Core
     {
         static constexpr size_t INFOLOG_BUFFER_SIZE = 1024;
 
     public:
-        static ShaderSPtr MakeShared(const QString& source, GLenum shaderType);
-        explicit Shader(const QString& source, GLenum shaderType);
+        static ShaderSPtr MakeShared(const QString& source, const ShaderType& shaderType);
+        static QString ShaderTypeToString(const ShaderType& shaderType);
+
+        explicit Shader(const QString& source, const ShaderType& shaderType);
         ~Shader();
 
         void SetSource(const QString& source);
         void Compile(GLuint program);
 
-        void SetFile(const std::string& newFile);
-        std::string File();
-
     private:
         GLuint shader{ 0 };
-        std::string cSource{ "" };
-        std::string file{ "" };
 
-        void InitializeShader(GLenum type);
+        ShaderType type;
+        QString cSource{ "" };
+
+        void InitializeShader();
         void HandleCompilationErrors();
     };
 }

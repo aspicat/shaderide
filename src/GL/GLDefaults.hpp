@@ -8,7 +8,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,6 +43,7 @@
     "\n" \
     "uniform float time;\n" \
     "uniform vec2 resolution;\n" \
+    "uniform vec2 mousePos;\n" \
     "\n" \
     "uniform mat4 modelMat;\n" \
     "uniform mat4 viewMat;\n" \
@@ -53,7 +54,8 @@
     "out vec2 vUV;\n" \
     "out mat4 vMVP;\n" \
     "\n" \
-    "void main() {\n" \
+    "void main()" \
+    "{\n" \
     "    mat4 mvp       = projectionMat * viewMat * modelMat;\n" \
     "    vPosition      = position;\n" \
     "    vNormal        = normal;\n" \
@@ -72,6 +74,7 @@
     "\n" \
     "uniform float time;\n" \
     "uniform vec2 resolution;\n" \
+    "uniform vec2 mousePos;\n" \
     "\n" \
     "uniform mat4 modelMat;\n" \
     "uniform mat4 viewMat;\n" \
@@ -84,14 +87,14 @@
     "\n" \
     "out vec4 fragColor;\n" \
     "\n" \
-    "void main() {\n" \
+    "void main()" \
+    "{\n" \
     "    vec4 lightPos      = vec4(-0.2f, 0.3f, 0.5f, 1.0f) * modelMat;\n" \
     "    float lightInt     = 1.8f;\n" \
     "    float lightVal     = dot(lightPos.xyz, vNormal);\n" \
-    "    float lightSpec    = pow(lightVal, 20) * 8000;\n" \
     "    vec4 color         = vec4(0.0f, 0.5f, 1.0f, 1.0f);\n" \
     "    vec4 tex           = texture(tex0, vUV);\n" \
-    "    fragColor          = tex * lightVal * lightInt + lightSpec;\n" \
+    "    fragColor          = tex * lightVal * lightInt;\n" \
     "}"
 
 #define GLSL_TEXTURE_SLOT_0_NAME "tex0"

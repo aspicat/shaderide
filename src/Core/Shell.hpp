@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,12 +29,14 @@
 #ifndef SHADERIDE_CORE_SHELL_HPP
 #define SHADERIDE_CORE_SHELL_HPP
 
+#include <QString>
+
 namespace ShaderIDE {
 
     class Shell
     {
     public:
-        static std::string Exec(const std::string& cmd);
+        static QString Exec(const QString& cmd);
     };
 }
 

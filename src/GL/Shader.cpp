@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,14 +32,27 @@
 
 using namespace ShaderIDE::GL;
 
-ShaderSPtr Shader::MakeShared(const QString& source, GLenum shaderType)
+ShaderSPtr Shader::MakeShared(const QString& source, const ShaderType& shaderType)
 {
     return QSharedPointer<Shader>::create(source, shaderType);
 }
 
-Shader::Shader(const QString& source, GLenum type)
+QString Shader::ShaderTypeToString(const ShaderType& shaderType)
 {
-    InitializeShader(type);
+    if (shaderType == ShaderType::VertexShader) {
+        return "Vertex Shader";
+
+    } else if (shaderType == ShaderType::FragmentShader) {
+        return "Fragment Shader";
+    }
+
+    return "Unknown";
+}
+
+Shader::Shader(const QString& source, const ShaderType& shaderType)
+    : type(shaderType)
+{
+    InitializeShader();
     SetSource(source);
 }
 
@@ -50,13 +63,14 @@ Shader::~Shader()
 
 void Shader::SetSource(const QString& source)
 {
-    cSource = source.trimmed().toStdString();
+    cSource = source.trimmed();
 }
 
 void Shader::Compile(GLuint program)
 {
     // Apply Source
-    auto src = cSource.c_str();
+    auto srcStdStr = cSource.toStdString();
+    auto src = srcStdStr.c_str();
     glShaderSource(shader, 1, &src, nullptr);
 
     // Compile
@@ -65,20 +79,10 @@ void Shader::Compile(GLuint program)
     glAttachShader(program, shader);
 }
 
-void Shader::SetFile(const std::string& newFile)
-{
-    file = newFile;
-}
-
-std::string Shader::File()
-{
-    return file;
-}
-
-void Shader::InitializeShader(GLenum type)
+void Shader::InitializeShader()
 {
     initializeOpenGLFunctions();
-    shader = glCreateShader(type);
+    shader = glCreateShader(static_cast<GLenum>(type));
 }
 
 void Shader::HandleCompilationErrors()
@@ -90,6 +94,6 @@ void Shader::HandleCompilationErrors()
     {
         std::array<char, INFOLOG_BUFFER_SIZE> infoLog{};
         glGetShaderInfoLog(shader, INFOLOG_BUFFER_SIZE, nullptr, infoLog.data());
-        throw SyntaxErrorException(file, std::string(infoLog.data()));
+        throw SyntaxErrorException(ShaderTypeToString(type), QString(infoLog.data()));
     }
 }

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,9 +65,9 @@ namespace ShaderIDE {
          * Converts the given image to base64 as JPEG.
          *
          * @param QImage image
-         * @return std::string
+         * @return QString
          */
-        static std::string MakeBase64FromImage(QImage image)
+        static QString MakeBase64FromImage(QImage image)
         {
             QByteArray bytes;
             QBuffer buffer(&bytes);
@@ -81,7 +81,7 @@ namespace ShaderIDE {
             image.save(&buffer, "JPG");
             buffer.close();
 
-            return QString::fromLatin1(bytes.toBase64().data()).toStdString();
+            return QString::fromLatin1(bytes.toBase64().data());
         }
 
         /**

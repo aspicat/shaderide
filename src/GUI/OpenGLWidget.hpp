@@ -7,7 +7,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -121,6 +121,12 @@ namespace ShaderIDE::GUI {
         void NotifyGeneralError(const GeneralException& error);
         void NotifyTriggerModelLoading();
 
+        void NotifyMeshSelected(const QString& meshName);
+        void NotifyRealtimeToggled(const bool& realtimeActive);
+        void NotifyPlane2DToggled(const bool& plane2DActive);
+        void NotifyModelRotationChanged(const glm::vec3& modelRotation);
+        void NotifyCameraPositionChanged(const glm::vec3& cameraPosition);
+
     public slots:
         void OnCompileShaders();
 
@@ -204,6 +210,8 @@ namespace ShaderIDE::GUI {
         float renderTime{ 0.0f };
 
         // Mouse Model Controls
+        glm::vec2 mousePos;
+
         int dragStartX{ 0 };
         int dragStartY{ 0 };
         int zoomStart{ 0 };

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,8 +54,7 @@ void TextureBrowser::AddImage(const QString& name, const QString& path)
     if (images.find(name) != images.end())
     {
         throw GeneralException(
-                (QString("Image \"") + name + " already available in texture browser.")
-                        .toStdString()
+                QString("Image \"") + name + " already available in texture browser."
         );
     }
 

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,6 +48,12 @@ using namespace ShaderIDE::Project;
 
 namespace ShaderIDE::GUI {
 
+    struct ApplicationSettings
+    {
+        int numSamples{ SHADERIDE_SURFACEFORMAT_NUM_SAMPLES };
+        int tabWidth{ SHADERIDE_CODE_EDITOR_TAB_WIDTH };
+    };
+
     class MainWindow : public QMainWindow
     {
         Q_OBJECT
@@ -60,6 +66,8 @@ namespace ShaderIDE::GUI {
     public:
         explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
+
+        ApplicationSettings GetApplicationSettings();
 
     private slots:
         void OnVSCodeChanged(const QString& code);
@@ -96,6 +104,17 @@ namespace ShaderIDE::GUI {
         // Menu / Help
         void OnMenuHelpAbout();
 
+        // OpenGL Widget
+        void OnOpenGLWidgetMeshSelected(const QString& meshName);
+        void OnOpenGLWidgetRealtimeToggled(const bool& realtimeActive);
+        void OnOpenGLWidgetPlane2DToggled(const bool& plane2DActive);
+        void OnOpenGLWidgetModelRotationChanged(const glm::vec3& modelRotation);
+        void OnOpenGLWidgetCameraPositionChanged(const glm::vec3& cameraPosition);
+
+        // Project
+        void OnShaderProjectMarkSaved();
+        void OnShaderProjectMarkUnsaved();
+
     protected:
         void dragEnterEvent(QDragEnterEvent* event) override;
         void dragMoveEvent(QDragMoveEvent* event) override;
@@ -107,8 +126,8 @@ namespace ShaderIDE::GUI {
         static QString GetConfigPath();
         static bool AppConfigDirExists();
 
-        // Settings
-        int numSamples{ SHADERIDE_SURFACEFORMAT_NUM_SAMPLES };
+        // Application Settings
+        ApplicationSettings applicationSettings;
 
         QJsonObject config;
         QJsonObject settings;
@@ -154,6 +173,7 @@ namespace ShaderIDE::GUI {
         QAction* aboutAction{ nullptr };
 
         // Project
+        QString lastShaderProjectOpenPath{ "" };
         ShaderProject* shaderProject{ nullptr };
 
         // Init
@@ -182,21 +202,24 @@ namespace ShaderIDE::GUI {
         // Project
         void ResetProject();
         void OpenProject(const QString& path);
-        bool ApplyProjectFromUI();
+        void MarkProjectSavedDelayed();
         bool ApplyUIFromProject();
         void ExportShaders(const QUrl& directory);
         void ExportSPIRV(const QUrl& directory);
 
+        void ConnectShaderProjectSignals();
+
         QString MakeVSPath(const QUrl& directory);
         QString MakeFSPath(const QUrl& directory);
 
-        // Layout Config & Settings
+        // Config & Application Settings
         void CreateAppConfigDirectory();
-        void SaveLayoutConfig();
-        void LoadLayoutConfig();
 
-        void SaveSettings();
-        void LoadSettings();
+        void SaveConfig();
+        void LoadConfig();
+
+        void SaveApplicationSettings();
+        void LoadApplicationSettings();
     };
 }
 

@@ -4,10 +4,10 @@
 # Shader IDE
 Simple GLSL code editor with realtime 3D preview.
 
-[screenshot]: assets/app/screenshot_v1_3_0.jpg "ShaderIDE Screenshot"
+[screenshot]: assets/app/screenshot_v1_5_0.jpg "ShaderIDE Screenshot"
 ![alt text][screenshot]
 
-**Example by inigo quilez - iq/2019 - https://www.shadertoy.com/view/3lsSzf**
+**Example code "Kirby Jump" by inigo quilez - iq/2018 - https://www.shadertoy.com/view/lt2fD3**
 
 The project was initialized during OpenGL learning sessions to have a better
 understanding of GLSL shaders with realtime preview. There are already a couple of
@@ -66,6 +66,7 @@ The following predefined shader variables are supported as of version 1.3.0:
 ### Uniforms (All Shaders)
 * **uniform float time**
 * **uniform vec2 resolution**
+* **uniform vec2 mousePos**
 * **uniform mat4 modelMat**
 * **uniform mat4 viewMat**
 * **uniform mat4 projectionMat**

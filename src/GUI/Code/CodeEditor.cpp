@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@
 #include "CodeEditor.hpp"
 #include "src/GUI/Style/CodeEditorStyle.hpp"
 #include "src/Core/Application.hpp"
+#include "src/GUI/MainWindow.hpp"
 #include "src/Core/MathUtility.hpp"
 #include "src/Core/Memory.hpp"
 
@@ -293,30 +294,32 @@ void CodeEditor::InitShortcuts()
 
 void CodeEditor::ReplaceTabStopsWithSpaces()
 {
-    // TODO Fetch number of spaces from config.
+    auto tabWidth = SHADERIDE_CODE_EDITOR_TAB_WIDTH;
 
-    constexpr int numSpaces = 4;
+    auto* win = dynamic_cast<GUI::MainWindow*>(window());
+
+    if (win != nullptr)
+    {
+        const auto appSettings = win->GetApplicationSettings();
+        tabWidth = appSettings.tabWidth;
+    }
 
     QString spaces{};
-    spaces.resize(numSpaces, ' ');
+    spaces.resize(tabWidth, ' ');
 
     auto cursor = textCursor();
     auto blockPos = cursor.positionInBlock();
-    auto lastPos = cursor.position();
-    auto nextPos = lastPos + 3;
 
     // Calculate Even Tab Width
-    if ((blockPos - 1) % numSpaces != 0)
+    if ((blockPos - 1) % tabWidth != 0)
     {
-        auto offset = (blockPos - 1) % numSpaces;
-        nextPos = lastPos + (numSpaces - offset - 1);
-        spaces.resize(numSpaces - offset, ' ');
+        const auto offset = (blockPos - 1) % tabWidth;
+        spaces.resize(tabWidth - offset, ' ');
     }
 
     // Replace Tabs
-    setPlainText(toPlainText().replace("\t", spaces));
-    cursor.setPosition(nextPos);
-    setTextCursor(cursor);
+    cursor.deletePreviousChar();
+    cursor.insertText(spaces);
 }
 
 void CodeEditor::UpdateLineNumberArea()

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,8 @@
  * SOFTWARE.
  */
 
+#include <QApplication>
+#include <QScreen>
 #include <QPixmap>
 #include "AboutDialog.hpp"
 #include "src/Core/ApplicationDefaults.hpp"
@@ -77,6 +79,9 @@ void AboutDialog::InitLayout()
     // Logo
     auto logo = QPixmap::fromImage(QImage(SHADERIDE_LOGO_PATH));
 
+    auto* screen = qApp->primaryScreen();
+    logo.setDevicePixelRatio(screen->devicePixelRatio());
+
     logoLabel = new QLabel();
     logoLabel->setPixmap(logo);
     logoLabel->setStyleSheet("background-color: rgb(50, 50, 50);");
@@ -112,8 +117,6 @@ void AboutDialog::InitLayout()
     licenseLinkLabel->setOpenExternalLinks(true);
     licenseLinkLabel->setContentsMargins(10, 0, 10, 0);
     mainLayout->addWidget(licenseLinkLabel);
-
-
 
     // Bottom Layout Spacer
     bottomLayoutSpacer = new QSpacerItem(

@@ -7,7 +7,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,26 +32,27 @@
 #define SHADERIDE_GL_GLSLCOMPILEERROR_HPP
 
 #include <QString>
+#include "Shader.hpp"
 
 namespace ShaderIDE::GL {
 
     class GLSLCompileError
     {
     public:
-        explicit GLSLCompileError(const QString& file, const QString& rawError);
+        explicit GLSLCompileError(const ShaderType& shaderType, const QString& rawError);
 
+        ShaderType GetShaderType();
         uint32_t Line();
         QString Code();
         QString Message();
         QString Raw();
-        QString File();
 
     private:
+        ShaderType type;
         uint32_t line{ 0 };
         QString code{ "" };
         QString message{ "" };
         QString raw{ "" };
-        QString file{ "" };
 
     private:
         void Parse(const QString& rawError);

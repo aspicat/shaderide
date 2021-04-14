@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,11 +52,11 @@ MainWindow::MainWindow(QWidget* parent)
         : QMainWindow(parent)
 {
     setAcceptDrops(true);
-    LoadSettings();
+    LoadApplicationSettings();
 
     // Apply default surface format for Anti-Aliasing.
     QSurfaceFormat surfaceFormat;
-    surfaceFormat.setSamples(numSamples);
+    surfaceFormat.setSamples(applicationSettings.numSamples);
 
     QSurfaceFormat::setDefaultFormat(surfaceFormat);
 
@@ -72,8 +72,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     UpdateWindowTitle();
 
-    // Load Layout Config
-    LoadLayoutConfig();
+    // Load Config
+    LoadConfig();
 
     OnUpdateStatusBarMessage("Ready.");
 }
@@ -125,20 +125,31 @@ MainWindow::~MainWindow()
     settingsDialog->deleteLater();
 }
 
+ApplicationSettings MainWindow::GetApplicationSettings()
+{
+    return applicationSettings;
+}
+
 void MainWindow::OnVSCodeChanged(const QString& code)
 {
     openGLWidget->SetVertexShaderSource(code);
+    shaderProject->SetVertexShaderSource(code);
 }
 
 void MainWindow::OnFSCodeChanged(const QString& code)
 {
     openGLWidget->SetFragmentShaderSource(code);
+    shaderProject->SetFragmentShaderSource(code);
 }
 
 void MainWindow::OnTextureBrowserImageChanged(TextureBrowserImage* image)
 {
     auto slot = OpenGLWidget::FindSlotByName(image->Name());
     openGLWidget->ApplyTextureToSlot(image->ImageHQ(), slot);
+
+    const auto data = QtUtility::MakeBase64FromImage(image->ImageHQ());
+    shaderProject->SetTextureData(image->Name(), data);
+
     OnUpdateStatusBarMessage(QString("Texture \"") + image->Name() + "\" changed.");
 }
 
@@ -146,7 +157,7 @@ void MainWindow::OnTextureBrowserImageCleared(TextureBrowserImage* image)
 {
     auto slot = OpenGLWidget::FindSlotByName(image->Name());
     openGLWidget->ClearTextureSlot(slot);
-    shaderProject->ClearTextureData(image->Name().toStdString());
+    shaderProject->ClearTextureData(image->Name());
     OnUpdateStatusBarMessage(QString("Texture \"") + image->Name() + "\" cleared.");
 }
 
@@ -190,16 +201,14 @@ void MainWindow::OnCompileError(GLSLCompileError& error)
     // TODO Stylesheet.
     auto highlightColor = QColor("#7A1F2F");
 
-    // TODO Instead of comparing a string here, define an enum class
-    //      for shader types.
-    if (error.File() == "VS")
+    if (error.GetShaderType() == ShaderType::VertexShader)
     {
         auto* vsCodeEditor = fileTabWidget->GetVSCodeEditor();
         vsCodeEditor->HighlightErrorLine(error.Line(), highlightColor);
         fileTabWidget->setCurrentWidget(vsCodeEditor);
     }
 
-    if (error.File() == "FS")
+    if (error.GetShaderType() == ShaderType::FragmentShader)
     {
         auto* fsCodeEditor = fileTabWidget->GetFSCodeEditor();
         fsCodeEditor->HighlightErrorLine(error.Line(), highlightColor);
@@ -244,22 +253,25 @@ void MainWindow::OnMenuFileOpenProject()
     QString path = QFileDialog::getOpenFileName(
             this,
             "Open Project...",
-            QString(),
+            lastShaderProjectOpenPath,
             QString("Shader IDE Files (") + SHADERIDE_PROJECT_EXTENSION + ")"
     );
 
     OpenProject(path);
+
+    // Store last project path to cache.
+    if (!path.isEmpty()) {
+        lastShaderProjectOpenPath = QFileInfo(path).absolutePath();
+    }
 }
 
 void MainWindow::OnMenuFileSaveProject()
 {
     try
     {
-        ApplyProjectFromUI();
         shaderProject->Save();
         OnMenuCodeCompile();
         OnUpdateStatusBarMessage("Shader project saved.");
-
     }
     catch (ProjectException& e)
     {
@@ -269,7 +281,7 @@ void MainWindow::OnMenuFileSaveProject()
             return;
         }
 
-        logOutputWidget->LogErrorMessage(e.what());
+        logOutputWidget->LogErrorMessage(QString(e.what()));
     }
 }
 
@@ -288,15 +300,14 @@ void MainWindow::OnMenuFileSaveProjectAs()
 
     try
     {
-        ApplyProjectFromUI();
-        shaderProject->SetPath(path.toStdString());
+        shaderProject->SetPath(path);
         shaderProject->Save();
         ApplyUIFromProject();
 
         OnMenuCodeCompile();
         OnUpdateStatusBarMessage(QString("Shader project saved to ") + path);
-
-    } catch (ProjectException& e) {
+    }
+    catch (ProjectException& e) {
         logOutputWidget->LogErrorMessage(e.what());
     }
 }
@@ -326,17 +337,50 @@ void MainWindow::OnMenuFileSettings()
 
 void MainWindow::OnMenuFileExit()
 {
-    auto mbButton = QMessageBox::question(
-            nullptr,
-            "Exit",
-            "All unsaved changes will be lost.\n\nContinue?"
-    );
+    // Project changes unsaved.
+    if (!shaderProject->Saved())
+    {
+        auto mbButton = QMessageBox::question(
+                nullptr,
+                "Exit",
+                "All unsaved changes will be lost.\n\nSave changes?",
+                QMessageBox::StandardButtons(
+                        QMessageBox::Yes |
+                        QMessageBox::No |
+                        QMessageBox::Cancel
+                )
+        );
 
-    if (mbButton != QMessageBox::Yes) {
-        return;
+        if (mbButton == QMessageBox::Yes) {
+            OnMenuFileSaveProject();
+        }
+
+        if (mbButton == QMessageBox::Cancel) {
+            return;
+        }
     }
 
-    SaveLayoutConfig();
+    // No changes. Wanna quit?
+    else
+    {
+        auto mbButton = QMessageBox::question(
+                nullptr,
+                "Exit",
+                "Do you really want to quit?",
+                QMessageBox::StandardButtons(
+                        QMessageBox::Yes |
+                        QMessageBox::No
+                )
+        );
+
+        if (mbButton == QMessageBox::No) {
+            return;
+        }
+    }
+
+    // No:
+
+    SaveConfig();
 
     // Disable realtime compilation before closing, to
     // avoid another compilation step after the code editors
@@ -387,6 +431,44 @@ void MainWindow::OnMenuCodeToggleWordWrap()
 void MainWindow::OnMenuHelpAbout()
 {
     aboutDialog->show();
+}
+
+void MainWindow::OnOpenGLWidgetMeshSelected(const QString& meshName)
+{
+    // Ignore "Plane" mesh, which is only used by "Plane 2D" mode.
+    if (meshName != "Plane") {
+        shaderProject->SetMeshName(meshName);
+    }
+}
+
+void MainWindow::OnOpenGLWidgetRealtimeToggled(const bool& realtimeActive)
+{
+    shaderProject->SetRealtime(realtimeActive);
+}
+
+void MainWindow::OnOpenGLWidgetPlane2DToggled(const bool& plane2DActive)
+{
+    shaderProject->SetPlane2D(plane2DActive);
+}
+
+void MainWindow::OnOpenGLWidgetModelRotationChanged(const glm::vec3& modelRotation)
+{
+    shaderProject->SetModelRotation(modelRotation);
+}
+
+void MainWindow::OnOpenGLWidgetCameraPositionChanged(const glm::vec3& cameraPosition)
+{
+    shaderProject->SetCameraPosition(cameraPosition);
+}
+
+void MainWindow::OnShaderProjectMarkSaved()
+{
+    UpdateWindowTitle();
+}
+
+void MainWindow::OnShaderProjectMarkUnsaved()
+{
+    UpdateWindowTitle();
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
@@ -643,6 +725,21 @@ void MainWindow::InitOpenGLWidget()
 
     connect(openGLWidget, SIGNAL(NotifyGeneralError(const GeneralException&)),
             this, SLOT(OnGeneralError(const GeneralException&)));
+
+    connect(openGLWidget, SIGNAL(NotifyMeshSelected(const QString&)),
+            this, SLOT(OnOpenGLWidgetMeshSelected(const QString&)));
+
+    connect(openGLWidget, SIGNAL(NotifyRealtimeToggled(const bool&)),
+            this, SLOT(OnOpenGLWidgetRealtimeToggled(const bool&)));
+
+    connect(openGLWidget, SIGNAL(NotifyPlane2DToggled(const bool&)),
+            this, SLOT(OnOpenGLWidgetPlane2DToggled(const bool&)));
+
+    connect(openGLWidget, SIGNAL(NotifyModelRotationChanged(const glm::vec3&)),
+            this, SLOT(OnOpenGLWidgetModelRotationChanged(const glm::vec3&)));
+
+    connect(openGLWidget, SIGNAL(NotifyCameraPositionChanged(const glm::vec3&)),
+            this, SLOT(OnOpenGLWidgetCameraPositionChanged(const glm::vec3&)));
 }
 
 void MainWindow::InitFileTabWidget()
@@ -698,6 +795,8 @@ void MainWindow::InitStatusBar()
 void MainWindow::InitShaderProject()
 {
     shaderProject = new ShaderProject("");
+    ConnectShaderProjectSignals();
+
     shaderProject->SetTextureData(GLSL_TEXTURE_SLOT_0_NAME, "");
     shaderProject->SetTextureData(GLSL_TEXTURE_SLOT_1_NAME, "");
     shaderProject->SetTextureData(GLSL_TEXTURE_SLOT_2_NAME, "");
@@ -757,10 +856,13 @@ void MainWindow::UpdateWindowTitle()
     // TODO -> Future Versions -> Project Name
     if (shaderProject != nullptr)
     {
-        if (!shaderProject->Path().empty())
+        if (!shaderProject->Path().isEmpty())
         {
-            windowTitle.append(" - ").append(QString::fromStdString(shaderProject->Path()));
-            // TODO .append("*"); --> if unsaved changes are available.
+            windowTitle.append(" - ").append(shaderProject->Path());
+
+            if (!shaderProject->Saved()) {
+                windowTitle.append(" *");
+            }
         }
     }
 
@@ -815,6 +917,8 @@ void MainWindow::ResetProject()
     Memory::Release(shaderProject);
 
     shaderProject = new ShaderProject("");
+    ConnectShaderProjectSignals();
+
     shaderProject->SetVertexShaderSource(GLSL_DEFAULT_VS_SOURCE);
     shaderProject->SetFragmentShaderSource(GLSL_DEFAULT_FS_SOURCE);
 
@@ -834,13 +938,14 @@ void MainWindow::OpenProject(const QString& path)
 
     try
     {
-        shaderProject = ShaderProject::Load(path.toStdString());
-        shaderProject->SetPath(path.toStdString());
+        shaderProject = ShaderProject::Load(path);
+        ConnectShaderProjectSignals();
 
         if (ApplyUIFromProject()) {
             OnUpdateStatusBarMessage(QString("Shader project loaded: ") + path);
         }
 
+        MarkProjectSavedDelayed();
     }
     catch (GeneralException& e)
     {
@@ -849,63 +954,44 @@ void MainWindow::OpenProject(const QString& path)
     }
 }
 
-bool MainWindow::ApplyProjectFromUI()
+void MainWindow::MarkProjectSavedDelayed()
 {
-    shaderProject->SetVertexShaderSource(fileTabWidget->VertexShaderSource().toStdString());
-    shaderProject->SetFragmentShaderSource(fileTabWidget->FragmentShaderSource().toStdString());
-
-    // Ignore "Plane" mesh, which is only used by "Plane 2D" mode.
-    auto meshName = openGLWidget->SelectedMeshName().toStdString();
-
-    if (meshName != "Plane") {
-        shaderProject->SetMeshName(meshName);
-    }
-
-    for (const auto& texture : fileTabWidget->GetTextureBrowser()->Images())
-    {
-        if (texture->Image().isNull()) {
-            continue;
-        }
-
-        const auto data = QtUtility::MakeBase64FromImage(texture->ImageHQ());
-        shaderProject->SetTextureData(texture->Name().toStdString(), data);
-    }
-
-    shaderProject->SetRealtime(openGLWidget->Realtime());
-    shaderProject->SetPlane2D(openGLWidget->Plane2D());
-    shaderProject->SetModelRotation(openGLWidget->ModelRotation());
-    shaderProject->SetCameraPosition(openGLWidget->CameraPosition());
-
-    return true;
+    // TODO Cheapfix: Mark project as saved when loaded.
+    // Check roughly after one second when all signals were fired
+    // by the code editors etc., which modify the project again by
+    // invalidating the save state flag from setters.
+    QTimer::singleShot(1000, [&] () {
+        shaderProject->MarkSaved();
+    });
 }
 
 bool MainWindow::ApplyUIFromProject()
 {
     if (shaderProject == nullptr)
     {
-        auto msg = "Could not load project.";
+        auto msg = "Invalid shader project pointer. Could not apply UI from project data.";
         logOutputWidget->LogErrorMessage(msg);
         OnUpdateStatusBarMessage(msg);
         return false;
     }
 
-    fileTabWidget->SetVertexShaderSource(shaderProject->VertexShaderSource().c_str());
-    fileTabWidget->SetFragmentShaderSource(shaderProject->FragmentShaderSource().c_str());
+    fileTabWidget->SetVertexShaderSource(shaderProject->VertexShaderSource());
+    fileTabWidget->SetFragmentShaderSource(shaderProject->FragmentShaderSource());
 
     openGLWidget->CheckPlane2D(shaderProject->Plane2D());
 
     openGLWidget->OnCompileShaders();
-    openGLWidget->SelectMesh(QString::fromStdString(shaderProject->MeshName()));
+    openGLWidget->SelectMesh(shaderProject->MeshName());
 
     for (auto& texture : shaderProject->TextureData())
     {
-        auto data = QString::fromStdString(texture.second);
+        auto data = texture.second;
 
         if (data.isEmpty()) {
             continue;
         }
 
-        const auto slotName = QString::fromStdString(texture.first);
+        const auto slotName = texture.first;
         const auto slot = OpenGLWidget::FindSlotByName(slotName);
         const auto image = QtUtility::MakeQImageFromBase64(data);
 
@@ -917,6 +1003,8 @@ bool MainWindow::ApplyUIFromProject()
     openGLWidget->RotateModel(shaderProject->ModelRotation());
     openGLWidget->MoveCamera(shaderProject->CameraPosition());
     openGLWidget->repaint();
+
+    shaderProject->MarkSaved();
 
     UpdateWindowTitle();
 
@@ -969,8 +1057,8 @@ void MainWindow::ExportSPIRV(const QUrl& directory)
 
     // TODO Move "glslangValidator" path to settings.
     const auto cmd = "glslangValidator --auto-map-bindings --auto-map-locations -V ";
-    const auto vsOutput = Shell::Exec(std::string(cmd) + vsFilePath);
-    const auto fsOutput = Shell::Exec(std::string(cmd) + fsFilePath);
+    const auto vsOutput = Shell::Exec(QString(cmd) + vsFilePath);
+    const auto fsOutput = Shell::Exec(QString(cmd) + fsFilePath);
 
     logOutputWidget->LogMessage(vsOutput.c_str());
     logOutputWidget->LogMessage(fsOutput.c_str());
@@ -980,11 +1068,20 @@ void MainWindow::ExportSPIRV(const QUrl& directory)
 
     const auto errorTag = "ERROR:";
 
-    if (vsOutput.find(errorTag) != std::string::npos ||
-        fsOutput.find(errorTag) != std::string::npos) {
+    if (vsOutput.find(errorTag) != QString::npos ||
+        fsOutput.find(errorTag) != QString::npos) {
         OnGeneralError("Could not export SPIR-V shader binaries. See log above.");
     }
 #endif
+}
+
+void MainWindow::ConnectShaderProjectSignals()
+{
+    connect(shaderProject, SIGNAL(NotifyMarkSaved()),
+            this, SLOT(OnShaderProjectMarkSaved()));
+
+    connect(shaderProject, SIGNAL(NotifyMarkUnsaved()),
+            this, SLOT(OnShaderProjectMarkUnsaved()));
 }
 
 QString MainWindow::MakeVSPath(const QUrl& directory)
@@ -1014,13 +1111,13 @@ void MainWindow::CreateAppConfigDirectory()
     }
 }
 
-void MainWindow::SaveLayoutConfig()
+void MainWindow::SaveConfig()
 {
     CreateAppConfigDirectory();
 
     if (!AppConfigDirExists())
     {
-        auto msg = "Could not save layout, app config directory not found.";
+        auto msg = "Could not save config, application config directory not found.";
         LogMessage(msg);
         return;
     }
@@ -1030,7 +1127,7 @@ void MainWindow::SaveLayoutConfig()
 
     if (!file.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text))
     {
-        auto msg = "Could not store application config file.";
+        auto msg = "Could not save config file.";
         LogMessage(msg);
         return;
     }
@@ -1059,11 +1156,16 @@ void MainWindow::SaveLayoutConfig()
     config_code["realtime_compilation"] = openGLWidget->RealtimeCompilation();
     config["code"] = config_code;
 
+    // Project
+    QJsonObject config_project;
+    config_project["last_open_path"] = lastShaderProjectOpenPath;
+    config["project"] = config_project;
+
     QJsonDocument jsonDocument(config);
     file.write(jsonDocument.toJson());
 }
 
-void MainWindow::LoadLayoutConfig()
+void MainWindow::LoadConfig()
 {
     if (!AppConfigDirExists()) {
         return;
@@ -1073,7 +1175,7 @@ void MainWindow::LoadLayoutConfig()
 
     if (!file.open(QIODevice::ReadOnly))
     {
-        auto msg = "Could not load layout config file.";
+        auto msg = "Could not load config file.";
         LogMessage(msg);
         return;
     }
@@ -1157,9 +1259,20 @@ void MainWindow::LoadLayoutConfig()
             toggleWordWrapAction->setIconVisibleInMenu(mode != 0);
         }
     }
+
+    // Project
+    if (config.find("project") != config.end())
+    {
+        auto config_project = config.find("project")->toObject();
+
+        // Last Path
+        if (config_project.contains("last_open_path")) {
+            lastShaderProjectOpenPath = config_project["last_open_path"].toString();
+        }
+    }
 }
 
-void MainWindow::SaveSettings()
+void MainWindow::SaveApplicationSettings()
 {
     CreateAppConfigDirectory();
 
@@ -1183,16 +1296,21 @@ void MainWindow::SaveSettings()
     // Collect Settings
     settings = QJsonObject();
 
-    // Viewport
+    // 3D Viewport
     QJsonObject settings_viewport;
-    settings_viewport["multisampling"] = numSamples;
+    settings_viewport["multisampling"] = applicationSettings.numSamples;
     settings["viewport"] = settings_viewport;
+
+    // Code Editor
+    QJsonObject settings_code_editor;
+    settings_code_editor["tab_width"] = applicationSettings.tabWidth;
+    settings["code_editor"] = settings_code_editor;
 
     QJsonDocument jsonDocument(settings);
     file.write(jsonDocument.toJson());
 }
 
-void MainWindow::LoadSettings()
+void MainWindow::LoadApplicationSettings()
 {
     if (!AppConfigDirExists()) {
         return;
@@ -1215,13 +1333,23 @@ void MainWindow::LoadSettings()
         return;
     }
 
-    // Viewport
+    // 3D Viewport
     if (settings.find("viewport") != settings.end())
     {
         auto settings_viewport = settings.find("viewport")->toObject();
 
         if (settings_viewport.contains("multisampling")) {
-            numSamples = settings_viewport["multisampling"].toInt();
+            applicationSettings.numSamples = settings_viewport["multisampling"].toInt();
+        }
+    }
+
+    // Code Editor
+    if (settings.find("code_editor") != settings.end())
+    {
+        auto settings_code_editor = settings.find("code_editor")->toObject();
+
+        if (settings_code_editor.contains("tab_width")) {
+            applicationSettings.tabWidth = settings_code_editor["tab_width"].toInt();
         }
     }
 }

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,15 +33,15 @@
 
 using namespace ShaderIDE;
 
-std::string Shell::Exec(const std::string& cmd)
+QString Shell::Exec(const QString& cmd)
 {
     const auto bufSize = 1024;
 
-    std::string output;
+    QString output;
     std::array<char, bufSize> buffer{};
 
     std::unique_ptr<FILE, decltype(&pclose)>
-            pipe(popen(cmd.c_str(), "r"), pclose);
+            pipe(popen(cmd.toStdString().c_str(), "r"), pclose);
 
     if (pipe == nullptr) {
         return output;

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
 #ifndef SHADERIDE_VERSION_HPP
 #define SHADERIDE_VERSION_HPP
 
-#define SHADERIDE_VERSION "1.4.0"
-#define SHADERIDE_COPYRIGHT "Copyright (c) 2017 - 2020 Florian Roth (The Damn Coder)"
+#define SHADERIDE_VERSION "1.5.0"
+#define SHADERIDE_COPYRIGHT "Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)"
 
 #endif // SHADERIDE_VERSION_HPP

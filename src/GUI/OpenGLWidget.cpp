@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -170,12 +170,16 @@ void OpenGLWidget::RotateModel(const glm::vec3& rotation)
     modelMatrix = glm::rotate(modelMatrix, modelRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
     modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
     modelMatrix = glm::rotate(modelMatrix, modelRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    emit NotifyModelRotationChanged(modelRotation);
 }
 
 void OpenGLWidget::MoveCamera(const glm::vec3& position)
 {
     cameraPosition = position;
     viewMatrix = glm::translate(glm::mat4(1.0f), cameraPosition);
+
+    emit NotifyCameraPositionChanged(cameraPosition);
 }
 
 glm::vec3 OpenGLWidget::ModelRotation()
@@ -209,11 +213,13 @@ void OpenGLWidget::SetFragmentShaderSource(const QString& source)
 void OpenGLWidget::SetRealtimeCompilationEnabled(bool value)
 {
     realtimeCompilation = value;
+    emit NotifyRealtimeToggled(realtimeCompilation);
 }
 
 void OpenGLWidget::ToggleRealtimeCompilation()
 {
     realtimeCompilation = !realtimeCompilation;
+    emit NotifyRealtimeToggled(realtimeCompilation);
 }
 
 bool OpenGLWidget::RealtimeCompilation()
@@ -330,7 +336,7 @@ void OpenGLWidget::OnCompileShaders()
     catch (SyntaxErrorException& e)
     {
         LinkProgramAndRepaint();
-        auto error = GLSLCompileError(QString::fromStdString(e.File()), e.what());
+        auto error = GLSLCompileError(ShaderType::VertexShader, e.what());
         emit NotifyCompileError(error);
         return;
     }
@@ -345,7 +351,7 @@ void OpenGLWidget::OnCompileShaders()
     catch (SyntaxErrorException& e)
     {
         LinkProgramAndRepaint();
-        auto error = GLSLCompileError(QString::fromStdString(e.File()), e.what());
+        auto error = GLSLCompileError(ShaderType::FragmentShader, e.what());
         emit NotifyCompileError(error);
         return;
     }
@@ -386,6 +392,8 @@ void OpenGLWidget::OnModelLoaded(const QString& name)
 
     InitVAO();
     repaint();
+
+    emit NotifyMeshSelected(selectedMeshName);
 }
 
 void OpenGLWidget::OnRealtimeUpdateStateChanged(const int& state)
@@ -403,6 +411,8 @@ void OpenGLWidget::OnRealtimeUpdateStateChanged(const int& state)
         default:
             break;
     }
+
+    emit NotifyRealtimeToggled(Realtime());
 }
 
 void OpenGLWidget::OnPlane2DStateChanged(const int& state)
@@ -420,6 +430,8 @@ void OpenGLWidget::OnPlane2DStateChanged(const int& state)
         default:
             break;
     }
+
+    emit NotifyPlane2DToggled(Plane2D());
 }
 
 void OpenGLWidget::OnSquareViewportClicked()
@@ -472,6 +484,7 @@ void OpenGLWidget::paintGL()
 
     auto timeLocation = glGetUniformLocation(program, "time");
     auto resolutionLocation = glGetUniformLocation(program, "resolution");
+    auto mousePosLocation = glGetUniformLocation(program, "mousePos");
     auto modelMatLocation = glGetUniformLocation(program, "modelMat");
     auto viewMatLocation = glGetUniformLocation(program, "viewMat");
     auto projectionMatLocation = glGetUniformLocation(program, "projectionMat");
@@ -481,6 +494,7 @@ void OpenGLWidget::paintGL()
     // Apply Uniform Data
     glUniform1f(timeLocation, renderTime);
     glUniform2fv(resolutionLocation, 1, glm::value_ptr(glm::vec2(width(), height())));
+    glUniform2fv(mousePosLocation, 1, glm::value_ptr(mousePos));
     glUniformMatrix4fv(modelMatLocation, 1, GL_FALSE, GetModelMatrix());
     glUniformMatrix4fv(viewMatLocation, 1, GL_FALSE, GetViewMatrix());
     glUniformMatrix4fv(projectionMatLocation, 1, GL_FALSE, GetProjectionMatrix());
@@ -546,15 +560,21 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event)
         ApplyMouseDrag(event);
     }
 
-        // Mouse Drag / Model Zoom (Camera Forward/Backwards)
+    // Mouse Drag / Model Zoom (Camera Forward/Backwards)
     else if (mouseZoomEnabled) {
         ApplyMouseZoom(event);
     }
 
-        // Mouse Shift / Model Shifting
+    // Mouse Shift / Model Shifting
     else if (mouseShiftEnabled) {
         ApplyMouseShift(event);
     }
+
+    // Mouse Position
+    mousePos = glm::vec2(
+            static_cast<float>(event->pos().x()) / static_cast<float>(width()),
+            static_cast<float>(event->pos().y()) / static_cast<float>(height())
+    );
 
     repaint();
 }
@@ -563,11 +583,8 @@ void OpenGLWidget::InitShaders()
 {
     program = glCreateProgram();
 
-    vertexShader = Shader::MakeShared("", GL_VERTEX_SHADER);
-    vertexShader->SetFile("VS");
-
-    fragmentShader = Shader::MakeShared("", GL_FRAGMENT_SHADER);
-    fragmentShader->SetFile("FS");
+    vertexShader = Shader::MakeShared("", ShaderType::VertexShader);
+    fragmentShader = Shader::MakeShared("", ShaderType::FragmentShader);
 }
 
 void OpenGLWidget::InitVAO()
@@ -588,7 +605,6 @@ void OpenGLWidget::InitVAO()
 
     InitAttribsForVAO();
     glBindVertexArray(0);
-
 }
 
 void OpenGLWidget::InitPlaneVAO()
@@ -819,6 +835,8 @@ void OpenGLWidget::ApplyMouseDrag(QMouseEvent* event)
 
     modelMatrix = glm::rotate(glm::mat4(1.0f), modelRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
     modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    emit NotifyModelRotationChanged(modelRotation);
 }
 
 void OpenGLWidget::ApplyMouseZoom(QMouseEvent* event)

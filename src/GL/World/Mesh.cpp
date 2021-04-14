@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -148,7 +148,7 @@ VertexVec Mesh::ComposedVertices()
     return stride;
 }
 
-std::string Mesh::ComposedVerticesString()
+QString Mesh::ComposedVerticesString()
 {
     std::stringstream stream;
 
@@ -157,19 +157,19 @@ std::string Mesh::ComposedVerticesString()
         stream << "Vertex(";
 
         stream << vtx.vertex.x << ", " <<
-               vtx.vertex.y << ", " <<
-               vtx.vertex.z << ", ";
+                  vtx.vertex.y << ", " <<
+                  vtx.vertex.z << ", ";
 
         stream << vtx.normal.x << ", " <<
-               vtx.normal.y << ", " <<
-               vtx.normal.z << ", ";
+                  vtx.normal.y << ", " <<
+                  vtx.normal.z << ", ";
 
         stream << vtx.uv.x << ", " <<
-               vtx.uv.y << "),\n";
+                  vtx.uv.y << "),\n";
     }
 
     auto str = stream.str();
 
     // Cut off last ",\n".
-    return str.substr(0, str.length() - 2);
+    return QString::fromStdString(str.substr(0, str.length() - 2));
 }

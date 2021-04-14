@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,8 +56,7 @@ void OBJMeshLoader::ReadFile(const QString& path)
     if (!objFile.open(QIODevice::ReadOnly))
     {
         throw GeneralException(
-                std::string("[") + __FUNCTION__ + "] Could not open file " +
-                path.toStdString() + "."
+                QString("[") + __FUNCTION__ + "] Could not open file " + path + "."
         );
     }
 
@@ -130,8 +129,8 @@ glm::vec2 OBJMeshLoader::ParseVector2(const std::string& line)
     if (!x3::phrase_parse(line.begin(), line.end(), vectorParser, x3::space, vectorValues))
     {
         throw GeneralException(
-                std::string("[") + __FUNCTION__ + "] Could not parse vector vt on line " +
-                std::to_string(lineCounter) + "."
+                QString::fromStdString(std::string("[") + __FUNCTION__ + "] Could not parse vector vt on line " +
+                std::to_string(lineCounter) + ".")
         );
     }
 
@@ -150,8 +149,8 @@ glm::vec3 OBJMeshLoader::ParseVector3(const std::string& line)
     if (!x3::phrase_parse(line.begin(), line.end(), vectorParser, x3::space, vectorValues))
     {
         throw GeneralException(
-                std::string("[") + __FUNCTION__ + "] Could not parse vector v on line " +
-                std::to_string(lineCounter) + "."
+                QString::fromStdString(std::string("[") + __FUNCTION__ + "] Could not parse vector v on line " +
+                std::to_string(lineCounter) + ".")
         );
     }
 
@@ -208,8 +207,8 @@ OBJMeshLoader::ParseIndices(const std::string& line)
         if (!x3::phrase_parse(line.begin(), line.end(), uvIndexParser, x3::space))
         {
             throw GeneralException(
-                    std::string("[") + __FUNCTION__ + "] Could not parse index on line " +
-                    std::to_string(lineCounter) + "."
+                    QString::fromStdString(std::string("[") + __FUNCTION__ + "] Could not parse index on line " +
+                    std::to_string(lineCounter) + ".")
             );
         }
     }

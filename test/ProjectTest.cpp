@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,15 +37,15 @@ BOOST_AUTO_TEST_SUITE(ProjectTestSuite)
 
 BOOST_AUTO_TEST_CASE(ProjectTestCase)
 {
-    const std::string WINDOWS_PATH_ONLY = "C:\\Windows\\Paths\\Are\\Ugly\\";
-    const std::string PATH_ONLY = "/Path/To/Project/";
-    const std::string NAME = "project";
-    const std::string EXTENSION = ".shaderide";
-    const std::string PATH = PATH_ONLY + NAME + EXTENSION;
-    const std::string WINDOWS_PATH = WINDOWS_PATH_ONLY + NAME + EXTENSION;
-    const std::string VS_SOURCE = "VERTEX_SHADER_CODE";
-    const std::string FS_SOURCE = "FRAGMENT_SHADER_CODE";
-    const std::string MESH_NAME = "Mesh";
+    const QString WINDOWS_PATH_ONLY = "C:\\Windows\\Paths\\Are\\Ugly\\";
+    const QString PATH_ONLY = "/Path/To/Project/";
+    const QString NAME = "project";
+    const QString EXTENSION = ".shaderide";
+    const QString PATH = PATH_ONLY + NAME + EXTENSION;
+    const QString WINDOWS_PATH = WINDOWS_PATH_ONLY + NAME + EXTENSION;
+    const QString VS_SOURCE = "VERTEX_SHADER_CODE";
+    const QString FS_SOURCE = "FRAGMENT_SHADER_CODE";
+    const QString MESH_NAME = "Mesh";
 
     // const std::string TEXTURE_SLOT_0 = "tex0";
     // const std::string TEXTURE_SLOT_1 = "tex1";

@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,18 +39,30 @@ SettingsDialog::SettingsDialog(MainWindow* mainWindow)
 {
     InitLayout();
     InitViewportSection();
+    InitCodeEditorSection();
     InitButtonLayout();
 }
 
 SettingsDialog::~SettingsDialog()
 {
+    // Button Layout
     Memory::Release(btSave);
     Memory::Release(buttonLayout);
+
+    // Code Editor
+    Memory::Release(cboxTabWidth);
+    Memory::Release(codeEditorForm);
+    Memory::Release(codeEditorTitle);
+    Memory::Release(codeEditorLayout);
+
+    // 3D Viewport
     Memory::Release(viewportRestartNote);
     Memory::Release(cboxMultisampling);
     Memory::Release(viewportForm);
     Memory::Release(viewportTitle);
     Memory::Release(viewportLayout);
+
+    // Main Layout
     Memory::Release(mainLayout);
 }
 
@@ -112,9 +124,35 @@ void SettingsDialog::InitViewportSection()
     // Restart Note
     viewportRestartNote = new QLabel("Application restart required for multisampling to be applied.");
 
-    viewportRestartNote->setObjectName("restart_note");
+    viewportRestartNote->setProperty("class", "note");
     viewportRestartNote->setWordWrap(true);
     viewportLayout->addWidget(viewportRestartNote);
+}
+
+void SettingsDialog::InitCodeEditorSection()
+{
+    codeEditorLayout = new QVBoxLayout();
+    mainLayout->addLayout(codeEditorLayout);
+
+    // Title
+    codeEditorTitle = new QLabel("Code Editor");
+    codeEditorTitle->setProperty("class", "title");
+    codeEditorLayout->addWidget(codeEditorTitle);
+
+    // Layout
+    codeEditorForm = new QFormLayout();
+    codeEditorForm->setContentsMargins(0, 0, 0, 0);
+    codeEditorForm->setSpacing(10);
+    codeEditorLayout->addLayout(codeEditorForm);
+
+    // Tab Width
+    cboxTabWidth = new QComboBox();
+    cboxTabWidth->setFixedWidth(120);
+    cboxTabWidth->addItem("2 Spaces", 2);
+    cboxTabWidth->addItem("4 Spaces", 4);
+    cboxTabWidth->addItem("8 Spaces", 8);
+    codeEditorForm->addRow("Tab Width", cboxTabWidth);
+    codeEditorForm->setAlignment(cboxTabWidth, Qt::AlignRight);
 }
 
 void SettingsDialog::InitButtonLayout()
@@ -134,29 +172,43 @@ void SettingsDialog::InitButtonLayout()
 
 void SettingsDialog::ApplySettings()
 {
-    // Multisampling, number of samples.
-    mainWindow->numSamples = cboxMultisampling->itemData(cboxMultisampling->currentIndex()).toInt();
-    mainWindow->SaveSettings();
+    // 3D Viewport
+    mainWindow->applicationSettings.numSamples = cboxMultisampling->itemData(cboxMultisampling->currentIndex()).toInt();
+
+    // Code Editor
+    mainWindow->applicationSettings.tabWidth = cboxTabWidth->itemData(cboxTabWidth->currentIndex()).toInt();
+
+    mainWindow->SaveApplicationSettings();
 }
 
 void SettingsDialog::FetchSettings()
 {
+    // ++++ 3D Viewport ++++
+
     // Multisampling, number of samples.
-    switch (mainWindow->numSamples)
-    {
-        case 2:
-            cboxMultisampling->setCurrentIndex(1);
-            break;
+    if (mainWindow->applicationSettings.numSamples == 2) {
+        cboxMultisampling->setCurrentIndex(1);
 
-        case 4:
-            cboxMultisampling->setCurrentIndex(2);
-            break;
+    } else if (mainWindow->applicationSettings.numSamples == 4) {
+        cboxMultisampling->setCurrentIndex(2);
 
-        case 8:
-            cboxMultisampling->setCurrentIndex(3);
-            break;
+    } else if (mainWindow->applicationSettings.numSamples == 8) {
+        cboxMultisampling->setCurrentIndex(3);
 
-        default:
-            cboxMultisampling->setCurrentIndex(0);
+    } else {
+        cboxMultisampling->setCurrentIndex(0);
+    }
+
+    // ++++ 3D Viewport ++++
+
+    // Tab Width
+    if (mainWindow->applicationSettings.tabWidth == 2) {
+        cboxTabWidth->setCurrentIndex(0);
+
+    } else if (mainWindow->applicationSettings.tabWidth == 4) {
+        cboxTabWidth->setCurrentIndex(1);
+
+    } else if (mainWindow->applicationSettings.tabWidth == 8) {
+        cboxTabWidth->setCurrentIndex(2);
     }
 }

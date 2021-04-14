@@ -1,11 +1,11 @@
 /**
- * SettingsDialog Style Header
+ * SettingsDialogStyle Header
  *
  * -------------------------------------------------------------------------------
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,11 +38,18 @@
     "QLabel {" \
     "    color: #fafafa;" \
     "}" \
-    ".title {" \
-    "    font-size: 12pt;" \
-    "    color: #fafafa;" \
+    "QComboBox {" \
+    "    min-width: 250px;" \
     "}" \
-    "#restart_note {" \
+    ".title {" \
+    "    padding: 5px;" \
+    "    border-radius: 3px;" \
+    "    font-size: 12pt;" \
+    "    font-weight: bold;" \
+    "    color: #5C9861;" \
+    "    background-color: #2D2D2D;" \
+    "}" \
+    ".note {" \
     "    font-size: 8pt;" \
     "    color: rgb(100, 100, 100);" \
     "}" \

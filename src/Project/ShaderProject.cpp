@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@
 
 using namespace ShaderIDE::Project;
 
-ShaderProject* ShaderProject::Load(const std::string& path)
+ShaderProject* ShaderProject::Load(const QString& path)
 {
     std::ifstream file = OpenInputFile(path);
     auto* shaderProject = new ShaderProject(path);
@@ -51,7 +51,7 @@ ShaderProject* ShaderProject::Load(const std::string& path)
 
     // File Version
     if (project.find("file_version") != project.end()) {
-        shaderProject->SetFileVersion(project.find("file_version")->toString().toStdString());
+        shaderProject->SetFileVersion(project.find("file_version")->toString());
     }
 
     // Path
@@ -59,17 +59,17 @@ ShaderProject* ShaderProject::Load(const std::string& path)
 
     // VS Source
     if (project.find("vsSource") != project.end()) {
-        shaderProject->SetVertexShaderSource(project.find("vsSource")->toString().toStdString());
+        shaderProject->SetVertexShaderSource(project.find("vsSource")->toString());
     }
 
     // FS Source
     if (project.find("fsSource") != project.end()) {
-        shaderProject->SetFragmentShaderSource(project.find("fsSource")->toString().toStdString());
+        shaderProject->SetFragmentShaderSource(project.find("fsSource")->toString());
     }
 
     // Mesh Name
     if (project.find("meshName") != project.end()) {
-        shaderProject->SetMeshName(project.find("meshName")->toString().toStdString());
+        shaderProject->SetMeshName(project.find("meshName")->toString());
     }
 
     // Texture Paths
@@ -78,7 +78,7 @@ ShaderProject* ShaderProject::Load(const std::string& path)
         auto tp = project.find("textureData")->toObject();
 
         for (auto it = tp.begin(); it != tp.end(); ++it) {
-            shaderProject->SetTextureData(it.key().toStdString(), it.value().toString().toStdString());
+            shaderProject->SetTextureData(it.key(), it.value().toString());
         }
     }
 
@@ -103,39 +103,43 @@ ShaderProject* ShaderProject::Load(const std::string& path)
     }
 
     file.close();
+
+    // Mark saved initially.
+    shaderProject->MarkSaved();
+
     return shaderProject;
 }
 
-ShaderProject::ShaderProject(std::string path)
+ShaderProject::ShaderProject(QString path)
         : path(std::move(path))
 {}
 
-std::string ShaderProject::Version()
+QString ShaderProject::Version()
 {
     return file_version;
 }
 
-std::string ShaderProject::Path()
+QString ShaderProject::Path()
 {
     return path;
 }
 
-std::string ShaderProject::VertexShaderSource()
+QString ShaderProject::VertexShaderSource()
 {
     return vsSource;
 }
 
-std::string ShaderProject::FragmentShaderSource()
+QString ShaderProject::FragmentShaderSource()
 {
     return fsSource;
 }
 
-std::string ShaderProject::MeshName()
+QString ShaderProject::MeshName()
 {
     return meshName;
 }
 
-std::unordered_map<std::string, std::string> ShaderProject::TextureData()
+std::unordered_map<QString, QString> ShaderProject::TextureData()
 {
     return textureData;
 }
@@ -160,72 +164,89 @@ glm::vec3 ShaderProject::CameraPosition()
     return cameraPosition;
 }
 
-std::string ShaderProject::PathOnly()
+QString ShaderProject::PathOnly()
 {
     const auto div = LastSlashPos();
 
     if (div != std::string::npos) {
-        return path.substr(0, div + 1);
+        return QString::fromStdString(path.toStdString().substr(0, div + 1));
     }
 
     return "./";
 }
 
-void ShaderProject::SetFileVersion(const std::string& newFileVersion)
+bool ShaderProject::Saved() const
+{
+    return saved;
+}
+
+void ShaderProject::SetFileVersion(const QString& newFileVersion)
 {
     file_version = newFileVersion;
+    MarkUnsaved();
 }
 
-void ShaderProject::SetPath(const std::string& newPath)
+void ShaderProject::SetPath(const QString& newPath)
 {
     path = newPath;
+    MarkUnsaved();
 }
 
-void ShaderProject::SetVertexShaderSource(const std::string& newVSSource)
+void ShaderProject::SetVertexShaderSource(const QString& newVSSource)
 {
     vsSource = newVSSource;
+    MarkUnsaved();
 }
 
-void ShaderProject::SetFragmentShaderSource(const std::string& newFSSource)
+void ShaderProject::SetFragmentShaderSource(const QString& newFSSource)
 {
     fsSource = newFSSource;
+    MarkUnsaved();
 }
 
-void ShaderProject::SetMeshName(const std::string& newMeshName)
+void ShaderProject::SetMeshName(const QString& newMeshName)
 {
     meshName = newMeshName;
+    MarkUnsaved();
 }
 
 void ShaderProject::SetRealtime(bool newRealtime)
 {
     realtime = newRealtime;
+    MarkUnsaved();
 }
 
 void ShaderProject::SetPlane2D(bool newPlane2D)
 {
     plane2D = newPlane2D;
+    MarkUnsaved();
 }
 
 void ShaderProject::SetModelRotation(const glm::vec3& newModelRotation)
 {
     modelRotation = newModelRotation;
+    MarkUnsaved();
 }
 
 void ShaderProject::SetCameraPosition(const glm::vec3& newCameraPosition)
 {
     cameraPosition = newCameraPosition;
+    MarkUnsaved();
 }
 
-void ShaderProject::SetTextureData(const std::string& name, const std::string& data)
+void ShaderProject::SetTextureData(const QString& name, const QString& data)
 {
     textureData[name] = data;
+    MarkUnsaved();
 }
 
-void ShaderProject::ClearTextureData(const std::string& name)
+void ShaderProject::ClearTextureData(const QString& name)
 {
     if (textureData.find(name) != textureData.end()) {
         textureData[name] = "";
     }
+
+    MarkUnsaved();
 }
 
 void ShaderProject::Save()
@@ -241,10 +262,10 @@ void ShaderProject::Save()
     }
 
     QJsonObject project;
-    project["file_version"] = file_version.c_str();
-    project["vsSource"] = vsSource.c_str();
-    project["fsSource"] = fsSource.c_str();
-    project["meshName"] = meshName.c_str();
+    project["file_version"] = SHADERIDE_VERSION;
+    project["vsSource"] = vsSource;
+    project["fsSource"] = fsSource;
+    project["meshName"] = meshName;
     project["textureData"] = MakeJsonObjectFromTextureData();
     project["realtime"] = realtime;
     project["plane2D"] = plane2D;
@@ -254,11 +275,13 @@ void ShaderProject::Save()
     QJsonDocument jsonDocument(project);
     file << jsonDocument.toJson().toStdString();
     file.close();
+
+    MarkSaved();
 }
 
-void ShaderProject::CheckPath(const std::string& filePath)
+void ShaderProject::CheckPath(const QString& filePath)
 {
-    if (filePath.empty())
+    if (filePath.isEmpty())
     {
         throw ProjectException(
                 "Could not save shader project. "
@@ -268,32 +291,30 @@ void ShaderProject::CheckPath(const std::string& filePath)
     }
 }
 
-std::ifstream ShaderProject::OpenInputFile(const std::string& filePath)
+std::ifstream ShaderProject::OpenInputFile(const QString& filePath)
 {
-    std::ifstream file(filePath);
+    std::ifstream file(filePath.toStdString());
 
     if (!file.is_open())
     {
         throw GeneralException(
-                std::string("Could not load shader project file \"") +
-                filePath + "\""
+                QString("Could not load shader project file \"") + filePath + "\""
         );
     }
 
     return file;
 }
 
-std::ofstream ShaderProject::OpenOutputFile(const std::string& filePath)
+std::ofstream ShaderProject::OpenOutputFile(const QString& filePath)
 {
     CheckPath(filePath);
 
-    std::ofstream file(filePath);
+    std::ofstream file(filePath.toStdString());
 
     if (!file.is_open())
     {
         throw GeneralException(
-                std::string("Could not save shader project to \"") +
-                filePath + "\""
+                QString("Could not save shader project to \"") + filePath + "\""
         );
     }
 
@@ -305,7 +326,7 @@ QJsonObject ShaderProject::MakeJsonObjectFromTextureData()
     QJsonObject jsonArray;
 
     for (auto& it : textureData) {
-        jsonArray[it.first.c_str()] = it.second.c_str();
+        jsonArray[it.first] = it.second;
     }
 
     return jsonArray;
@@ -314,7 +335,27 @@ QJsonObject ShaderProject::MakeJsonObjectFromTextureData()
 size_t ShaderProject::LastSlashPos()
 {
     const auto npos = std::string::npos;
-    const auto divFS = path.find_last_of('/');
-    const auto divBS = path.find_last_of('\\');
+    const auto divFS = path.toStdString().find_last_of('/');
+    const auto divBS = path.toStdString().find_last_of('\\');
     return (divFS != npos) ? divFS : divBS;
+}
+
+void ShaderProject::MarkSaved()
+{
+    if (path.isEmpty()) {
+        return;
+    }
+
+    saved = true;
+    emit NotifyMarkSaved();
+}
+
+void ShaderProject::MarkUnsaved()
+{
+    if (path.isEmpty()) {
+        return;
+    }
+
+    saved = false;
+    emit NotifyMarkUnsaved();
 }

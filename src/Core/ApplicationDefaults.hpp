@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@
 #define SHADERIDE_PROJECT_EXTENSION "*.shaderide"
 #define SHADERIDE_STATUSBAR_TIMEOUT 10000 // 10 Seconds
 #define SHADERIDE_SURFACEFORMAT_NUM_SAMPLES 8
+#define SHADERIDE_CODE_EDITOR_TAB_WIDTH 4
 #define SHADERIDE_LOGO_PATH ":/app/logo-light.png"
 #define SHADERIDE_LICENSE_URL "https://github.com/thedamncoder/shaderide/blob/master/LICENSE"
 #define SHADERIDE_GITHUB_URL "https://github.com/thedamncoder/shaderide"

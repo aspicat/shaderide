@@ -5,7 +5,7 @@
  * This file is part of "Shader IDE" -> https://github.com/thedamncoder/shaderide.
  * -------------------------------------------------------------------------------
  *
- * Copyright (c) 2017 - 2020 Florian Roth
+ * Copyright (c) 2019 - 2021 Florian Roth (The Damn Coder)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,10 +31,15 @@
 
 using namespace ShaderIDE::GL;
 
-GLSLCompileError::GLSLCompileError(const QString& file, const QString& rawError)
-        : file(file)
+GLSLCompileError::GLSLCompileError(const ShaderType& shaderType, const QString& rawError)
+    : type(shaderType)
 {
     Parse(rawError);
+}
+
+ShaderType GLSLCompileError::GetShaderType()
+{
+    return type;
 }
 
 uint32_t GLSLCompileError::Line()
@@ -55,11 +60,6 @@ QString GLSLCompileError::Message()
 QString GLSLCompileError::Raw()
 {
     return raw;
-}
-
-QString GLSLCompileError::File()
-{
-    return file;
 }
 
 void GLSLCompileError::Parse(const QString& rawError)
